@@ -5,7 +5,6 @@ using Microsoft.MixedReality.Toolkit.Physics;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using Microsoft.MixedReality.Toolkit.Input.UnityInput;
 using UnityEngine;
-using System.Threading.Tasks;
 
 namespace Microsoft.MixedReality.Toolkit.Input
 {

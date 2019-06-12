@@ -4,7 +4,6 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System;
-using System.Threading.Tasks;
 using UnityEngine.Serialization;
 
 namespace Microsoft.MixedReality.Toolkit.Input

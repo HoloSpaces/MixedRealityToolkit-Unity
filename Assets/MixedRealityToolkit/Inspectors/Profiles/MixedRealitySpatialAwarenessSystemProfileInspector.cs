@@ -110,7 +110,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                         using (new EditorGUILayout.HorizontalScope())
                         {
                             observerFoldouts[i] = EditorGUILayout.Foldout(observerFoldouts[i], observerName.stringValue, true);
-                             
+
                             if (GUILayout.Button(RemoveObserverContent, EditorStyles.miniButtonRight, GUILayout.Width(24f)))
                             {
                                 list.DeleteArrayElementAtIndex(i);
