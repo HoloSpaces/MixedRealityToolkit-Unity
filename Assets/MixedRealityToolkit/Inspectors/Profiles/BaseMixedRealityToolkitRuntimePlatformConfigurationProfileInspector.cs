@@ -12,8 +12,8 @@ public class BaseMixedRealityToolkitRuntimePlatformConfigurationProfileInspector
 
     protected void GatherSupportedPlatforms(SerializedProperty serializedProperty)
     {
-        runtimePlatformTypes = IPlatformSupportExtension.GetSupportedPlatformTypes();
-        runtimePlatformNames = IPlatformSupportExtension.GetSupportedPlatformNames();
+        runtimePlatformTypes = PlatformSupportExtension.GetSupportedPlatformTypes();
+        runtimePlatformNames = PlatformSupportExtension.GetSupportedPlatformNames();
 
         runtimePlatformMasks = new int[serializedProperty.arraySize];
         SerializedProperty supportedPlatformsArray;

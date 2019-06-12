@@ -593,8 +593,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
             List<string> platformValues = new List<string>();
 
-            var supportedPlatformTypeNames = IPlatformSupportExtension.GetSupportedPlatformNames();
-            var supportedPlatformTypes = IPlatformSupportExtension.GetSupportedPlatformTypes();
+            var supportedPlatformTypeNames = PlatformSupportExtension.GetSupportedPlatformNames();
+            var supportedPlatformTypes = PlatformSupportExtension.GetSupportedPlatformTypes();
 
             for (int i = 0; i < supportedPlatformTypes.Length; i++)
             {

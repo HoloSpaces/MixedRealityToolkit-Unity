@@ -58,8 +58,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 creator = new ExtensionServiceCreator();
 
             creator.LoadStoredState();
-            creatorPlatformNames = IPlatformSupportExtension.GetSupportedPlatformNames();
-            creatorPlatformTypes = IPlatformSupportExtension.GetSupportedPlatformTypes();
+            creatorPlatformNames = PlatformSupportExtension.GetSupportedPlatformNames();
+            creatorPlatformTypes = PlatformSupportExtension.GetSupportedPlatformTypes();
         }
 
         private void OnGUI()
