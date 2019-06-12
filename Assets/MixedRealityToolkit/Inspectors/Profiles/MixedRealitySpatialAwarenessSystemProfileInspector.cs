@@ -16,12 +16,13 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
         private static readonly GUIContent ComponentTypeContent = new GUIContent("Type");
         private static readonly GUIContent RuntimePlatformContent = new GUIContent("Platform(s)");
-        private static readonly GUIContent ObserverProfileContent = new GUIContent("Profile");
 
-        private static bool showObservers = true;
         private SerializedProperty observerConfigurations;
 
-        private bool[] observerFoldouts;
+        private const string ProfileTitle = "Spatial Awareness System Settings";
+        private const string ProfileDescription = "The Spatial Awareness System profile allows developers to configure cross-platform environmental awareness.";
+
+        private static bool[] observerFoldouts;
 
         protected override void OnEnable()
         {
@@ -29,43 +30,36 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
             observerConfigurations = serializedObject.FindProperty("observerConfigurations");
 
-            observerFoldouts = new bool[observerConfigurations.arraySize];
-
-            GatherSupportedPlatforms(observerConfigurations);
+            if (observerFoldouts == null || observerFoldouts.Length != observerConfigurations.arraySize)
+            {
+                observerFoldouts = new bool[observerConfigurations.arraySize];
+            }
         }
 
         public override void OnInspectorGUI()
         {
-            RenderTitleDescriptionAndLogo(
-                "Spatial Awareness System Profile",
-                "The Spatial Awareness System profile allows developers to configure cross-platform environmental awareness.");
+            RenderProfileHeader(ProfileTitle, ProfileDescription, target);
 
-            if (MixedRealityInspectorUtility.CheckMixedRealityConfigured(true, !RenderAsSubProfile))
+            using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
-                if (DrawBacktrackProfileButton("Back to Configuration Profile", MixedRealityToolkit.Instance.ActiveProfile))
-                {
-                    return;
-                }
-            }
+                serializedObject.Update();
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Spatial Awareness System Profile", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("The Spatial Awareness System profile allows developers to configure cross-platform environmental awareness.", MessageType.Info);
-
-            CheckProfileLock(target);
-
-            serializedObject.Update();
-
-            EditorGUILayout.Space();
-            showObservers = EditorGUILayout.Foldout(showObservers, "Observers", true);
-            if (showObservers)
-            {
                 using (new EditorGUI.IndentLevelScope())
                 {
                     RenderList(observerConfigurations);
                 }
+
+                serializedObject.ApplyModifiedProperties();
             }
-            serializedObject.ApplyModifiedProperties();
+        }
+
+        protected override bool IsProfileInActiveInstance()
+        {
+            if (!base.IsProfileInActiveInstance()) return false;
+
+            var profile = target as BaseMixedRealityProfile;
+
+            return profile != null && MixedRealityToolkit.Instance.ActiveProfile.SpatialAwarenessSystemProfile == profile;
         }
 
         private void RenderList(SerializedProperty list)
@@ -158,7 +152,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                                     serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
                                 }
 
-                                changed |= RenderProfile(observerProfile, ObserverProfileContent, true, serviceType);
+                                changed |= RenderProfile(observerProfile, null, true, false, serviceType);
                             }
 
                             serializedObject.ApplyModifiedProperties();
@@ -166,12 +160,9 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     }
                 }
 
-                if (MixedRealityToolkit.IsInitialized)
+                if (MixedRealityToolkit.IsInitialized && changed)
                 {
-                    if (changed)
-                    {
-                        EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
-                    }
+                    EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
                 }
             }
         }

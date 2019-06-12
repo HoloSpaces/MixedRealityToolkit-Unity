@@ -40,7 +40,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
         }
 
-        protected virtual async void Start()
+        protected virtual async Task Start()
         {
             if (lateInitialize)
             {

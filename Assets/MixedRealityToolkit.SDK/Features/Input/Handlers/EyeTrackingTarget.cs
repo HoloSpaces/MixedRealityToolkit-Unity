@@ -4,6 +4,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System;
+using System.Threading.Tasks;
 using UnityEngine.Serialization;
 
 namespace Microsoft.MixedReality.Toolkit.Input
@@ -121,11 +122,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
         public bool IsDwelledOn { get; private set; } = false;
         
         private DateTime lookAtStartTime;
-
-        /// <summary>
-        /// Current expected framerate of the eye tracking system.
-        /// </summary>
-        private float EyeTrackerFramerate = 30; // In Hz -> This means that every 1000ms/30 = 33.33ms a new sample should arrive. 
         
         /// <summary>
         /// Duration in milliseconds to indicate that if more time than this passes without new eye tracking data, then timeout. 
@@ -147,8 +143,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
         public static Vector3 LookedAtPoint { get; private set; }
 
         #region Focus handling
-        private void Start()
+        protected override async Task Start()
         {
+            await base.Start();
             IsLookedAt = false;
             LookedAtTarget = null;
             LookedAtEyeTarget = null;
@@ -182,8 +179,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
             OnEyeFocusStop();
         }      
 

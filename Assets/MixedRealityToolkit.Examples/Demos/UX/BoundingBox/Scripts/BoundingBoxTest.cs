@@ -5,6 +5,7 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.UI
@@ -25,9 +26,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private BoundingBox bbox;
 
         // Start is called before the first frame update
-        protected override void Start()
+        protected override async Task Start()
         {
-            base.Start();
+            await base.Start();
             StartCoroutine(Sequence());
         }
 

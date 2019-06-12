@@ -4,6 +4,7 @@
 using Microsoft.MixedReality.Toolkit.Physics;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Input
@@ -146,9 +147,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
         }
 
-        protected override async void Start()
+        protected override async Task Start()
         {
-            base.Start();
+            await base.Start();
 
             await EnsureInputSystemValid();
 

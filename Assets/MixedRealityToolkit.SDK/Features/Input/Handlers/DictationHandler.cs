@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -101,9 +102,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         #region MonoBehaviour implementation
 
-        protected override void Start()
+        protected override async Task Start()
         {
-            base.Start();
+            await base.Start();
 
             dictationSystem = (InputSystem as IMixedRealityDataProviderAccess)?.GetDataProvider<IMixedRealityDictationSystem>();
             Debug.Assert(dictationSystem != null, "No dictation system found. In order to use dictation, add a dictation system like 'Windows Dictation Input Provider' to the Data Providers in the Input System profile");

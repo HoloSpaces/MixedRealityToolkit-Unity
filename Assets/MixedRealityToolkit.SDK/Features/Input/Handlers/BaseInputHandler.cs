@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Input
@@ -33,11 +34,11 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
         }
 
-        protected override void Start()
+        protected override async Task Start()
         {
             if (!isFocusRequired)
             {
-                base.Start();
+                await base.Start();
             }
         }
 

@@ -17,36 +17,36 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
         private static readonly GUIContent ComponentTypeContent = new GUIContent("Type");
         private static readonly GUIContent RuntimePlatformContent = new GUIContent("Platform(s)");
-        private static readonly GUIContent ProviderProfileContent = new GUIContent("Profile");
 
-        private static bool showDataProviders = true;
+        private static bool showDataProviders = false;
         private SerializedProperty dataProviderConfigurations;
 
-        private static bool showFocusProperties = true;
         private SerializedProperty focusProviderType;
 
-        private static bool showPointerProperties = true;
+        private static bool showPointerProperties = false;
         private SerializedProperty pointerProfile;
 
-        private static bool showActionsProperties = true;
+        private static bool showActionsProperties = false;
         private SerializedProperty inputActionsProfile;
         private SerializedProperty inputActionRulesProfile;
 
-        private static bool showControllerProperties = true;
+        private static bool showControllerProperties = false;
         private SerializedProperty enableControllerMapping;
         private SerializedProperty controllerMappingProfile;
         private SerializedProperty controllerVisualizationProfile;
 
-        private static bool showGestureProperties = true;
+        private static bool showGestureProperties = false;
         private SerializedProperty gesturesProfile;
 
-        private static bool showSpeechCommandsProperties = true;
+        private static bool showSpeechCommandsProperties = false;
         private SerializedProperty speechCommandsProfile;
 
-        private static bool showHandTrackingProperties = true;
+        private static bool showHandTrackingProperties = false;
         private SerializedProperty handTrackingProfile;
 
         private static bool[] providerFoldouts;
+        private const string ProfileTitle = "Input System Settings";
+        private const string ProfileDescription = "The Input System Profile helps developers configure input for cross-platform applications.";
 
         protected override void OnEnable()
         {
@@ -76,127 +76,111 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
         public override void OnInspectorGUI()
         {
-            RenderTitleDescriptionAndLogo(
-                "Input System Profile",
-                "The Input System Profile helps developers configure input for cross-platform applications.");
+            RenderProfileHeader(ProfileTitle, string.Empty, target);
 
-            if (!MixedRealityInspectorUtility.CheckMixedRealityConfigured(true, !RenderAsSubProfile))
-            {
-                return;
-            }
-
-            if (DrawBacktrackProfileButton("Back to Configuration Profile", MixedRealityToolkit.Instance.ActiveProfile))
-            {
-                return;
-            }
-
-            CheckProfileLock(target);
-
-            var previousLabelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = 160f;
-
-            serializedObject.Update();
-            EditorGUI.BeginChangeCheck();
             bool changed = false;
-
-            EditorGUILayout.Space();
-            showDataProviders = EditorGUILayout.Foldout(showDataProviders, "Data Providers", true);
-            if (showDataProviders)
+            using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
-                using (new EditorGUI.IndentLevelScope())
+                serializedObject.Update();
+
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.PropertyField(focusProviderType);
+                EditorGUILayout.Space();
+
+                bool isSubProfile = RenderAsSubProfile;
+                if (!isSubProfile)
                 {
-                    RenderList(dataProviderConfigurations);
+                    EditorGUI.indentLevel++;
                 }
-            }
 
-            EditorGUILayout.Space();
-            showFocusProperties = EditorGUILayout.Foldout(showFocusProperties, "Focus Settings", true);
-            if (showFocusProperties)
-            {
-                using (new EditorGUI.IndentLevelScope())
+                RenderFoldout(ref showDataProviders, "Input Data Providers", () =>
                 {
-                    EditorGUILayout.PropertyField(focusProviderType);
-                }
-            }
+                    using (new EditorGUI.IndentLevelScope())
+                    {
+                        RenderList(dataProviderConfigurations);
+                    }
+                });
 
-            EditorGUILayout.Space();
-            showPointerProperties = EditorGUILayout.Foldout(showPointerProperties, "Pointer Settings", true);
-            if (showPointerProperties)
-            {
-                using (new EditorGUI.IndentLevelScope())
+                RenderFoldout(ref showPointerProperties, "Pointers", () =>
                 {
-                    changed |= RenderProfile(pointerProfile);
-                }
-            }
+                    using (new EditorGUI.IndentLevelScope())
+                    {
+                        changed |= RenderProfile(pointerProfile, typeof(MixedRealityPointerProfile), true, false);
+                    }
+                });
 
-            EditorGUILayout.Space();
-            showActionsProperties = EditorGUILayout.Foldout(showActionsProperties, "Action Settings", true);
-            if (showActionsProperties)
-            {
-                using (new EditorGUI.IndentLevelScope())
+                RenderFoldout(ref showActionsProperties, "Input Actions", () =>
                 {
-                    changed |= RenderProfile(inputActionsProfile);
-                    changed |= RenderProfile(inputActionRulesProfile);
-                }
-            }
+                    using (new EditorGUI.IndentLevelScope())
+                    {
+                        changed |= RenderProfile(inputActionsProfile, typeof(MixedRealityInputActionsProfile), true, false);
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        changed |= RenderProfile(inputActionRulesProfile, typeof(MixedRealityInputActionRulesProfile), true, false);
+                    }
+                });
 
-            EditorGUILayout.Space();
-            showControllerProperties = EditorGUILayout.Foldout(showControllerProperties, "Controller Settings", true);
-            if (showControllerProperties)
-            {
-                using (new EditorGUI.IndentLevelScope())
+                RenderFoldout(ref showControllerProperties, "Controllers", () =>
                 {
-                    EditorGUILayout.PropertyField(enableControllerMapping);
-                    changed |= RenderProfile(controllerMappingProfile);
-                    changed |= RenderProfile(controllerVisualizationProfile, true, typeof(IMixedRealityControllerVisualizer));
-                }
-            }
+                    using (new EditorGUI.IndentLevelScope())
+                    {
+                        EditorGUILayout.PropertyField(enableControllerMapping);
+                        changed |= RenderProfile(controllerMappingProfile, typeof(MixedRealityControllerMappingProfile), true, false);
+                        EditorGUILayout.Space();
+                        changed |= RenderProfile(controllerVisualizationProfile, null, true, false, typeof(IMixedRealityControllerVisualizer));
+                    }
+                });
 
-            EditorGUILayout.Space();
-            showGestureProperties = EditorGUILayout.Foldout(showGestureProperties, "Gesture Settings", true);
-            if (showGestureProperties)
-            {
-                using (new EditorGUI.IndentLevelScope())
+                RenderFoldout(ref showGestureProperties, "Gestures", () =>
                 {
-                    changed |= RenderProfile(gesturesProfile);
-                }
-            }
+                    using (new EditorGUI.IndentLevelScope())
+                    {
+                        changed |= RenderProfile(gesturesProfile, typeof(MixedRealityGesturesProfile), true, false);
+                    }
+                });
 
-            EditorGUILayout.Space();
-            showSpeechCommandsProperties = EditorGUILayout.Foldout(showSpeechCommandsProperties, "Speech Command Settings", true);
-            if (showSpeechCommandsProperties)
-            {
-                using (new EditorGUI.IndentLevelScope())
+                RenderFoldout(ref showSpeechCommandsProperties, "Speech Commands", () =>
                 {
-                    changed |= RenderProfile(speechCommandsProfile);
-                }
-            }
+                    using (new EditorGUI.IndentLevelScope())
+                    {
+                        changed |= RenderProfile(speechCommandsProfile, typeof(MixedRealitySpeechCommandsProfile), true, false);
+                    }
+                });
 
-            EditorGUILayout.Space();
-            showHandTrackingProperties = EditorGUILayout.Foldout(showHandTrackingProperties, "Hand Tracking Settings", true);
-            if (showHandTrackingProperties)
-            {
-                using (new EditorGUI.IndentLevelScope())
+                RenderFoldout(ref showHandTrackingProperties, "Hand Tracking", () =>
                 {
-                    changed |= RenderProfile(handTrackingProfile);
-                }
-            }
+                    using (new EditorGUI.IndentLevelScope())
+                    {
+                        changed |= RenderProfile(handTrackingProfile, typeof(MixedRealityHandTrackingProfile), true, false);
+                    }
+                });
 
-            if (!changed)
-            {
-                changed |= EditorGUI.EndChangeCheck();
-            }
-
-            EditorGUIUtility.labelWidth = previousLabelWidth;
-            serializedObject.ApplyModifiedProperties();
-
-            if (MixedRealityToolkit.IsInitialized)
-            {
-                if (changed)
+                if (!isSubProfile)
                 {
-                    EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
+                    EditorGUI.indentLevel--;
                 }
+
+                if (!changed)
+                {
+                    changed |= EditorGUI.EndChangeCheck();
+                }
+
+                serializedObject.ApplyModifiedProperties();
             }
+
+            if (changed && MixedRealityToolkit.IsInitialized)
+            {
+                EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
+            }
+        }
+
+        protected override bool IsProfileInActiveInstance()
+        {
+            if (!base.IsProfileInActiveInstance()) return false;
+
+            var profile = target as BaseMixedRealityProfile;
+
+            return profile != null && MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile == profile;
         }
 
         private void RenderList(SerializedProperty list)
@@ -265,7 +249,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                             }
                         }
 
-                        if (providerFoldouts[i] || RenderAsSubProfile)
+                        if (providerFoldouts[i])
                         {
                             using (new EditorGUI.IndentLevelScope())
                             {
@@ -274,7 +258,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                                 if (EditorGUI.EndChangeCheck())
                                 {
                                     serializedObject.ApplyModifiedProperties();
-                                    System.Type type = ((MixedRealityInputSystemProfile)serializedObject.targetObject).DataProviderConfigurations[i].ComponentType.Type;
+                                    Type type = ((MixedRealityInputSystemProfile)serializedObject.targetObject).DataProviderConfigurations[i].ComponentType.Type;
                                     ApplyDataProviderConfiguration(type, providerName, configurationProfile, runtimePlatform, i);
                                     break;
                                 }
@@ -289,7 +273,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                                     serviceType = (target as MixedRealityInputSystemProfile).DataProviderConfigurations[i].ComponentType;
                                 }
 
-                                changed |= RenderProfile(configurationProfile, ProviderProfileContent, true, serviceType);
+                                changed |= RenderProfile(configurationProfile, null, true, false, serviceType);
                             }
 
                             serializedObject.ApplyModifiedProperties();

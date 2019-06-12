@@ -46,11 +46,11 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
         protected override bool IsProfileInActiveInstance()
         {
+            if (!base.IsProfileInActiveInstance()) return false;
+
             var profile = target as BaseMixedRealityProfile;
 
-            return MixedRealityToolkit.IsInitialized && profile != null &&
-                   MixedRealityToolkit.Instance.HasActiveProfile &&
-                   MixedRealityToolkit.Instance.ActiveProfile.RegisteredServiceProvidersProfile == profile;
+            return profile != null && MixedRealityToolkit.Instance.ActiveProfile.RegisteredServiceProvidersProfile == profile;
         }
 
         private void RenderList(SerializedProperty list)

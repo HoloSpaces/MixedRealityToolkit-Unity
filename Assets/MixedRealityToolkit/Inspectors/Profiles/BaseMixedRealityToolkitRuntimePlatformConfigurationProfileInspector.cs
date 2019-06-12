@@ -10,6 +10,12 @@ public class BaseMixedRealityToolkitRuntimePlatformConfigurationProfileInspector
     protected static Type[] runtimePlatformTypes;
     protected static int[] runtimePlatformMasks;
 
+    protected override bool IsProfileInActiveInstance()
+    {
+        return MixedRealityToolkit.IsInitialized &&
+               MixedRealityToolkit.Instance.HasActiveProfile;
+    }
+
     protected void GatherSupportedPlatforms(SerializedProperty serializedProperty)
     {
         runtimePlatformTypes = PlatformSupportExtension.GetSupportedPlatformTypes();

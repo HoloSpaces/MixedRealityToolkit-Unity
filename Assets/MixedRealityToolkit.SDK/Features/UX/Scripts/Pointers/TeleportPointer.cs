@@ -5,6 +5,7 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Physics;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityPhysics = UnityEngine.Physics;
 
@@ -105,9 +106,9 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             }
         }
 
-        protected override async void Start()
+        protected override async Task Start()
         {
-            base.Start();
+            await base.Start();
 
             if (lateRegisterTeleport)
             {

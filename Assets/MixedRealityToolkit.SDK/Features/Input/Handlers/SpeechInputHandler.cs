@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -30,9 +31,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         #region MonoBehaviour Implementation
 
-        protected override void Start()
+        protected override async Task Start()
         {
-            base.Start();
+            await base.Start();
 
             if (persistentKeywords)
             {

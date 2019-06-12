@@ -258,11 +258,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
         }
 
-        protected override void Start()
-        {
-            base.Start();
-        }
-
         protected override void OnDisable()
         {
             base.OnDisable();
