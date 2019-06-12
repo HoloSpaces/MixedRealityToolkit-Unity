@@ -46,11 +46,11 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
         protected override bool IsProfileInActiveInstance()
         {
-            if (!base.IsProfileInActiveInstance()) return false;
-
             var profile = target as BaseMixedRealityProfile;
 
-            return profile != null && MixedRealityToolkit.Instance.ActiveProfile.RegisteredServiceProvidersProfile == profile;
+            return MixedRealityToolkit.IsInitialized && profile != null &&
+                   MixedRealityToolkit.Instance.HasActiveProfile &&
+                   MixedRealityToolkit.Instance.ActiveProfile.RegisteredServiceProvidersProfile == profile;
         }
 
         private void RenderList(SerializedProperty list)
@@ -174,12 +174,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             }
         }
 
-        private void AssignDefaultConfigurationValues(
-            Type componentType,
-            SerializedProperty configurationProfile,
-            SerializedProperty runtimePlatform,
-            int index
-            )
+        private void AssignDefaultConfigurationValues(System.Type componentType, SerializedProperty configurationProfile, SerializedProperty runtimePlatform, int index)
         {
             configurationProfile.objectReferenceValue = null;
             runtimePlatform.objectReferenceValue = null;

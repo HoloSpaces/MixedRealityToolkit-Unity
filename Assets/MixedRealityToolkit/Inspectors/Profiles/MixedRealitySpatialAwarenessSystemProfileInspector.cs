@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information. 
 
+using Microsoft.MixedReality.Toolkit.Editor;
 using Microsoft.MixedReality.Toolkit.Utilities.Editor;
 using UnityEngine;
 using UnityEditor;
@@ -55,31 +56,25 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
         protected override bool IsProfileInActiveInstance()
         {
-            if (!base.IsProfileInActiveInstance()) return false;
-
             var profile = target as BaseMixedRealityProfile;
-
-            return profile != null && MixedRealityToolkit.Instance.ActiveProfile.SpatialAwarenessSystemProfile == profile;
+            return MixedRealityToolkit.IsInitialized && profile != null &&
+                   MixedRealityToolkit.Instance.HasActiveProfile &&
+                   profile == MixedRealityToolkit.Instance.ActiveProfile.SpatialAwarenessSystemProfile;
         }
 
         private void RenderList(SerializedProperty list)
         {
-            EditorGUILayout.Space();
-
             bool changed = false;
 
             using (new EditorGUILayout.VerticalScope())
             {
-                if (GUILayout.Button(AddObserverContent, EditorStyles.miniButton))
+                if (MixedRealityEditorUtility.RenderIndentedButton(AddObserverContent, EditorStyles.miniButton))
                 {
                     list.InsertArrayElementAtIndex(list.arraySize);
                     SerializedProperty observer = list.GetArrayElementAtIndex(list.arraySize - 1);
 
                     SerializedProperty observerName = observer.FindPropertyRelative("componentName");
                     observerName.stringValue = $"New spatial observer {list.arraySize - 1}";
-
-                    SerializedProperty priority = observer.FindPropertyRelative("priority");
-                    priority.intValue = 0;
 
                     SerializedProperty runtimePlatform = observer.FindPropertyRelative("runtimePlatform");
                     runtimePlatform.objectReferenceValue = null;
@@ -96,8 +91,6 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     return;
                 }
 
-                GUILayout.Space(12f);
-
                 if (list == null || list.arraySize == 0)
                 {
                     EditorGUILayout.HelpBox("The Mixed Reality Spatial Awareness System requires one or more observers.", MessageType.Warning);
@@ -112,12 +105,12 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     SerializedProperty observerProfile = observer.FindPropertyRelative("observerProfile");
                     SerializedProperty runtimePlatform = observer.FindPropertyRelative("runtimePlatform");
 
-                    using (new EditorGUILayout.VerticalScope())
+                    using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
                             observerFoldouts[i] = EditorGUILayout.Foldout(observerFoldouts[i], observerName.stringValue, true);
-
+                             
                             if (GUILayout.Button(RemoveObserverContent, EditorStyles.miniButtonRight, GUILayout.Width(24f)))
                             {
                                 list.DeleteArrayElementAtIndex(i);
@@ -125,12 +118,12 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                                 changed = true;
                                 break;
                             }
-
                         }
 
-                        if (observerFoldouts[i] || RenderAsSubProfile)
+                        if (observerFoldouts[i])
                         {
-                            using (new EditorGUI.IndentLevelScope())
+                            System.Type serviceType = null;
+                            if (observerProfile.objectReferenceValue != null)
                             {
                                 EditorGUI.BeginChangeCheck();
                                 EditorGUILayout.PropertyField(observerType, ComponentTypeContent);
@@ -146,21 +139,20 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                                 RenderSupportedPlatforms(runtimePlatform, i, RuntimePlatformContent);
                                 changed |= EditorGUI.EndChangeCheck();
 
-                                System.Type serviceType = null;
                                 if (observerProfile.objectReferenceValue != null)
                                 {
                                     serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
                                 }
-
-                                changed |= RenderProfile(observerProfile, null, true, false, serviceType);
                             }
+
+                            changed |= RenderProfile(observerProfile, null, true, false, serviceType);
 
                             serializedObject.ApplyModifiedProperties();
                         }
                     }
                 }
 
-                if (MixedRealityToolkit.IsInitialized && changed)
+                if (changed && MixedRealityToolkit.IsInitialized)
                 {
                     EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
                 }

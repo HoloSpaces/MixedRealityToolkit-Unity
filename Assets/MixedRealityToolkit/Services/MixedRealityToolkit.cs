@@ -162,7 +162,7 @@ namespace Microsoft.MixedReality.Toolkit
 
         /// <inheritdoc />
         public bool RegisterService<T>(
-            Type concreteType, 
+            Type concreteType,
             IPlatformSupport[] supportedPlatforms = null,
             params object[] args) where T : IMixedRealityService
         {

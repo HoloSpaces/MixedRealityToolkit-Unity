@@ -5,7 +5,6 @@ using Microsoft.MixedReality.Toolkit.Utilities.Editor;
 using UnityEngine;
 using UnityEditor;
 using Microsoft.MixedReality.Toolkit.Utilities;
-using System;
 
 namespace Microsoft.MixedReality.Toolkit.Input.Editor
 {
@@ -51,11 +50,6 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
         protected override void OnEnable()
         {
             base.OnEnable();
-
-            if (!MixedRealityInspectorUtility.CheckMixedRealityConfigured(false))
-            {
-                return;
-            }
 
             dataProviderConfigurations = serializedObject.FindProperty("dataProviderConfigurations");
             focusProviderType = serializedObject.FindProperty("focusProviderType");
@@ -139,7 +133,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     }
                 });
 
-                RenderFoldout(ref showSpeechCommandsProperties, "Speech Commands", () =>
+                RenderFoldout(ref showSpeechCommandsProperties, "Speech", () =>
                 {
                     using (new EditorGUI.IndentLevelScope())
                     {
@@ -176,11 +170,10 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
         protected override bool IsProfileInActiveInstance()
         {
-            if (!base.IsProfileInActiveInstance()) return false;
-
             var profile = target as BaseMixedRealityProfile;
-
-            return profile != null && MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile == profile;
+            return MixedRealityToolkit.IsInitialized && profile != null &&
+                   MixedRealityToolkit.Instance.HasActiveProfile &&
+                   profile == MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile;
         }
 
         private void RenderList(SerializedProperty list)
@@ -218,7 +211,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     return;
                 }
 
-                GUILayout.Space(12f);
+                EditorGUILayout.Space();
 
                 if (list == null || list.arraySize == 0)
                 {
@@ -258,7 +251,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                                 if (EditorGUI.EndChangeCheck())
                                 {
                                     serializedObject.ApplyModifiedProperties();
-                                    Type type = ((MixedRealityInputSystemProfile)serializedObject.targetObject).DataProviderConfigurations[i].ComponentType.Type;
+                                    System.Type type = ((MixedRealityInputSystemProfile)serializedObject.targetObject).DataProviderConfigurations[i].ComponentType.Type;
                                     ApplyDataProviderConfiguration(type, providerName, configurationProfile, runtimePlatform, i);
                                     break;
                                 }
@@ -282,14 +275,14 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                 }
             }
 
-            if (changed)
+            if (changed && MixedRealityToolkit.IsInitialized)
             {
                 EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
             }
         }
 
         private void ApplyDataProviderConfiguration(
-            Type type, 
+            System.Type type, 
             SerializedProperty providerName,
             SerializedProperty configurationProfile,
             SerializedProperty runtimePlatform,
