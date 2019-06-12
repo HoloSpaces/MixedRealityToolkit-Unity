@@ -178,7 +178,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField(creator.ServiceName + ".cs", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("This is the main script for your service. It functions simliarly to a MonoBehaviour, with Enable, Disable and Update functions.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("This is the main script for your service. It functions similarly to a MonoBehaviour, with Enable, Disable and Update functions.", EditorStyles.wordWrappedMiniLabel);
             creator.ServiceFolderObject = EditorGUILayout.ObjectField("Target Folder", creator.ServiceFolderObject, typeof(UnityEngine.Object), false);
             EditorGUILayout.EndVertical();
 
@@ -312,7 +312,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             if (!registered)
             {
                 EditorGUILayout.LabelField("Would you like to register this service in your current MixedRealityToolkit profile?", EditorStyles.miniLabel);
-                // Check to see whether it's possible ot register the profile
+                // Check to see whether it's possible to register the profile
                 bool canRegisterProfile = true;
                 if (MixedRealityToolkit.Instance == null || !MixedRealityToolkit.Instance.HasActiveProfile)
                 {
