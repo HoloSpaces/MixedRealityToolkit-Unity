@@ -212,11 +212,11 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         #region MonoBehaviour Implementation
 
-        protected override async Task Start()
+        protected override void Start()
         {
             isDisabled = DisableCursorOnStart;
 
-            await base.Start();
+            base.Start();
 
             if (RayStabilizer != null)
             {

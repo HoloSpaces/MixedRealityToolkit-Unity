@@ -34,11 +34,11 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
         }
 
-        protected override async Task Start()
+        protected override void Start()
         {
             if (!isFocusRequired)
             {
-                await base.Start();
+                base.Start();
             }
         }
 

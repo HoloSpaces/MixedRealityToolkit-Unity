@@ -46,21 +46,29 @@ public static class PlatformSupportExtension
 
     public static Type[] GetSupportedPlatformTypes()
     {
+#if UNITY_EDITOR
         return (from assembly in AppDomain.CurrentDomain.GetAssemblies()
                 from type in assembly.GetTypes()
                 where typeof(IPlatformSupport).IsAssignableFrom(type)
                 where type != typeof(IPlatformSupport)
                 orderby type.Name
                 select type).ToArray();
+#else
+        return null;
+#endif
     }
 
     public static string[] GetSupportedPlatformNames()
     {
+#if UNITY_EDITOR
         return (from assembly in AppDomain.CurrentDomain.GetAssemblies()
                 from type in assembly.GetTypes()
                 where typeof(IPlatformSupport).IsAssignableFrom(type)
                 where type != typeof(IPlatformSupport)
                 orderby type.Name
                 select type.Name).ToArray();
+#else
+        return null;
+#endif
     }
 }

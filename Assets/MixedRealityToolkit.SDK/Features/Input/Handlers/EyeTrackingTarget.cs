@@ -143,9 +143,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
         public static Vector3 LookedAtPoint { get; private set; }
 
         #region Focus handling
-        protected override async Task Start()
+        protected override void Start()
         {
-            await base.Start();
+            base.Start();
             IsLookedAt = false;
             LookedAtTarget = null;
             LookedAtEyeTarget = null;

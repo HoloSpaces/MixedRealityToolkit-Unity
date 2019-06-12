@@ -102,9 +102,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         #region MonoBehaviour implementation
 
-        protected override async Task Start()
+        protected override void Start()
         {
-            await base.Start();
+            base.Start();
 
             dictationSystem = (InputSystem as IMixedRealityDataProviderAccess)?.GetDataProvider<IMixedRealityDictationSystem>();
             Debug.Assert(dictationSystem != null, "No dictation system found. In order to use dictation, add a dictation system like 'Windows Dictation Input Provider' to the Data Providers in the Input System profile");

@@ -49,8 +49,8 @@ namespace Microsoft.MixedReality.Toolkit.Input
         public InputSimulationService(
             IMixedRealityServiceRegistrar registrar,
             IMixedRealityInputSystem inputSystem,
-            string name, 
-            uint priority, 
+            string name,
+            uint priority,
             BaseMixedRealityProfile profile) : base(registrar, inputSystem, name, priority, profile) { }
 
         /// <inheritdoc />
@@ -177,7 +177,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         /// <inheritdoc/>
         bool IMixedRealityEyeGazeDataProvider.SmoothEyeTracking { get; set; }
-
 
         private void EnableCameraControl()
         {

@@ -26,9 +26,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private BoundingBox bbox;
 
         // Start is called before the first frame update
-        protected override async Task Start()
+        protected override void Start()
         {
-            await base.Start();
+            base.Start();
             StartCoroutine(Sequence());
         }
 

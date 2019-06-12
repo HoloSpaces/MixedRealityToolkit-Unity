@@ -106,9 +106,9 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             }
         }
 
-        protected override async Task Start()
+        protected override async void Start()
         {
-            await base.Start();
+            base.Start();
 
             if (lateRegisterTeleport)
             {

@@ -350,9 +350,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
             }
         }
 
-        protected override async Task Start()
+        protected override async void Start()
         {
-            await base.Start();
+            base.Start();
 
             await EnsureInputSystemValid();
 
