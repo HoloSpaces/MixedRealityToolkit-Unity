@@ -3,8 +3,17 @@ using UnityEngine;
 
 public class StartLook : MonoBehaviour
 {
+    private enum TestCase
+    {
+        MotionController = 0,
+        Mouse,
+        Hand
+    }
+
     public Transform cube;
     public Transform rotator;
+
+    [SerializeField] private TestCase testCase = default(TestCase);
 
     Vector3 cameraStartPosition;
 
@@ -23,11 +32,21 @@ public class StartLook : MonoBehaviour
 
     private void Update()
     {
-        //UpdateControllerBehaviour();
-        UpdateMouseBehaviour();
-        UpdateHandBehaviour();
+        switch (testCase)
+        {
+            case TestCase.MotionController:
+                UpdateControllerBehaviour();
+                break;
+            case TestCase.Mouse:
+                UpdateMouseBehaviour();
+                break;
+            case TestCase.Hand:
+                UpdateHandBehaviour();
+                break;
+        }
     }
 
+    // TODO
     private void UpdateHandBehaviour()
     {
         Vector3 cubeToCamera = cube.position - cameraStartPosition;
@@ -52,14 +71,13 @@ public class StartLook : MonoBehaviour
 
     private void UpdateMouseBehaviour()
     { 
-        Vector3 cubeToCamera = cube.position - Camera.main.transform.position;
-        cubeToCamera.y = 0f;
-        Vector3 mouseForward = transform.position - Camera.main.transform.position;
+        Vector3 cubeToCamera = Vector3.ProjectOnPlane(cube.position - Camera.main.transform.position, cube.up);
+        Vector3 mouseForward = Vector3.ProjectOnPlane(transform.position - Camera.main.transform.position, cube.up);
 
-        transform.rotation = Quaternion.LookRotation(mouseForward, Vector3.up);
-
-        mouseForward.y = 0f;
-
+        if (Vector3.Dot(cubeToCamera, mouseForward) <= 0f)
+        {
+            return;
+        }
 
         float angleAxis = Vector3.SignedAngle(cubeToCamera, mouseForward, cube.up);
 
@@ -74,18 +92,24 @@ public class StartLook : MonoBehaviour
 
     private void UpdateControllerBehaviour()
     {
-        Vector3 cubeToController = cube.position - transform.position;
-        cubeToController.y = 0f;
-        Vector3 controllerForward = transform.forward;
-        controllerForward.y = 0f;
+        Vector3 cubeToController = Vector3.ProjectOnPlane(cube.position - transform.position, cube.up);
+        Vector3 controllerForward = Vector3.ProjectOnPlane(transform.forward, cube.up);
+
+        if (Vector3.Dot(cubeToController, controllerForward) <= 0f)
+        {
+            return;
+        }
+
         float angleAxis = Vector3.SignedAngle(cubeToController, controllerForward, cube.up);
 
-        float offsetLength = Mathf.Sin(angleAxis * Mathf.Deg2Rad) * cubeToController.magnitude;
+        float worldAngleToController = Vector3.SignedAngle(cubeToController, Vector3.forward, Vector3.up);
 
-        float angleToControllerAngle = Vector3.SignedAngle(cubeToController, Vector3.forward, Vector3.up);
+        float offsetLength = Mathf.Sin(angleAxis * Mathf.Deg2Rad) * cubeToController.magnitude * offsetScale;
 
-        float downScaled = offsetLength * offsetScale;
+        Quaternion handleOffsetRotation = Quaternion.LookRotation(rotator.localPosition, cube.up);
+        float full90s = (int)offsetLength * 90f;
+        float partial90 = Mathf.Asin(offsetLength % 1f) * Mathf.Rad2Deg;
 
-        cube.rotation = Quaternion.LookRotation(rotator.localPosition, cube.up) * Quaternion.Euler(0, (int)downScaled * -90f - Mathf.Asin(downScaled % 1f) * Mathf.Rad2Deg - angleToControllerAngle, 0);
+        cube.rotation = handleOffsetRotation * Quaternion.Euler(0, - (full90s - partial90 - worldAngleToController), 0);
     }
 }
