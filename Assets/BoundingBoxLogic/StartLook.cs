@@ -1,21 +1,25 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class StartLook : MonoBehaviour
 {
     private enum TestCase
     {
-        MotionController = 0,
+        MotionController,
         Mouse,
         Hand
     }
 
     public Transform cube;
     public Transform rotator;
+    public Transform hand;
 
-    [SerializeField] private TestCase testCase = default(TestCase);
+    [SerializeField] private TestCase testCase;
+    [SerializeField] private float handSpeed = 2f;
+    //[SerializeField] private float testDegree = 15f;
 
-    Vector3 cameraStartPosition;
+    Vector3 handLocalStart;
+    Vector3 cubeUp;
+    Quaternion cubeStartRotation;
 
     //float startOffset;
     float offsetScale;
@@ -24,10 +28,19 @@ public class StartLook : MonoBehaviour
     void Start()
     {
         Vector3 lookPoint = rotator.transform.TransformPoint(Vector3.right * .5f);
-        transform.LookAt(lookPoint);
+        cubeStartRotation = cube.rotation;
+        cubeUp = cube.up;
+        switch (testCase)
+        {
+            case TestCase.Hand:
+                handLocalStart = hand.localPosition;
+                break;
+            default:
+                transform.LookAt(lookPoint);
+                break;
+        }
 
         offsetScale = 1f / Vector3.Distance(cube.position, lookPoint);
-        cameraStartPosition = Camera.main.transform.position;
     }
 
     private void Update()
@@ -49,45 +62,39 @@ public class StartLook : MonoBehaviour
     // TODO
     private void UpdateHandBehaviour()
     {
-        Vector3 cubeToCamera = cube.position - cameraStartPosition;
-        cubeToCamera.y = 0f;
-        Vector3 mouseForward = transform.position - cameraStartPosition;
+        Transform cameraTransform = Camera.main.transform;
+        Vector3 handProjection = hand.localPosition - handLocalStart;
 
-        transform.rotation = Quaternion.LookRotation(mouseForward, Vector3.up);
+        Vector3 handWorldMovement = cameraTransform.TransformDirection(handProjection);
 
-        mouseForward.y = 0f;
+        Vector3 cubeToCamera = Vector3.ProjectOnPlane(cube.position - cameraTransform.position, cubeUp);
 
+        Vector3 right = Vector3.Cross(cubeToCamera.normalized, cubeUp);
+        float extend = Vector3.Dot(handWorldMovement, right);
 
-        float angleAxis = Vector3.SignedAngle(cubeToCamera, mouseForward, cube.up);
-
-        float offsetLength = Mathf.Sin(angleAxis * Mathf.Deg2Rad) * cubeToCamera.magnitude;
-
-        float angleToControllerAngle = Vector3.SignedAngle(cubeToCamera, Vector3.forward, Vector3.up);
-
-        float downScaled = offsetLength * offsetScale;
-
-        cube.rotation = Quaternion.LookRotation(rotator.localPosition, cube.up) * Quaternion.Euler(0, (int)downScaled * -90f - Mathf.Asin(downScaled % 1f) * Mathf.Rad2Deg - angleToControllerAngle, 0);
+        float result = (((int)extend * 90f + Mathf.Asin(extend % 1f) * Mathf.Rad2Deg) * handSpeed);
+        cube.rotation = Quaternion.AngleAxis(result, cubeUp) * cubeStartRotation;
     }
 
     private void UpdateMouseBehaviour()
     { 
-        Vector3 cubeToCamera = Vector3.ProjectOnPlane(cube.position - Camera.main.transform.position, cube.up);
-        Vector3 mouseForward = Vector3.ProjectOnPlane(transform.position - Camera.main.transform.position, cube.up);
+        Vector3 cubeToCamera = Vector3.ProjectOnPlane(cube.position - Camera.main.transform.position, cubeUp);
+        Vector3 mouseForward = Vector3.ProjectOnPlane(transform.position - Camera.main.transform.position, cubeUp);
 
         if (Vector3.Dot(cubeToCamera, mouseForward) <= 0f)
         {
             return;
         }
 
-        float angleAxis = Vector3.SignedAngle(cubeToCamera, mouseForward, cube.up);
+        float angleAxis = Vector3.SignedAngle(cubeToCamera, mouseForward, cubeUp);
 
         float offsetLength = Mathf.Sin(angleAxis * Mathf.Deg2Rad) * cubeToCamera.magnitude;
 
-        float angleToControllerAngle = Vector3.SignedAngle(cubeToCamera, Vector3.forward, Vector3.up);
+        float angleToControllerAngle = Vector3.SignedAngle(cubeToCamera, Camera.main.transform.forward, cubeUp);
 
         float downScaled = offsetLength * offsetScale;
 
-        cube.rotation = Quaternion.LookRotation(rotator.localPosition, cube.up) * Quaternion.Euler(0, (int)downScaled * -90f - Mathf.Asin(downScaled % 1f) * Mathf.Rad2Deg - angleToControllerAngle, 0);
+        cube.rotation = Quaternion.LookRotation(rotator.localPosition, cubeUp) * Quaternion.AngleAxis((int)downScaled * -90f - Mathf.Asin(downScaled % 1f) * Mathf.Rad2Deg - angleToControllerAngle, cubeUp);
     }
 
     private void UpdateControllerBehaviour()
