@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Microsoft.MixedReality.Toolkit.Input;
@@ -79,16 +79,24 @@ namespace Microsoft.MixedReality.Toolkit.UI
         }
 
         /// <summary>
-        /// This enum is used internally to define how an object's bounds are calculated in order to fit the boundingbox
-        /// to it.
+        /// This enum defines what volume type the bound calculation depends on and its priority
+        /// for it.
+        /// RendererOverCollider: Used Renderers for the bounds calculation and Colliders as a fallback
+        /// ColliderOverRenderer: Used Colliders for the bounds calculation and Renderers as a fallback
+        /// ColliderOnly: Omits Renderers and uses Colliders for the bounds calculation exclusively
+        /// ColliderOnly: Omits Colliders and uses Renderers for the bounds calculation exclusively
         /// </summary>
-        private enum BoundsCalculationMethod
+        public enum BoundsCalculationMethod
         {
-            Collider = 0,
-            Colliders,
-            Renderers,
-            MeshFilters
+            RendererOverCollider = 0,
+            ColliderOverRenderer,
+            ColliderOnly,
+            RendererOnly,
         }
+
+        /// <summary>
+        /// This enum defines how the BoundingBox gets activated
+        /// </summary>
         public enum BoundingBoxActivationType
         {
             ActivateOnStart = 0,
@@ -138,6 +146,22 @@ namespace Microsoft.MixedReality.Toolkit.UI
                     {
                         prevBoundsOverride = new Bounds();
                     }
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Defines the volume type and the priority for the bounds calculation")]
+        private BoundsCalculationMethod boundsCalculationMethod = BoundsCalculationMethod.RendererOverCollider;
+        public BoundsCalculationMethod CalculationMethod
+        {
+            get { return boundsCalculationMethod; }
+            set
+            {
+                if (boundsCalculationMethod != value)
+                {
+                    boundsCalculationMethod = value;
                     CreateRig();
                 }
             }
@@ -835,6 +859,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private bool isChildOfTarget = false;
         private static readonly string rigRootName = "rigRoot";
 
+        // Cache for Collider corner points, returned as List from BoundsExtensions
+        private static List<Vector3> colliderCorners = new List<Vector3>();
+
         #endregion
 
 
@@ -974,7 +1001,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         #region MonoBehaviour Methods
 
-        private void Start()
+        private void OnEnable()
         {
             CreateRig();
             CaptureInitialState();
@@ -996,6 +1023,11 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 Active = true;
                 Active = false;
             }
+        }
+
+        private void OnDisable()
+        {
+            DestroyRig();
         }
 
         private void Update()
@@ -1278,15 +1310,18 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private Bounds GetMaxBounds(GameObject g)
         {
             var b = new Bounds();
-            foreach (Renderer r in g.GetComponentsInChildren<Renderer>())
+            Mesh currentMesh;
+            foreach (MeshFilter r in g.GetComponentsInChildren<MeshFilter>())
             {
+                if ((currentMesh = r.sharedMesh) == null) { continue; }
+
                 if (b.size == Vector3.zero)
                 {
-                    b = r.bounds;
+                    b = r.sharedMesh.bounds;
                 }
                 else
                 {
-                    b.Encapsulate(r.bounds);
+                    b.Encapsulate(currentMesh.bounds);
                 }
             }
             return b;
@@ -1516,7 +1551,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private void SetBoundingBoxCollider()
         {
             // Make sure that the bounds of all child objects are up to date before we compute bounds
-            UnityEngine.Physics.SyncTransforms();
+            UnityPhysics.SyncTransforms();
 
             //Collider.bounds is world space bounding volume.
             //Mesh.bounds is local space bounding volume
@@ -1531,158 +1566,121 @@ namespace Microsoft.MixedReality.Toolkit.UI
             {
                 Bounds bounds = GetTargetBounds();
                 cachedTargetCollider = Target.AddComponent<BoxCollider>();
-                if (boundsMethod == BoundsCalculationMethod.Renderers)
-                {
-                    cachedTargetCollider.center = bounds.center;
-                    cachedTargetCollider.size = bounds.size;
-                }
-                else if (boundsMethod == BoundsCalculationMethod.Colliders)
-                {
-                    // bounds.center is in world space, but cachedTargetCollider.center is in local space
-                    cachedTargetCollider.center = Target.transform.InverseTransformPoint(bounds.center);
-                    cachedTargetCollider.size = Target.transform.InverseTransformSize(bounds.size);
-                }
+
+                cachedTargetCollider.center = bounds.center;
+                cachedTargetCollider.size = bounds.size;
             }
 
-            Vector3 scale = cachedTargetCollider.transform.lossyScale;
-            Vector3 invScale = new Vector3(1.0f / scale[0], 1.0f / scale[1], 1.0f / scale[2]);
-            cachedTargetCollider.size += Vector3.Scale(boxPadding, invScale);
+            CalculateBoxPadding();
 
             cachedTargetCollider.EnsureComponent<NearInteractionGrabbable>();
         }
 
-        private Bounds GetTargetBounds()
+        private void CalculateBoxPadding()
         {
-            Bounds bounds = new Bounds();
+            if (boxPadding == Vector3.zero) { return; }
 
-            List<Transform> toExplore = new List<Transform>();
-            for (int i = 0; i < Target.transform.childCount; i++)
-            {
-                var child = Target.transform.GetChild(i);
-                if (!child.name.Equals(rigRootName))
-                {
-                    toExplore.Add(child);
-                }
-            }
-            if (toExplore.Count == 0)
-            {
-                bounds = GetSingleObjectBounds(Target);
-                boundsMethod = BoundsCalculationMethod.Collider;
-                return bounds;
-            }
-            else
-            {
-                for (int i = 0; i < toExplore.Count; ++i)
-                {
-                    var child = toExplore[i];
-                    if (bounds.size == Vector3.zero)
-                    {
-                        bounds = GetSingleObjectBounds(child.gameObject);
-                    }
-                    else
-                    {
-                        Bounds childBounds = GetSingleObjectBounds(child.gameObject);
-                        if (childBounds.size != Vector3.zero)
-                        {
-                            bounds.Encapsulate(childBounds);
-                        }
-                    }
-                }
+            Vector3 scale = cachedTargetCollider.transform.lossyScale;
 
-                if (bounds.size != Vector3.zero)
-                {
-                    boundsMethod = BoundsCalculationMethod.Colliders;
-                    return bounds;
-                }
+            for (int i = 0; i < 3; i++)
+            {
+                if (scale[i] == 0f) { return; }
+
+                scale[i] = 1f / scale[i];
             }
 
-            //simple case: sum of existing colliders
-            Collider[] colliders = Target.GetComponentsInChildren<Collider>();
-            if (colliders.Length > 0)
-            {
-                //Collider.bounds is in world space.
-                bounds = colliders[0].bounds;
-                for (int i = 0; i < colliders.Length; ++i)
-                {
-                    Bounds colliderBounds = colliders[i].bounds;
-                    if (colliderBounds.size != Vector3.zero)
-                    {
-                        bounds.Encapsulate(colliderBounds);
-                    }
-                }
-                if (bounds.size != Vector3.zero)
-                {
-                    boundsMethod = BoundsCalculationMethod.Colliders;
-                    return bounds;
-                }
-            }
-
-            //Renderer bounds is local. Requires transform to global coordinate system.
-            Renderer[] childRenderers = Target.GetComponentsInChildren<Renderer>();
-            if (childRenderers.Length > 0)
-            {
-                bounds = new Bounds();
-                bounds = childRenderers[0].bounds;
-                for (int i = 0; i < childRenderers.Length; ++i)
-                {
-                    bounds.Encapsulate(childRenderers[i].bounds);
-                }
-
-                GetCornerPositionsFromBounds(bounds, ref boundsCorners);
-                for (int c = 0; c < boundsCorners.Length; ++c)
-                {
-                    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    cube.name = c.ToString();
-                    cube.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-                    cube.transform.position = boundsCorners[c];
-                }
-
-                boundsMethod = BoundsCalculationMethod.Renderers;
-                return bounds;
-            }
-
-            MeshFilter[] meshFilters = Target.GetComponentsInChildren<MeshFilter>();
-            if (meshFilters.Length > 0)
-            {
-                //Mesh.bounds is local space bounding volume
-                bounds.size = meshFilters[0].mesh.bounds.size;
-                bounds.center = meshFilters[0].mesh.bounds.center;
-                for (int i = 0; i < meshFilters.Length; ++i)
-                {
-                    bounds.Encapsulate(meshFilters[i].mesh.bounds);
-                }
-                if (bounds.size != Vector3.zero)
-                {
-                    bounds.center = Target.transform.position;
-                    boundsMethod = BoundsCalculationMethod.MeshFilters;
-                    return bounds;
-                }
-            }
-
-            BoxCollider boxCollider = Target.AddComponent<BoxCollider>();
-            bounds = boxCollider.bounds;
-            Destroy(boxCollider);
-            boundsMethod = BoundsCalculationMethod.Collider;
-            return bounds;
+            cachedTargetCollider.size += Vector3.Scale(boxPadding, scale);
         }
 
-        private Bounds GetSingleObjectBounds(GameObject gameObject)
+        private Bounds GetTargetBounds()
         {
-            Bounds bounds = new Bounds(Vector3.zero, Vector3.zero);
-            BoxCollider boxCollider;
-            boxCollider = gameObject.GetComponent<BoxCollider>();
-            if (boxCollider == null)
+            KeyValuePair<Transform, Collider> colliderByTransform;
+            KeyValuePair<Transform, Bounds> rendererBoundsByTransform;
+            colliderCorners.Clear();
+
+            // Collect all Transforms except for the rigRoot(s) transform structure(s)
+            // Its possible we have two rigRoots here, the one about to be deleted and the new one
+            // Since those have the gizmo structure childed, be need to ommit them completely in the calculation of the bounds
+            // This can only happen by name unless there is a better idea of tracking the rigRoot that needs destruction
+
+            List<Transform> childTransforms = new List<Transform>();
+            childTransforms.Add(Target.transform);
+
+            foreach (Transform childTransform in Target.transform)
             {
-                boxCollider = gameObject.AddComponent<BoxCollider>();
-                bounds = boxCollider.bounds;
-                DestroyImmediate(boxCollider);
-            }
-            else
-            {
-                bounds = boxCollider.bounds;
+                if (childTransform.name.Equals(rigRootName)) { continue; }
+                childTransforms.AddRange(childTransform.GetComponentsInChildren<Transform>());
             }
 
-            return bounds;
+            // Iterate transforms and collect bound volumes
+
+            foreach (Transform childTransform in childTransforms)
+            {
+                if (childTransform == rigRoot) { continue; }
+
+                if (boundsCalculationMethod != BoundsCalculationMethod.RendererOnly)
+                {
+                    Collider collider = childTransform.GetComponent<Collider>();
+                    colliderByTransform = collider != null ? new KeyValuePair<Transform, Collider>(childTransform, collider) : new KeyValuePair<Transform, Collider>();
+                }
+
+                if (boundsCalculationMethod != BoundsCalculationMethod.ColliderOnly)
+                {
+                    MeshFilter meshFilter = childTransform.GetComponent<MeshFilter>();
+                    rendererBoundsByTransform = meshFilter != null && meshFilter.sharedMesh != null ? new KeyValuePair<Transform, Bounds>(childTransform, meshFilter.sharedMesh.bounds) : new KeyValuePair<Transform, Bounds>();
+                }
+
+                // Encapsulate the collider bounds if criteria match
+
+                if (boundsCalculationMethod == BoundsCalculationMethod.ColliderOnly ||
+                    boundsCalculationMethod == BoundsCalculationMethod.ColliderOverRenderer)
+                {
+                    if (AddColliderBoundsToTarget(colliderByTransform)) { continue; }
+                    if (boundsCalculationMethod == BoundsCalculationMethod.ColliderOnly) { continue; }
+                }
+
+                // Encapsulate the renderer bounds if criteria match
+
+                if (boundsCalculationMethod != BoundsCalculationMethod.ColliderOnly)
+                {
+                    if (AddRendererBoundsToTarget(rendererBoundsByTransform)) { continue; }
+                    if (boundsCalculationMethod == BoundsCalculationMethod.RendererOnly) { continue; }
+                }
+
+                // Do the collider for the one case that we chose RendererOverCollider and did not find a renderer
+                AddColliderBoundsToTarget(colliderByTransform);
+            }
+
+            if (colliderCorners.Count == 0) { return new Bounds(); }
+
+            Transform targetTransform = Target.transform;
+
+            Bounds finalBounds = new Bounds(targetTransform.InverseTransformPoint(colliderCorners[0]), Vector3.zero);
+
+            for (int i = 1; i < colliderCorners.Count; i++)
+            {
+                finalBounds.Encapsulate(targetTransform.InverseTransformPoint(colliderCorners[i]));
+            }
+
+            return finalBounds;
+        }
+
+        private bool AddRendererBoundsToTarget(KeyValuePair<Transform, Bounds> rendererBoundsByTarget)
+        {
+            if (rendererBoundsByTarget.Key == null) { return false; }
+
+            Vector3[] cornersToWorld = null;
+            rendererBoundsByTarget.Value.GetCornerPositions(rendererBoundsByTarget.Key, ref cornersToWorld);
+            colliderCorners.AddRange(cornersToWorld);
+            return true;
+    }
+
+        private bool AddColliderBoundsToTarget(KeyValuePair<Transform, Collider> colliderByTransform)
+        {
+            if (colliderByTransform.Key == null) { return false; }
+
+            BoundsExtensions.GetColliderBoundsPoints(colliderByTransform.Value, colliderCorners, 0);
+            return true;
         }
 
         private void SetMaterials()
