@@ -20,6 +20,7 @@ public class StartLook : MonoBehaviour
     Vector3 handLocalStart;
     Vector3 cubeUp;
     Quaternion cubeStartRotation;
+    float controllerStartAngleOffset;
 
     //float startOffset;
     float offsetScale;
@@ -37,6 +38,14 @@ public class StartLook : MonoBehaviour
                 break;
             default:
                 transform.LookAt(lookPoint);
+                Vector3 cubeToController = Vector3.ProjectOnPlane(cube.position - transform.position, cubeUp);
+                Vector3 controllerForward = Vector3.ProjectOnPlane(transform.forward, cubeUp);
+
+                if (Vector3.Dot(cubeToController, controllerForward) > 0f)
+                {
+                    controllerStartAngleOffset = Vector3.SignedAngle(cubeToController, controllerForward, cubeUp);
+                }
+                
                 break;
         }
 
@@ -99,24 +108,24 @@ public class StartLook : MonoBehaviour
 
     private void UpdateControllerBehaviour()
     {
-        Vector3 cubeToController = Vector3.ProjectOnPlane(cube.position - transform.position, cube.up);
-        Vector3 controllerForward = Vector3.ProjectOnPlane(transform.forward, cube.up);
+        Vector3 cubeToController = Vector3.ProjectOnPlane(cube.position - transform.position, cubeUp);
+        Vector3 controllerForward = Vector3.ProjectOnPlane(transform.forward, cubeUp);
 
         if (Vector3.Dot(cubeToController, controllerForward) <= 0f)
         {
             return;
         }
 
-        float angleAxis = Vector3.SignedAngle(cubeToController, controllerForward, cube.up);
+        float angleAxis = Vector3.SignedAngle(cubeToController, controllerForward, cubeUp);
 
-        float worldAngleToController = Vector3.SignedAngle(cubeToController, Vector3.forward, Vector3.up);
+        float worldAngleToController = Vector3.SignedAngle(cubeToController, Camera.main.transform.forward, cubeUp);
 
         float offsetLength = Mathf.Sin(angleAxis * Mathf.Deg2Rad) * cubeToController.magnitude * offsetScale;
 
-        Quaternion handleOffsetRotation = Quaternion.LookRotation(rotator.localPosition, cube.up);
+        Quaternion handleOffsetRotation = Quaternion.LookRotation(rotator.localPosition, cubeUp);
         float full90s = (int)offsetLength * 90f;
         float partial90 = Mathf.Asin(offsetLength % 1f) * Mathf.Rad2Deg;
 
-        cube.rotation = handleOffsetRotation * Quaternion.Euler(0, - (full90s - partial90 - worldAngleToController), 0);
+        cube.rotation = handleOffsetRotation * Quaternion.AngleAxis(- (full90s + partial90 + worldAngleToController), cubeUp);
     }
 }
