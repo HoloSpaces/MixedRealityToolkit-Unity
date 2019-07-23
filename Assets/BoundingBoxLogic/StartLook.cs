@@ -23,7 +23,6 @@ public class StartLook : MonoBehaviour
     Vector3 lookPoint;
     float initialLookPointDistance;
     Quaternion inititalCubeRotation;
-    Quaternion rotatorRotation;
     Vector3 tipStartPosition;
     float controllerStartOffset = 0f;
 
@@ -32,6 +31,7 @@ public class StartLook : MonoBehaviour
     float initialOrthogonalExtend;
     float initialControllerTilt;
     float initialControllerToCubeAngle;
+    Quaternion initialControllerToHandleRotation;
 
     // Start is called before the first frame update
     void Start()
@@ -39,12 +39,12 @@ public class StartLook : MonoBehaviour
         lookPoint = rotator.transform.position;
         initialLookPointDistance = Vector3.Distance(lookPoint, cube.position);
         inititalCubeRotation = cube.rotation;
-        rotatorRotation = Quaternion.LookRotation(rotator.localPosition, Vector3.up);
         tipStartPosition = beamTip.position;
         cubeUp = cube.up;
         offsetScale = 1f / Vector3.Distance(cube.position, lookPoint);
-
-
+        Vector3 flattendControllerInCube = cube.InverseTransformPoint(transform.position);
+        flattendControllerInCube.y = 0;
+        initialControllerToHandleRotation = Quaternion.FromToRotation(flattendControllerInCube, rotator.localPosition);
         switch (testCase)
         {
             case TestCase.Hand:
@@ -58,7 +58,7 @@ public class StartLook : MonoBehaviour
                 initialControllerTilt = Vector3.SignedAngle(controllerToCube, controllerForward, cubeUp);
                 cubeForward = cube.forward;
                 initialControllerToCubeAngle = Vector3.SignedAngle(controllerToCube, cubeForward, cubeUp);
-                initialOrthogonalExtend = Mathf.Sin(initialControllerTilt * Mathf.Deg2Rad) * controllerToCube.magnitude * offsetScale;
+                initialOrthogonalExtend = Mathf.Tan(initialControllerTilt * Mathf.Deg2Rad) * controllerToCube.magnitude * offsetScale;
                 break;
         }
 
@@ -168,11 +168,11 @@ public class StartLook : MonoBehaviour
         float controllerTiltAngle = Vector3.SignedAngle(controllerToCube, controllerForward, cubeUp);
         float controllerToCubeAngle = Vector3.SignedAngle(controllerToCube, cubeForward, cubeUp);
 
-        float orthogonalExtend = Mathf.Sin(controllerTiltAngle * Mathf.Deg2Rad) * controllerToCube.magnitude * offsetScale;
-
         int upsideDown = Vector3.Dot(Vector3.up, cubeUp) >= 0 ? 1 : -1;
 
         Vector3 cubeToBeam = Vector3.ProjectOnPlane(beamTip.position - cube.position, cubeUp);
+
+        float orthogonalExtend = Mathf.Tan(controllerTiltAngle * Mathf.Deg2Rad) * controllerToCube.magnitude * offsetScale;
 
         Quaternion rotationModel;
 
@@ -192,10 +192,10 @@ public class StartLook : MonoBehaviour
             float partial90 = Mathf.Asin(orthogonalExtend % 1f) * Mathf.Rad2Deg;
             float frontAngle = full90s + partial90;
 
-            Debug.Log($"{orthogonalExtend < initialLookPointDistance} {full90s} {partial90} {upsideDown} {otherSideOfBox} {initialControllerTilt}");
-            float sideAngle = frontAngle - initialControllerTilt + (controllerToCubeAngle - initialControllerToCubeAngle);
-            sideAngle += otherSideOfBox == 1f ? 180f : 0f;
-            rotationModel = Quaternion.AngleAxis(sideAngle * otherSideOfBox, cubeUp) * inititalCubeRotation;
+            float sideAngle = frontAngle + controllerToCubeAngle - initialControllerToCubeAngle;// - initialControllerToCubeAngle;// + (controllerToCubeAngle - initialControllerToCubeAngle);
+            Debug.Log($"{orthogonalExtend} {frontAngle} {controllerToCubeAngle} {initialControllerToCubeAngle} {initialControllerToHandleRotation.eulerAngles}");
+            //sideAngle += otherSideOfBox == 1f ? 180f : 0f;
+            rotationModel = Quaternion.AngleAxis(sideAngle * otherSideOfBox, cubeUp) * inititalCubeRotation;// * inititalCubeRotation;
         }
 
         cube.rotation = rotationModel;
