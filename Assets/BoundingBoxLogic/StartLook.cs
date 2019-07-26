@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 public class StartLook : MonoBehaviour
 {
@@ -63,7 +64,6 @@ public class StartLook : MonoBehaviour
 
                 initialControllerTilt = Vector3.SignedAngle(controllerToCube, controllerForward, cubeUp);
                 initialOrthogonalExtend = Mathf.Tan(initialControllerTilt * Mathf.Deg2Rad) * controllerToCube.magnitude * offsetScale;
-                Debug.Log(Mathf.Atan(initialControllerTilt * Mathf.Deg2Rad) * controllerToCube.magnitude * offsetScale);
                 cubeForward = cube.forward;
                 initialControllerToCubeAngle = Vector3.SignedAngle(controllerToCube, cubeForward, cubeUp);
                 //initialControllerOrthogonalExtend = Mathf.Tan(initialControllerToCubeAngle * Mathf.Deg2Rad) * .5f;
@@ -164,11 +164,14 @@ public class StartLook : MonoBehaviour
     }
 
     int otherSideOfBox = -1;
+    float correctAngle;
+    float controllerTiltAngle;
+    Vector3 controllerToCube;
     private void UpdateControllerBehaviour2()
     {
         //transform.LookAt(cube.position, cube.up);
 
-        Vector3 controllerToCube = cube.position - transform.position;
+        controllerToCube = cube.position - transform.position;
         Vector3 crossRight = Vector3.Cross(cubeUp, controllerToCube.normalized);
         Vector3 crossUp = Vector3.Cross(controllerToCube.normalized, crossRight);
 
@@ -181,9 +184,9 @@ public class StartLook : MonoBehaviour
         Debug.DrawRay(cube.position - crossRight * 2.5f - crossUp * 2.5f + crossUp * 5f, crossRight * 5f);
 
         Debug.DrawRay(transform.position, controllerToCube);
-        Debug.DrawRay(transform.position, controllerForward * controllerToCube.magnitude);
+        Debug.DrawRay(transform.position, controllerForward);
 
-        float controllerTiltAngle = Vector3.SignedAngle(controllerToCube, controllerForward, crossUp);
+        controllerTiltAngle = Vector3.SignedAngle(controllerToCube, controllerForward, crossUp);
         float controllerToCubeAngle = Vector3.SignedAngle(Vector3.ProjectOnPlane(controllerToCube, cubeUp), cubeForward, cubeUp);
 
         int upsideDown = Vector3.Dot(Vector3.up, cubeUp) >= 0 ? 1 : -1;
@@ -193,12 +196,14 @@ public class StartLook : MonoBehaviour
 
         float orthogonalExtend = Mathf.Tan(controllerTiltAngle * Mathf.Deg2Rad) * controllerToCube.magnitude * offsetScale;
 
+        bool InCircleRange = CalculateVectorCircleContactAngle(controllerTiltAngle, controllerToCube.magnitude, .5f, out correctAngle);
+
         Quaternion rotationModel;
 
-        if (Mathf.Abs(orthogonalExtend) < initialLookPointDistance * 2f)
-         otherSideOfBox = transform.InverseTransformDirection(cubeToBeam).z >= 0 ? 1 : -1;
+        if (InCircleRange)
+            otherSideOfBox = transform.InverseTransformDirection(cubeToBeam).z >= 0 ? 1 : -1;
 
-        if (Mathf.Abs(orthogonalExtend) < initialLookPointDistance * 2f && cubeToBeamTited.magnitude < initialLookPointDistance)
+        if (InCircleRange && cubeToBeamTited.magnitude < initialLookPointDistance)
         {
             //otherSideOfBox = transform.InverseTransformDirection(cubeToBeam).z >= 0 ? 1 : -1;
             rotationModel = Quaternion.LookRotation(-cubeToBeam, cubeUp);// * inititalCubeRotation;
@@ -208,18 +213,46 @@ public class StartLook : MonoBehaviour
         {
             //orthogonalExtend -= initialOrthogonalExtend;
             float full90s = (int)orthogonalExtend * 90;
-            float partial90 = Mathf.Asin(orthogonalExtend % 1f) * Mathf.Rad2Deg;
+            float partial90 = correctAngle;
             float frontAngle = full90s + partial90;
 
             //float floatInitialFrontAngle = (int)initialOrthogonalExtend * 90 + Mathf.Asin(initialOrthogonalExtend % 1f) * Mathf.Rad2Deg;
             //float initialcontrollerToCube = (int)initialControllerOrthogonalExtend * 90 + Mathf.Asin(initialControllerOrthogonalExtend % 1f) * Mathf.Rad2Deg;
 
             float sideAngle = frontAngle - otherSideOfBox * controllerToCubeAngle - initialControllerToCubeAngle;// - initialControllerToCubeAngle;// + (controllerToCubeAngle - initialControllerToCubeAngle);
-            Debug.Log($"{orthogonalExtend} {frontAngle} {controllerToCubeAngle} {initialControllerToCubeAngle} {initialControllerToHandleRotation.eulerAngles} {otherSideOfBox}");
+            Debug.Log($"{correctAngle} {orthogonalExtend} {frontAngle} {controllerToCubeAngle} {initialControllerToCubeAngle} {initialControllerToHandleRotation.eulerAngles} {otherSideOfBox}");
             sideAngle += otherSideOfBox == 1f ? 180f : 0f;
-            rotationModel = Quaternion.AngleAxis(sideAngle * otherSideOfBox, cubeUp) * inititalCubeRotation * initialControllerToHandleRotation;// * inititalCubeRotation;
+            rotationModel = Quaternion.AngleAxis(correctAngle * otherSideOfBox, cubeUp) * inititalCubeRotation * initialControllerToHandleRotation;// * inititalCubeRotation;
         }
 
         cube.rotation = rotationModel;
+    }
+
+    private bool CalculateVectorCircleContactAngle(float outerAngle, float hypotenuse, float opposite, out float resultAngle)
+    {
+        float sin = Mathf.Sin(outerAngle * Mathf.Deg2Rad) * hypotenuse / opposite;
+        if (Mathf.Abs(sin) > 1)
+        {
+            resultAngle = 90f;
+            return false;
+        }
+        resultAngle = Mathf.Asin(sin) * Mathf.Rad2Deg - outerAngle;
+        return true;
+    }
+
+    private void OnDrawGizmos()
+    {
+        Handles.DrawWireDisc(cube.position, cubeUp, .5f);
+        Handles.DrawLine(transform.position, cube.position - transform.position);
+        Handles.DrawSolidArc(transform.position, cubeUp, cube.position - transform.position, controllerTiltAngle, .3f);
+        Handles.DrawLine(transform.position, transform.position + Quaternion.Euler(0, controllerTiltAngle, 0) * Vector3.forward * controllerToCube.magnitude);
+
+        float correctExtend;
+        if (!CalculateVectorCircleContactAngle(controllerTiltAngle, controllerToCube.magnitude, .5f, out correctExtend))
+            return;
+        Handles.Label(Vector3.up * .1f, correctExtend.ToString());
+        Handles.Label(Vector3.up * .3f, (180f - correctExtend).ToString());
+        Handles.DrawSolidArc(Vector3.zero, Vector3.up, Vector3.back, -(correctExtend - controllerTiltAngle), .3f);
+        Handles.DrawLine(Vector3.zero, Quaternion.Euler(0, -(correctExtend - controllerTiltAngle), 0) * Vector3.back * .5f);
     }
 }
