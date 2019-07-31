@@ -2,12 +2,10 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
+namespace Microsoft.MixedReality.Toolkit.UI
 {
     public class InteractableColorChildrenTheme : InteractableShaderTheme
     {
@@ -65,7 +63,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
         {
             InteractableThemePropertyValue color = new InteractableThemePropertyValue();
 
-            string propId = property.GetShaderPropId();
+            int propId = property.GetShaderPropertyId();
 
             if (propertyBlocks.Count > 0)
             {
@@ -80,7 +78,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
         {
             Color color = Color.Lerp(property.StartValue.Color, property.Values[index].Color, percentage);
 
-            string propId = property.GetShaderPropId();
+            int propId = property.GetShaderPropertyId();
 
             for (int i = 0; i < propertyBlocks.Count; i++)
             {

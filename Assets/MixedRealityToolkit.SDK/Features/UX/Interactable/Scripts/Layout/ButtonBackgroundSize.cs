@@ -1,15 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Layout
+namespace Microsoft.MixedReality.Toolkit.UI
 {
     /// <summary>
     /// The base layout component for a button or UI elements - easily build UI with Unity Primitives.
-    /// Helps to create consistancy by using values that scale to a designer's 2D layout program.
+    /// Helps to create consistency by using values that scale to a designer's 2D layout program.
     /// Based on a ratio of 2048 pixels for 1 meter of surface area.
     /// 
     /// Use case:
@@ -20,11 +18,12 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Layout
     /// The designer or engineer can take pixel based redlines and create UI at 1:1 scale.
     /// </summary>
     [ExecuteInEditMode]
+    [System.Obsolete("This component is no longer supported", true)]
     public class ButtonBackgroundSize : MonoBehaviour
     {
         /// <summary>
         /// A scale factor for button layouts, default is based on 2048 pixels to 1 meter.
-        /// Similar to values used in designer and 2D art programs and helps create consistancy across teams.
+        /// Similar to values used in designer and 2D art programs and helps create consistency across teams.
         /// </summary>
         [Tooltip("A pixel to Unity unit conversion, Default: 2048x2048 pixels covers a 1x1 Unity Unit or default primitive size")]
         [SerializeField]
@@ -90,6 +89,11 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Layout
         {
             Vector3 newScale = new Vector3(ItemSize.x / BasePixelScale, ItemSize.y / BasePixelScale, ItemSize.z / BasePixelScale);
             transform.localScale = newScale;
+        }
+
+        private void Awake()
+        {
+            Debug.LogError(this.GetType().Name + " is deprecated");
         }
 
         // Update is called once per frame

@@ -3,17 +3,28 @@
 
 using UnityEngine;
 using UnityEditor;
-using Microsoft.MixedReality.Toolkit.SDK.UX.Collections;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.Inspectors.UX.Collections
+namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
 {
     [CustomEditor( typeof(BaseObjectCollection), true )]
-    public class BaseCollectionInspector : Editor
+    public class BaseCollectionInspector : UnityEditor.Editor
     {
-        public override void OnInspectorGUI()
+        private SerializedProperty ignoreInactiveTransforms;
+        private SerializedProperty sortType;
+
+        protected virtual void OnEnable()
         {
-            // Draw the default
-            base.OnInspectorGUI();
+            ignoreInactiveTransforms = serializedObject.FindProperty("ignoreInactiveTransforms");
+            sortType = serializedObject.FindProperty("sortType");
+        }
+
+        sealed public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+            EditorGUILayout.PropertyField(ignoreInactiveTransforms);
+            EditorGUILayout.PropertyField(sortType);
+            OnInspectorGUIInsertion();
+            serializedObject.ApplyModifiedProperties();
 
             // Place the button at the bottom
             BaseObjectCollection collection = (BaseObjectCollection)target;
@@ -22,5 +33,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Inspectors.UX.Collections
                 collection.UpdateCollection();
             }
         }
+
+        protected virtual void OnInspectorGUIInsertion() { }
     }
 }

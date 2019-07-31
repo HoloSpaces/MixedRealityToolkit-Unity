@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Utilities;
-using Microsoft.MixedReality.Toolkit.Core.Utilities;
+using Microsoft.MixedReality.Toolkit.Input;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
+namespace Microsoft.MixedReality.Toolkit.Utilities.Solvers
 {
     /// <summary>
-    /// This class handles the solver components that are attached to this <see cref="GameObject"/>
+    /// This class handles the solver components that are attached to this <see href="https://docs.unity3d.com/ScriptReference/GameObject.html">GameObject</see>
     /// </summary>
     public class SolverHandler : ControllerFinder
     {
@@ -30,6 +29,23 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
                     trackedObjectToReference = value;
                     RefreshTrackedObject();
                 }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("When using the hand to calculate position and orientation, use this specific joint.")]
+        private TrackedHandJoint trackedHandJoint = TrackedHandJoint.Palm;
+
+        /// <summary>
+        /// When using the hand to calculate position and orientation, use this specific joint.
+        /// </summary>
+        public TrackedHandJoint TrackedHandJoint
+        {
+            get { return trackedHandJoint; }
+            set
+            {
+                trackedHandJoint = value;
+                RefreshTrackedObject();
             }
         }
 
@@ -68,7 +84,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
         }
 
         [SerializeField]
-        [Tooltip("Manual override for TrackedObjectToReference if you want to use a scene object. Leave empty if you want to use head or motion-tracked controllers.")]
+        [Tooltip("Manual override for TrackedObjectToReference if you want to use a scene object. Leave empty if you want to use head, motion-tracked controllers, or motion-tracked hands.")]
         private Transform transformTarget;
 
         /// <summary>
@@ -123,7 +139,11 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
         protected readonly List<Solver> solvers = new List<Solver>();
 
         private float lastUpdateTime;
+
         private GameObject transformWithOffset;
+
+        private IMixedRealityHandJointService HandJointService => handJointService ?? (handJointService = (InputSystem as IMixedRealityDataProviderAccess)?.GetDataProvider<IMixedRealityHandJointService>());
+        private IMixedRealityHandJointService handJointService = null;
 
         #region MonoBehaviour Implementation
 
@@ -131,7 +151,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
         {
             GoalScale = Vector3.one;
             AltScale = new Vector3Smoothed(Vector3.one, 0.1f);
-            DeltaTime = 0.0f;
+            DeltaTime = Time.deltaTime;
+            lastUpdateTime = Time.realtimeSinceStartup;
 
             solvers.AddRange(GetComponents<Solver>());
         }
@@ -139,9 +160,13 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
         private void Start()
         {
             // TransformTarget overrides TrackedObjectToReference
-            if (!transformTarget)
+            if (transformTarget == null)
             {
                 AttachToNewTrackedObject();
+            }
+            else if (RequiresOffset)
+            {
+                TrackTransform(transformTarget);
             }
         }
 
@@ -155,13 +180,18 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
         {
             if (UpdateSolvers)
             {
+                //Before calling solvers, update goal to be the transform so that working and transform will match
+                GoalPosition = transform.position;
+                GoalRotation = transform.rotation;
+                GoalScale = transform.localScale;
+
                 for (int i = 0; i < solvers.Count; ++i)
                 {
                     Solver solver = solvers[i];
 
-                    if (solver.enabled)
+                    if (solver != null && solver.enabled)
                     {
-                        solver.SolverUpdate();
+                        solver.SolverUpdateEntry();
                     }
                 }
             }
@@ -176,7 +206,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
 
         protected override void OnControllerFound()
         {
-            if (!transformTarget)
+            if (transformTarget == null)
             {
                 TrackTransform(ControllerTransform);
             }
@@ -222,12 +252,27 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
                 case TrackedObjectType.MotionControllerRight:
                     Handedness = Handedness.Right;
                     break;
+                case TrackedObjectType.HandJointLeft:
+                    // Set to None, so the underlying ControllerFinder doesn't attach to a controller.
+                    // TODO: Make this more generic / configurable for hands vs controllers. Also resolve the duplicate Handedness variables.
+                    Handedness = Handedness.None;
+                    TrackTransform(RequestEnableHandJoint(Handedness.Left));
+                    break;
+                case TrackedObjectType.HandJointRight:
+                    Handedness = Handedness.None;
+                    TrackTransform(RequestEnableHandJoint(Handedness.Right));
+                    break;
             }
         }
 
         private void TrackTransform(Transform newTrackedTransform)
         {
             transformTarget = RequiresOffset ? MakeOffsetTransform(newTrackedTransform) : newTrackedTransform;
+        }
+
+        public Transform RequestEnableHandJoint(Handedness handedness)
+        {
+            return HandJointService?.RequestJointTransform(trackedHandJoint, handedness);
         }
 
         private Transform MakeOffsetTransform(Transform parentTransform)
@@ -240,7 +285,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.Utilities.Solvers
 
             transformWithOffset.transform.localPosition = Vector3.Scale(AdditionalOffset, transformWithOffset.transform.localScale);
             transformWithOffset.transform.localRotation = Quaternion.Euler(AdditionalRotation);
-            transformWithOffset.name = string.Format("{0} on {1} with offset {2}, {3}", gameObject.name, TrackedObjectToReference.ToString(), AdditionalOffset, AdditionalRotation);
+            transformWithOffset.name = string.Format("{0} on {1} with offset {2}, {3}", gameObject.name, transformTarget.ToString(), AdditionalOffset, AdditionalRotation);
             return transformWithOffset.transform;
         }
     }

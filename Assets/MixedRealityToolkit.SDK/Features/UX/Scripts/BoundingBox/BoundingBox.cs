@@ -1,29 +1,28 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Devices;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Utilities;
-using Microsoft.MixedReality.Toolkit.Core.EventDatum.Input;
-using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem;
-using Microsoft.MixedReality.Toolkit.SDK.Input.Handlers;
-using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem.Handlers;
-using Microsoft.MixedReality.Toolkit.Core.Services;
+using Microsoft.MixedReality.Toolkit.Input;
+using Microsoft.MixedReality.Toolkit.Utilities;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Serialization;
+using UnityPhysics = UnityEngine.Physics;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX
+namespace Microsoft.MixedReality.Toolkit.UI
 {
-    public class BoundingBox : BaseFocusHandler,
-        IMixedRealityInputHandler,
-        IMixedRealityInputHandler<MixedRealityPose>,
-        IMixedRealityPointerHandler,
-        IMixedRealitySourceStateHandler
+    public class BoundingBox : MonoBehaviour,
+        IMixedRealitySourceStateHandler,
+        IMixedRealityFocusChangedHandler,
+        IMixedRealityFocusHandler
     {
         #region Enums
+
         /// <summary>
         /// Enum which describes how an object's boundingbox is to be flattened.
         /// </summary>
-        private enum FlattenModeType
+        public enum FlattenModeType
         {
             DoNotFlatten = 0,
             /// <summary>
@@ -48,7 +47,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
         /// Enum which describes whether a boundingbox handle which has been grabbed, is 
         /// a Rotation Handle (sphere) or a Scale Handle( cube)
         /// </summary>
-        private enum HandleType
+        public enum HandleType
         {
             None = 0,
             Rotation,
@@ -63,7 +62,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
         /// Wireframe refers to the thin linkage between the handles. When the handles are invisible
         /// the wireframe looks like an outline box around an object.
         /// </remarks> 
-        private enum WireframeType
+        public enum WireframeType
         {
             Cubic = 0,
             Cylindrical
@@ -90,81 +89,447 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
             Renderers,
             MeshFilters
         }
+        public enum BoundingBoxActivationType
+        {
+            ActivateOnStart = 0,
+            ActivateByProximity,
+            ActivateByPointer,
+            ActivateByProximityAndPointer,
+            ActivateManually
+        }
+
+        private enum HandleProximityState
+        {
+            FullsizeNoProximity = 0,
+            MediumProximity,
+            CloseProximity
+        }
 
         /// <summary>
-        /// This enum defines how a particular controller rotates an object when a Rotate handle has been grabbed.
+        /// This enum defines the type of collider in use when a rotation handle prefab is provided.
         /// </summary>
-        /// <remarks>
-        /// a Controller feels more natural when rotation of the controller rotates the object.
-        /// the wireframe looks like an outline box around an object.
-        /// </remarks> 
-        private enum HandleMoveType
+        public enum RotationHandlePrefabCollider
         {
-            Ray = 0,
-            Point
+            Sphere,
+            Box
         }
         #endregion Enums
 
-        #region Serialized Fields
-        [Header("Bounds Calculation")]
+
+        #region Serialized Fields and Properties
+        [SerializeField]
+        [Tooltip("The object that the bounding box rig will be modifying.")]
+        private GameObject targetObject;
+
         [Tooltip("For complex objects, automatic bounds calculation may not behave as expected. Use an existing Box Collider (even on a child object) to manually determine bounds of Bounding Box.")]
         [SerializeField]
-        private BoxCollider boxColliderToUse = null;
+        [FormerlySerializedAs("BoxColliderToUse")]
+        private BoxCollider boundsOverride = null;
+        public BoxCollider BoundsOverride
+        {
+            get { return boundsOverride; }
+            set
+            {
+                if (boundsOverride != value)
+                {
+                    boundsOverride = value;
+
+                    if (boundsOverride == null)
+                    {
+                        prevBoundsOverride = new Bounds();
+                    }
+                    CreateRig();
+                }
+            }
+        }
 
         [Header("Behavior")]
         [SerializeField]
-        private bool activateOnStart = false;
-
-        [SerializeField]
-        private float scaleMaximum = 2.0f;
-
-        [SerializeField]
-        private float scaleMinimum = 0.2f;
-
-        [Header("Wireframe")]
-        [SerializeField]
-        private bool wireframeOnly = false;
-
-        /// <summary>
-        /// Public Property that displays simple wireframe around an object with no scale or rotate handles.
-        /// </summary>
-        /// <remarks>
-        /// this is useful when outlining an object without being able to edit it is desired.
-        /// </remarks>
-        public bool WireframeOnly
+        private BoundingBoxActivationType activation = BoundingBoxActivationType.ActivateOnStart;
+        public BoundingBoxActivationType BoundingBoxActivation
         {
-            get { return wireframeOnly; }
+            get { return activation; }
             set
             {
-                if (wireframeOnly != value)
+                if (activation != value)
                 {
-                    wireframeOnly = value;
+                    activation = value;
                     ResetHandleVisibility();
                 }
             }
         }
 
         [SerializeField]
-        private Vector3 wireframePadding = Vector3.zero;
-
+        [Obsolete("Use a TransformScaleHandler script rather than setting minimum on BoundingBox directly", false)]
+        [Tooltip("Minimum scaling allowed relative to the initial size")]
+        private float scaleMinimum = 0.2f;
         [SerializeField]
+        [Obsolete("Use a TransformScaleHandler script rather than setting maximum on BoundingBox directly")]
+        [Tooltip("Maximum scaling allowed relative to the initial size")]
+        private float scaleMaximum = 2.0f;
+
+
+        /// <summary>
+        /// Public property for the scale minimum, in the target's local scale.
+        /// Set this value with SetScaleLimits.
+        /// </summary>
+        [Obsolete("Use a TransformScaleHandler.ScaleMinimum as it is the authoritative value for min scale")]
+        public float ScaleMinimum
+        {
+            get
+            {
+                if (scaleHandler != null)
+                {
+                    return scaleHandler.ScaleMinimum;
+                }
+                return 0.0f;
+            }
+        }
+
+        /// <summary>
+        /// Public property for the scale maximum, in the target's local scale.
+        /// Set this value with SetScaleLimits.
+        /// </summary>
+        [Obsolete("Use a TransformScaleHandler.ScaleMinimum as it is the authoritative value for max scale")]
+        public float ScaleMaximum
+        {
+            get
+            {
+                if (scaleHandler != null)
+                {
+                    return scaleHandler.ScaleMaximum;
+                }
+                return 0.0f;            }
+        }
+
+        [Header("Box Display")]
+        [SerializeField]
+        [Tooltip("Flatten bounds in the specified axis or flatten the smallest one if 'auto' is selected")]
         private FlattenModeType flattenAxis = FlattenModeType.DoNotFlatten;
+        public FlattenModeType FlattenAxis
+        {
+            get { return flattenAxis; }
+            set
+            {
+                if (flattenAxis != value)
+                {
+                    flattenAxis = value;
+                    CreateRig();
+                }
+            }
+        }
 
         [SerializeField]
+        [Tooltip("When an axis is flattened what value to set that axis's scale to for display.")]
+        private float flattenAxisDisplayScale = 0.0f;
+
+        /// <summary>
+        /// When an axis is flattened what value to set that axis's scale to for display.
+        /// </summary>
+        public float FlattenAxisDisplayScale
+        {
+            get { return flattenAxisDisplayScale; }
+            set
+            {
+                if (flattenAxisDisplayScale != value)
+                {
+                    flattenAxisDisplayScale = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [FormerlySerializedAs("wireframePadding")]
+        [Tooltip("Extra padding added to the actual Target bounds")]
+        private Vector3 boxPadding = Vector3.zero;
+        public Vector3 BoxPadding
+        {
+            get { return boxPadding; }
+            set
+            {
+                if (Vector3.Distance(boxPadding, value) > float.Epsilon)
+                {
+                    boxPadding = value;
+                    CreateRig();
+                }
+            }
+        }
+        [SerializeField]
+        [Tooltip("Material used to display the bounding box. If set to null no bounding box will be displayed")]
+        private Material boxMaterial = null;
+        public Material BoxMaterial
+        {
+            get { return boxMaterial; }
+            set
+            {
+                if (boxMaterial != value)
+                {
+                    boxMaterial = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        public List<GameObject> GetCorner(int v)
+        {
+            throw new NotImplementedException();
+        }
+
+        [SerializeField]
+        [Tooltip("Material used to display the bounding box when grabbed. If set to null no change will occur when grabbed.")]
+        private Material boxGrabbedMaterial = null;
+
+        public Material BoxGrabbedMaterial
+        {
+            get { return boxGrabbedMaterial; }
+            set
+            {
+                if (boxGrabbedMaterial != value)
+                {
+                    boxGrabbedMaterial = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Show a wireframe around the bounding box when checked. Wireframe parameters below have no effect unless this is checked")]
+        private bool showWireframe = true;
+
+        public bool ShowWireFrame
+        {
+            get { return showWireframe; }
+            set
+            {
+                if (showWireframe != value)
+                {
+                    showWireframe = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Shape used for wireframe display")]
         private WireframeType wireframeShape = WireframeType.Cubic;
+        public WireframeType WireframeShape
+        {
+            get { return wireframeShape; }
+            set
+            {
+                if (wireframeShape != value)
+                {
+                    wireframeShape = value;
+                    CreateRig();
+                }
+            }
+        }
 
         [SerializeField]
+        [Tooltip("Material used for wireframe display")]
         private Material wireframeMaterial;
+        public Material WireframeMaterial
+        {
+            get { return wireframeMaterial; }
+            set
+            {
+                if (wireframeMaterial != value)
+                {
+                    wireframeMaterial = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [FormerlySerializedAs("linkRadius")]
+        [Tooltip("Radius for wireframe edges")]
+        private float wireframeEdgeRadius = 0.001f;
+        public float WireframeEdgeRadius
+        {
+            get { return wireframeEdgeRadius; }
+            set
+            {
+                if (wireframeEdgeRadius != value)
+                {
+                    wireframeEdgeRadius = value;
+                    CreateRig();
+                }
+            }
+        }
 
         [Header("Handles")]
-        [Tooltip("Default materials will be created for Handles and Wireframe if none is specified.")]
         [SerializeField]
+        [Tooltip("Material applied to handles when they are not in a grabbed state")]
         private Material handleMaterial;
+        public Material HandleMaterial
+        {
+            get { return handleMaterial; }
+            set
+            {
+                if (handleMaterial != value)
+                {
+                    handleMaterial = value;
+                    CreateRig();
+                }
+            }
+        }
 
         [SerializeField]
+        [Tooltip("Material applied to handles while they are a grabbed")]
         private Material handleGrabbedMaterial;
 
+        public Material HandleGrabbedMaterial
+        {
+            get { return handleGrabbedMaterial; }
+            set
+            {
+                if (handleGrabbedMaterial != value)
+                {
+                    handleGrabbedMaterial = value;
+                    CreateRig();
+                }
+            }
+        }
+
         [SerializeField]
+        [Tooltip("Prefab used to display scale handles in corners. If not set, boxes will be displayed instead")]
+        GameObject scaleHandlePrefab = null;
+
+        public GameObject ScaleHandlePrefab
+        {
+            get { return scaleHandlePrefab; }
+            set
+            {
+                if (scaleHandlePrefab != value)
+                {
+                    scaleHandlePrefab = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Prefab used to display scale handles in corners for 2D slate. If not set, boxes will be displayed instead")]
+        GameObject scaleHandleSlatePrefab = null;
+
+        public GameObject ScaleHandleSlatePrefab
+        {
+            get { return scaleHandleSlatePrefab; }
+            set
+            {
+                if (scaleHandleSlatePrefab != value)
+                {
+                    scaleHandleSlatePrefab = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [FormerlySerializedAs("cornerRadius")]
+        [Tooltip("Size of the cube collidable used in scale handles")]
+        private float scaleHandleSize = 0.016f; // 1.6cm default handle size
+
+        public float ScaleHandleSize
+        {
+            get { return scaleHandleSize; }
+            set
+            {
+                if (scaleHandleSize != value)
+                {
+                    scaleHandleSize = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Additional padding to apply to the collider on scale handle to make handle easier to hit")]
+        private Vector3 scaleHandleColliderPadding = new Vector3(0.016f, 0.016f, 0.016f);
+        public Vector3 ScaleHandleColliderPadding
+        {
+            get { return scaleHandleColliderPadding; }
+            set
+            {
+                if (scaleHandleColliderPadding != value)
+                {
+                    scaleHandleColliderPadding = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Prefab used to display rotation handles in the midpoint of each edge. Aligns the Y axis of the prefab with the pivot axis, and the X and Z axes pointing outward. If not set, spheres will be displayed instead")]
+        GameObject rotationHandlePrefab = null;
+        public GameObject RotationHandleSlatePrefab
+        {
+            get { return rotationHandlePrefab; }
+            set
+            {
+                if (rotationHandlePrefab != value)
+                {
+                    rotationHandlePrefab = value;
+                    CreateRig();
+                }
+            }
+        }
+        [SerializeField]
+        [FormerlySerializedAs("ballRadius")]
+        [Tooltip("Radius of the handle geometry of rotation handles")]
+        private float rotationHandleSize = 0.016f; // 1.6cm default handle size
+        public float RotationHandleSize
+        {
+            get { return rotationHandleSize; }
+            set
+            {
+                if (rotationHandleSize != value)
+                {
+                    rotationHandleSize = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Additional padding to apply to the collider on rotate handle to make handle easier to hit")]
+        private Vector3 rotateHandleColliderPadding = new Vector3(0.016f, 0.016f, 0.016f);
+        public Vector3 RotateHandleColliderPadding
+        {
+            get { return rotateHandleColliderPadding; }
+            set
+            {
+                if (rotateHandleColliderPadding != value)
+                {
+                    rotateHandleColliderPadding = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Determines the type of collider that will surround the rotation handle prefab.")]
+        private RotationHandlePrefabCollider rotationHandlePrefabColliderType = RotationHandlePrefabCollider.Box;
+        public RotationHandlePrefabCollider RotationHandlePrefabColliderType
+        {
+            get
+            {
+                return rotationHandlePrefabColliderType;
+            }
+            set
+            {
+                if (rotationHandlePrefabColliderType != value)
+                {
+                    rotationHandlePrefabColliderType = value;
+                    CreateRig();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Check to show scale handles")]
         private bool showScaleHandles = true;
 
         /// <summary>
@@ -188,312 +553,606 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
         }
 
         [SerializeField]
-        private bool showRotateHandles = true;
-
-        /// <summary>
-        /// Public property to Set the visibility of the sphere rotating handles.
-        /// This property can be set independent of the Scaling handles.
-        /// </summary>
-        public bool ShowRotateHandles
+        [Tooltip("Check to show rotation handles for the X axis")]
+        private bool showRotationHandleForX = true;
+        public bool ShowRotationHandleForX
         {
             get
             {
-                return showRotateHandles;
+                return showRotationHandleForX;
             }
             set
             {
-                if (showRotateHandles != value)
+                if (showRotationHandleForX != value)
                 {
-                    showRotateHandles = value;
+                    showRotationHandleForX = value;
                     ResetHandleVisibility();
                 }
             }
         }
 
         [SerializeField]
-        private float linkRadius = 0.005f;
-
-        [SerializeField]
-        private float ballRadius = 0.035f;
-
-        [SerializeField]
-        private float cornerRadius = 0.03f;
-        #endregion Serialized Fields
-
-        #region Constants
-        private const int LeftTopBack = 0;
-        private const int LeftTopFront = 1;
-        private const int LeftBottomFront = 2;
-        private const int LeftBottomBack = 3;
-        private const int RightTopBack = 4;
-        private const int RightTopFront = 5;
-        private const int RightBottonFront = 6;
-        private const int RightBottomBack = 7;
-        private const int CORNER_COUNT = 8;
-        #endregion Constants
-
-        #region Private Properties
-        private bool isActive = false;
-        /// <summary>
-        /// This Public property sets whether the BoundingBox is active (visible)
-        /// </summary>
-        public bool IsActive
+        [Tooltip("Check to show rotation handles for the Y axis")]
+        private bool showRotationHandleForY = true;
+        public bool ShowRotationHandleForY
         {
             get
             {
-                return isActive;
+                return showRotationHandleForY;
             }
             set
             {
-                if (isActive != value)
+                if (showRotationHandleForY != value)
                 {
-                    if (value)
-                    {
-                        CreateRig();
-                        rigRoot.gameObject.SetActive(true);
-                    }
-                    else
-                    {
-                        DestroyRig();
-                    }
-
-                    isActive = value;
+                    showRotationHandleForY = value;
+                    ResetHandleVisibility();
                 }
             }
         }
+
+        [SerializeField]
+        [Tooltip("Check to show rotation handles for the Z axis")]
+        private bool showRotationHandleForZ = true;
+        public bool ShowRotationHandleForZ
+        {
+            get
+            {
+                return showRotationHandleForZ;
+            }
+            set
+            {
+                if (showRotationHandleForZ != value)
+                {
+                    showRotationHandleForZ = value;
+                    ResetHandleVisibility();
+                }
+            }
+        }
+
+        [SerializeField]
+        [Tooltip("Check to draw a tether point from the handles to the hand when manipulating.")]
+        private bool drawTetherWhenManipulating = true;
+        public bool DrawTetherWhenManipulating
+        {
+            get { return drawTetherWhenManipulating; }
+            set { drawTetherWhenManipulating = value; }
+        }
+
+        [Header("Proximity")]
+        [SerializeField]
+        private bool proximityEffectActive = true;
+        public bool ProximityEffectActive
+        {
+            get
+            {
+                return proximityEffectActive;
+            }
+            set
+            {
+                proximityEffectActive = value;
+            }
+        }
+        [SerializeField]
+        [Tooltip("How far away should the hand be from a handle before it starts scaling the handle?")]
+        [Range(0.005f, 0.2f)]
+        private float handleMediumProximity = 0.1f;
+        [SerializeField]
+        [Tooltip("How far away should the hand be from a handle before it activates the close-proximity scaling effect?")]
+        [Range(0.001f, 0.1f)]
+        private float handleCloseProximity = 0.03f;
+        [SerializeField]
+        [Tooltip("A Proximity-enabled Handle scales by this amount when a hand moves out of range")]
+        private float farScale = 1.0f;
+        public float FarScale
+        {
+            get
+            {
+                return farScale;
+            }
+            set
+            {
+                farScale = value;
+            }
+        }
+        [SerializeField]
+        [Tooltip("A Proximity-enabled Handle scales by this amount when a hand moves into the Medium Proximity range")]
+        private float mediumScale = 1.2f;
+        public float MediumScale
+        {
+            get
+            {
+                return mediumScale;
+            }
+            set
+            {
+                mediumScale = value;
+            }
+        }
+        [SerializeField]
+        [Tooltip("A Proximity-enabled Handle scales by this amount when a hand moves into the Close Proximity range")]
+        private float closeScale = 1.5f;
+        public float CloseScale
+        {
+            get
+            {
+                return closeScale;
+            }
+            set
+            {
+                closeScale = value;
+            }
+        }
+        [SerializeField]
+        [Tooltip("At what rate should a Proximity-scaled Handle scale when the Hand moves from Medium proximity to Far proximity?")]
+        [Range(0.0f, 1.0f)]
+        private float farGrowRate = 0.3f;
+        [SerializeField]
+        [Tooltip("At what rate should a Proximity-scaled Handle scale when the Hand moves to a distance that activates Medium Scale ?")]
+        [Range(0.0f, 1.0f)]
+        private float mediumGrowRate = 0.2f;
+        [SerializeField]
+        [Tooltip("At what rate should a Proximity-scaled Handle scale when the Hand moves to a distance that activates Close Scale ?")]
+        [Range(0.0f, 1.0f)]
+        private float closeGrowRate = 0.3f;
+        [SerializeField]
+        [Tooltip("Add a Collider here if you do not want the handle colliders to interact with another object's collider.")]
+        private Collider handlesIgnoreCollider;
+        public Collider HandlesIgnoreCollider
+        {
+            get
+            {
+                return handlesIgnoreCollider;
+            }
+            set
+            {
+                handlesIgnoreCollider = value;
+            }
+        }
+
+        [Header("Debug")]
+        [Tooltip("Debug only. Component used to display debug messages")]
+        public TextMesh debugText;
+
+        [SerializeField]
+        private bool hideElementsInInspector = true;
+        public bool HideElementsInInspector
+        {
+            get { return hideElementsInInspector; }
+            set
+            {
+                if (hideElementsInInspector != value)
+                {
+                    hideElementsInInspector = value;
+                    UpdateRigVisibilityInInspector();
+                }
+            }
+        }
+
+        private void UpdateRigVisibilityInInspector()
+        {
+            HideFlags desiredFlags = hideElementsInInspector ? HideFlags.HideInHierarchy | HideFlags.HideInInspector : HideFlags.None;
+            if (corners != null)
+            {
+                foreach (var cube in corners)
+                {
+                    cube.hideFlags = desiredFlags;
+                }
+            }
+
+            if (boxDisplay != null)
+            {
+                boxDisplay.hideFlags = desiredFlags;
+            }
+
+            if (rigRoot != null)
+            {
+                rigRoot.hideFlags = desiredFlags;
+            }
+
+            if (links != null)
+            {
+                foreach (var link in links)
+                {
+                    link.hideFlags = desiredFlags;
+                }
+            }
+        }
+
+        [Header("Events")]
+        public UnityEvent RotateStarted = new UnityEvent();
+        public UnityEvent RotateStopped = new UnityEvent();
+        public UnityEvent ScaleStarted = new UnityEvent();
+        public UnityEvent ScaleStopped = new UnityEvent();
+        #endregion Serialized Fields
+
+
+        #region Private Fields
+
+        // Whether we should be displaying just the wireframe (if enabled) or the handles too
+        private bool wireframeOnly = false;
+
+        // Pointer that is being used to manipulate the bounding box
         private IMixedRealityPointer currentPointer;
-        private IMixedRealityInputSource currentInputSource;
-        private Vector3 initialGazePoint = Vector3.zero;
-        private GameObject targetObject;
+
         private Transform rigRoot;
+
+        // Game object used to display the bounding box. Parented to the rig root
+        private GameObject boxDisplay;
+
         private BoxCollider cachedTargetCollider;
         private Vector3[] boundsCorners;
-        private Vector3 currentBoundsSize;
+
+        // Half the size of the current bounds
+        private Vector3 currentBoundsExtents;
+
         private BoundsCalculationMethod boundsMethod;
-        private HandleMoveType handleMoveType = HandleMoveType.Point;
+
+        private IMixedRealityInputSystem inputSystem = null;
+        private IMixedRealityInputSystem InputSystem
+        {
+            get
+            {
+                if (inputSystem == null)
+                {
+                    MixedRealityServiceRegistry.TryGetService<IMixedRealityInputSystem>(out inputSystem);
+                }
+                return inputSystem;
+            }
+        }
+        private IMixedRealityEyeGazeProvider EyeTrackingProvider => eyeTrackingProvider ?? (eyeTrackingProvider = InputSystem?.EyeGazeProvider);
+        private IMixedRealityEyeGazeProvider eyeTrackingProvider = null;
+
+        private List<IMixedRealityInputSource> touchingSources = new List<IMixedRealityInputSource>();
         private List<Transform> links;
+        // List of corner root transforms. Use these to position corners
         private List<Transform> corners;
+        private List<Transform> cornerVisuals;
         private List<Transform> balls;
+        private List<Transform> ballVisuals;
+        private List<Renderer> linkRenderers;
         private List<Renderer> cornerRenderers;
         private List<Renderer> ballRenderers;
-        private List<Renderer> linkRenderers;
-        private List<Collider> cornerColliders;
-        private List<Collider> ballColliders;
+        private List<HandleProximityState> cornersProximate;
+        private List<HandleProximityState> ballsProximate;
+        private List<IMixedRealityController> sourcesDetected;
         private Vector3[] edgeCenters;
-        private Ray initialGrabRay;
-        private Ray currentGrabRay;
-        private float initialGrabMag;
+
+        // Current axis of rotation about the center of the rig root
         private Vector3 currentRotationAxis;
-        private Vector3 initialScale;
-        private Vector3 initialGrabbedPosition;
-        private Vector3 initialGrabbedCentroid;
+
+        // Scale of the target at the beginning of the current manipulation
+        private Vector3 initialScaleOnGrabStart;
+        // Position of the target at the beginning of the current manipulation
+        private Vector3 initialPositionOnGrabStart;
+        // Point that was initially grabbed in OnPointerDown()
         private Vector3 initialGrabPoint;
+        // Current position of the grab point
+        private Vector3 currentGrabPoint;
+
+        private TransformScaleHandler scaleHandler;
+
+
+        // Grab point position in pointer space. Used to calculate the current grab point from the current pointer pose.
+        private Vector3 grabPointInPointer;
+
         private CardinalAxisType[] edgeAxes;
         private int[] flattenedHandles;
-        private Vector3 boundsCentroid;
-        private GameObject grabbedHandle;
-        private bool usingPose = false;
-        private Vector3 currentPosePosition = Vector3.zero;
+
+        // Corner opposite to the grabbed one. Scaling will be relative to it.
+        private Vector3 oppositeCorner;
+
+        // Direction of the diagonal from the opposite corner to the grabbed one.
+        private Vector3 diagonalDir;
+
         private HandleType currentHandleType;
-        #endregion Private Properties
+
+        // The size, position of boundsOverride object in the previous frame
+        // Used to determine if boundsOverride size has changed.
+        private Bounds prevBoundsOverride = new Bounds();
+        private Vector3 lastBounds;
+
+        // True if this game object is a child of the Target one
+        private bool isChildOfTarget = false;
+        private static readonly string rigRootName = "rigRoot";
+
+        #endregion
+
+
+        #region public Properties
+        // TODO Review this, it feels like we should be using Behaviour.enabled instead.
+        private bool active = false;
+        public bool Active
+        {
+            get
+            {
+                return active;
+            }
+            set
+            {
+                if (active != value)
+                {
+                    active = value;
+                    rigRoot?.gameObject.SetActive(value);
+                    ResetHandleVisibility();
+
+                    if (value && proximityEffectActive)
+                    {
+                        HandleProximityScaling(true);
+                    }
+                }
+            }
+        }
+
+        public GameObject Target
+        {
+            get
+            {
+                if (targetObject == null)
+                {
+                    targetObject = gameObject;
+                }
+
+                return targetObject;
+            }
+        }
+
+        public BoxCollider TargetBounds
+        {
+            get { return cachedTargetCollider; }
+        }
+
+        private List<Vector3> inputPoints = new List<Vector3>();
+
+        /// <summary>
+        /// Returns list of transforms pointing to the scale handles of the bounding box.
+        /// </summary>
+        public IReadOnlyList<Transform> ScaleCorners
+        {
+            get { return corners; }
+        }
+
+        /// <summary>
+        /// Returns list of transforms pointing to the rotation handles of the bounding box.
+        /// </summary>
+        public IReadOnlyList<Transform> RotateMidpoints
+        {
+            get { return balls; }
+        }
+        #endregion Public Properties
+
+
+        #region Public Methods
+
+        /// <summary>
+        /// Allows to manually enable wire (edge) highlighting (edges) of the bounding box.
+        /// This is useful if connected to the Manipulation events of a
+        /// <see cref="Microsoft.MixedReality.Toolkit.UI.ManipulationHandler"/> 
+        /// when used in conjunction with this MonoBehavior.
+        /// </summary>
+        public void HighlightWires()
+        {
+            SetHighlighted(null);
+        }
+
+        public void UnhighlightWires()
+        {
+            ResetHandleVisibility();
+        }
+
+        /// <summary>
+        /// Sets the minimum/maximum scale for the bounding box at runtime.
+        /// </summary>
+        /// <param name="min">Minimum scale</param>
+        /// <param name="max">Maximum scale</param>
+        /// <param name="relativeToInitialState">If true the values will be multiplied by scale of target at startup. If false they will be in absolute local scale.</param>
+        [Obsolete("Use a TransformScaleHandler script rather than setting min/max scale on BoundingBox directly")]
+        public void SetScaleLimits(float min, float max, bool relativeToInitialState = true)
+        {
+            scaleMinimum = min;
+            scaleMaximum = max;
+        }
+
+        /// <summary>
+        /// Destroys and re-creates the rig around the bounding box
+        /// </summary>
+        public void CreateRig()
+        {
+            DestroyRig();
+            SetMaterials();
+            InitializeRigRoot();
+            InitializeDataStructures();
+            SetBoundingBoxCollider();
+            UpdateBounds();
+            AddCorners();
+            AddLinks();
+            HandleIgnoreCollider();
+            AddBoxDisplay();
+            UpdateRigHandles();
+            Flatten();
+            ResetHandleVisibility();
+            rigRoot.gameObject.SetActive(active);
+            UpdateRigVisibilityInInspector();
+        }
+
+        #endregion
+
 
         #region MonoBehaviour Methods
-        private void Start()
+
+        private void OnEnable()
         {
-            targetObject = this.gameObject;
+            CreateRig();
+            CaptureInitialState();
 
-            if (MixedRealityToolkit.IsInitialized && MixedRealityToolkit.InputSystem != null)
+            if (activation == BoundingBoxActivationType.ActivateByProximityAndPointer ||
+                activation == BoundingBoxActivationType.ActivateByProximity ||
+                activation == BoundingBoxActivationType.ActivateByPointer)
             {
-                MixedRealityToolkit.InputSystem.Register(targetObject);
+                wireframeOnly = true;
+                Active = true;
             }
+            else if (activation == BoundingBoxActivationType.ActivateOnStart)
+            {
+                Active = true;
+            }
+            else if (activation == BoundingBoxActivationType.ActivateManually)
+            {
+                //activate to create handles etc. then deactivate. 
+                Active = true;
+                Active = false;
+            }
+        }
 
-            if (activateOnStart == true)
-            {
-                IsActive = true;
-            }
+        private void OnDisable()
+        {
+            DestroyRig();
         }
 
         private void Update()
         {
-            if (currentInputSource == null)
+            if (active)
             {
-                UpdateBounds();
-            }
-            else
-            {
-                UpdateBounds();
-                TransformRig();
-            }
+                if (currentPointer != null)
+                {
+                    TransformTarget();
+                    UpdateBounds();
+                    UpdateRigHandles();
+                }
+                else if (!isChildOfTarget && Target.transform.hasChanged)
+                {
+                    UpdateBounds();
+                    UpdateRigHandles();
+                    Target.transform.hasChanged = false;
+                }
 
-            UpdateRigHandles();
+                if (proximityEffectActive)
+                {
+                    HandleProximityScaling();
+                }
+            }
+            else if (boundsOverride != null && HasBoundsOverrideChanged())
+            {
+                UpdateBounds();
+                UpdateRigHandles();
+            }
         }
+
+        /// <summary>
+        /// Assumes that boundsOverride is not null
+        /// Returns true if the size / location of boundsOverride has changed.
+        /// If boundsOverride gets set to null, rig is re-created in BoundsOverride
+        /// property setter.
+        /// </summary>
+        private bool HasBoundsOverrideChanged()
+        {
+            Debug.Assert(boundsOverride != null, "HasBoundsOverrideChanged called but boundsOverride is null");
+            Bounds curBounds = boundsOverride.bounds;
+            bool result = curBounds != prevBoundsOverride;
+            prevBoundsOverride = curBounds;
+            return result;
+        }
+
         #endregion MonoBehaviour Methods
 
+
         #region Private Methods
-        private void CreateRig()
-        {
-            DestroyRig();
-            SetMaterials();
-            InitializeDataStructures();
-
-            SetBoundingBoxCollider();
-
-            UpdateBounds();
-            AddCorners();
-            AddLinks();
-            UpdateRigHandles();
-            Flatten();
-            ResetHandleVisibility();
-            rigRoot.gameObject.SetActive(false);
-        }
 
         private void DestroyRig()
         {
-            if (boxColliderToUse == null)
+            if (boundsOverride == null)
             {
                 Destroy(cachedTargetCollider);
             }
             else
             {
-                boxColliderToUse.size -= wireframePadding;
+                boundsOverride.size -= boxPadding;
+
+                if (cachedTargetCollider != null)
+                {
+                    if (cachedTargetCollider.gameObject.GetComponent<NearInteractionGrabbable>())
+                    {
+                        Destroy(cachedTargetCollider.gameObject.GetComponent<NearInteractionGrabbable>());
+                    }
+                }
             }
 
             if (balls != null)
             {
-                for (var i = 0; i < balls.Count; i++)
+                foreach (Transform transform in balls)
                 {
-                    Destroy(balls[i].gameObject);
+                    Destroy(transform.gameObject);
                 }
-
                 balls.Clear();
+                ballsProximate.Clear();
+                ballRenderers.Clear();
+                ballVisuals.Clear();
             }
 
             if (links != null)
             {
-                for (int i = 0; i < links.Count; i++)
+                foreach (Transform transform in links)
                 {
-                    Destroy(links[i].gameObject);
+                    Destroy(transform.gameObject);
                 }
-
                 links.Clear();
+                links = null;
             }
 
             if (corners != null)
             {
-                for (var i = 0; i < corners.Count; i++)
+                foreach (Transform transform in corners)
                 {
-                    Destroy(corners[i].gameObject);
+                    Destroy(transform.gameObject);
                 }
-
                 corners.Clear();
+                cornersProximate.Clear();
+                cornerRenderers.Clear();
+                cornerVisuals.Clear();
             }
 
             if (rigRoot != null)
             {
                 Destroy(rigRoot.gameObject);
+                rigRoot = null;
             }
         }
 
-        private void TransformRig()
-        {
-            if (usingPose)
-            {
-                TransformHandleWithPoint();
-            }
-            else
-            {
-                switch (handleMoveType)
-                {
-                    case HandleMoveType.Ray:
-                        TransformHandleWithRay();
-                        break;
-                    case HandleMoveType.Point:
-                        TransformHandleWithPoint();
-                        break;
-                    default:
-                        Debug.LogWarning($"Unexpected handle move type {handleMoveType}");
-                        break;
-                }
-            }
-        }
-
-        private void TransformHandleWithRay()
+        private void TransformTarget()
         {
             if (currentHandleType != HandleType.None)
             {
-                currentGrabRay = GetHandleGrabbedRay();
-                Vector3 grabRayPt = currentGrabRay.origin + (currentGrabRay.direction * initialGrabMag);
-
-                switch (currentHandleType)
-                {
-                    case HandleType.Rotation:
-                        RotateByHandle(grabRayPt);
-                        break;
-                    case HandleType.Scale:
-                        ScaleByHandle(grabRayPt);
-                        break;
-                    default:
-                        Debug.LogWarning($"Unexpected handle type {currentHandleType}");
-                        break;
-                }
-            }
-        }
-
-        private void TransformHandleWithPoint()
-        {
-            if (currentHandleType != HandleType.None)
-            {
-                Vector3 newGrabbedPosition;
-
-                if (usingPose == false)
-                {
-                    Vector3 newRemotePoint;
-                    currentPointer.TryGetPointerPosition(out newRemotePoint);
-                    newGrabbedPosition = initialGrabbedPosition + (newRemotePoint - initialGrabPoint);
-                }
-                else
-                {
-                    if (initialGazePoint == Vector3.zero)
-                    {
-                        return;
-                    }
-
-                    newGrabbedPosition = currentPosePosition;
-                }
+                Vector3 prevGrabPoint = currentGrabPoint;
+                currentGrabPoint = (currentPointer.Rotation * grabPointInPointer) + currentPointer.Position;
 
                 if (currentHandleType == HandleType.Rotation)
                 {
-                    RotateByHandle(newGrabbedPosition);
+                    Vector3 prevDir = Vector3.ProjectOnPlane(prevGrabPoint - rigRoot.transform.position, currentRotationAxis).normalized;
+                    Vector3 currentDir = Vector3.ProjectOnPlane(currentGrabPoint - rigRoot.transform.position, currentRotationAxis).normalized;
+                    Quaternion q = Quaternion.FromToRotation(prevDir, currentDir);
+                    q.ToAngleAxis(out float angle, out Vector3 axis);
+                    Target.transform.RotateAround(rigRoot.transform.position, axis, angle);
                 }
                 else if (currentHandleType == HandleType.Scale)
                 {
-                    ScaleByHandle(newGrabbedPosition);
+                    float initialDist = Vector3.Dot(initialGrabPoint - oppositeCorner, diagonalDir);
+                    float currentDist = Vector3.Dot(currentGrabPoint - oppositeCorner, diagonalDir);
+                    float scaleFactor = 1 + (currentDist - initialDist) / initialDist;
+
+                    Vector3 newScale = initialScaleOnGrabStart * scaleFactor;
+                    Vector3 clampedScale = newScale;
+                    if (scaleHandler != null)
+                    {
+                        clampedScale = scaleHandler.ClampScale(newScale);
+                        if (clampedScale != newScale)
+                        {
+                            scaleFactor = clampedScale[0] / initialScaleOnGrabStart[0];
+                        }
+                    }
+
+                    Target.transform.localScale = clampedScale;
+                    Target.transform.position = initialPositionOnGrabStart * scaleFactor + (1 - scaleFactor) * oppositeCorner;
                 }
             }
-        }
-
-        private void RotateByHandle(Vector3 newHandlePosition)
-        {
-            Vector3 projPt = Vector3.ProjectOnPlane((newHandlePosition - rigRoot.transform.position).normalized, currentRotationAxis);
-            Quaternion rotation = Quaternion.FromToRotation((grabbedHandle.transform.position - rigRoot.transform.position).normalized, projPt.normalized);
-            Vector3 axis;
-            float angle;
-            rotation.ToAngleAxis(out angle, out axis);
-            targetObject.transform.RotateAround(rigRoot.transform.position, axis, angle);
-        }
-
-        private void ScaleByHandle(Vector3 newHandlePosition)
-        {
-            Vector3 correctedPt = PointToRay(rigRoot.transform.position, grabbedHandle.transform.position, newHandlePosition);
-            Vector3 rigCentroid = rigRoot.transform.position;
-            float startMag = (initialGrabbedPosition - rigCentroid).magnitude;
-            float newMag = (correctedPt - rigCentroid).magnitude;
-
-            bool isClamped;
-            float ratio = newMag / startMag;
-            Vector3 newScale = ClampScale(initialScale * ratio, out isClamped);
-            //scale from object center
-            targetObject.transform.localScale = newScale;
         }
 
         private Vector3 GetRotationAxis(Transform handle)
@@ -502,14 +1161,17 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
             {
                 if (handle == balls[i])
                 {
-                    switch (edgeAxes[i])
+                    if (edgeAxes[i] == CardinalAxisType.X)
                     {
-                        case CardinalAxisType.X:
-                            return rigRoot.transform.right;
-                        case CardinalAxisType.Y:
-                            return rigRoot.transform.up;
-                        default:
-                            return rigRoot.transform.forward;
+                        return rigRoot.transform.right;
+                    }
+                    else if (edgeAxes[i] == CardinalAxisType.Y)
+                    {
+                        return rigRoot.transform.up;
+                    }
+                    else
+                    {
+                        return rigRoot.transform.forward;
                     }
                 }
             }
@@ -519,24 +1181,129 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
 
         private void AddCorners()
         {
+            bool isFlattened = (flattenAxis != FlattenModeType.DoNotFlatten);
+
             for (int i = 0; i < boundsCorners.Length; ++i)
             {
-                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                cube.name = $"corner_{i}";
-                cube.transform.localScale = new Vector3(cornerRadius, cornerRadius, cornerRadius);
-                cube.transform.position = boundsCorners[i];
-                cube.transform.parent = rigRoot.transform;
-
-                var cubeRenderer = cube.GetComponent<Renderer>();
-                cornerRenderers.Add(cubeRenderer);
-                cornerColliders.Add(cube.GetComponent<Collider>());
-                corners.Add(cube.transform);
-
-                if (handleMaterial != null)
+                GameObject corner = new GameObject
                 {
-                    cubeRenderer.material = handleMaterial;
+                    name = "corner_" + i.ToString()
+                };
+                corner.transform.parent = rigRoot.transform;
+                corner.transform.localPosition = boundsCorners[i];
+
+                GameObject visualsScale = new GameObject();
+                visualsScale.name = "visualsScale";
+                visualsScale.transform.parent = corner.transform;
+                visualsScale.transform.localPosition = Vector3.zero;
+
+                // Compute mirroring scale
+                {
+                    Vector3 p = boundsCorners[i];
+                    visualsScale.transform.localScale = new Vector3(Mathf.Sign(p[0]), Mathf.Sign(p[1]), Mathf.Sign(p[2]));
+                }
+
+                // figure out which prefab to instantiate
+                GameObject prefabToInstantiate = null;
+                GameObject cornerVisual = null;
+                if (isFlattened)
+                {
+                    prefabToInstantiate = scaleHandleSlatePrefab;
+                }
+                else
+                {
+                    prefabToInstantiate = scaleHandlePrefab;
+                }
+
+                if (prefabToInstantiate == null)
+                {
+                    // instantiate default prefab, a cube. Remove the box collider from it
+                    cornerVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    cornerVisual.transform.parent = visualsScale.transform;
+                    cornerVisual.transform.localPosition = Vector3.zero;
+                    Destroy(cornerVisual.GetComponent<BoxCollider>());
+                }
+                else
+                {
+                    cornerVisual = Instantiate(prefabToInstantiate, visualsScale.transform);
+                }
+
+                if (isFlattened)
+                {
+                    // Rotate 2D slate handle asset for proper orientation
+                    cornerVisual.transform.Rotate(0, 0, -90);
+                }
+
+                cornerVisual.name = "visuals";
+
+                // this is the size of the corner visuals
+                var cornerbounds = GetMaxBounds(cornerVisual);
+                float maxDim = Mathf.Max(
+                    Mathf.Max(cornerbounds.size.x, cornerbounds.size.y),
+                    cornerbounds.size.z);
+                cornerbounds.size = maxDim * Vector3.one;
+                // we need to multiply by this amount to get to desired scale handle size
+                var invScale = scaleHandleSize / cornerbounds.size.x;
+                cornerVisual.transform.localScale = new Vector3(invScale, invScale, invScale);
+
+                ApplyMaterialToAllRenderers(cornerVisual, handleMaterial);
+
+                AddComponentsToAffordance(corner, new Bounds(cornerbounds.center * invScale, cornerbounds.size * invScale), RotationHandlePrefabCollider.Box, CursorContextInfo.CursorAction.Scale, scaleHandleColliderPadding);
+                corners.Add(corner.transform);
+                cornerVisuals.Add(cornerVisual.transform);
+                cornersProximate.Add(HandleProximityState.FullsizeNoProximity);
+                Renderer renderer = cornerVisual.GetComponentInChildren<Renderer>();
+                cornerRenderers.Add(renderer ?? null);
+            }
+        }
+
+        /// <summary>
+        /// Add all common components to a corner or rotate affordance
+        /// </summary>
+        /// <param name="afford"></param>
+        /// <param name="bounds"></param>
+        private void AddComponentsToAffordance(GameObject afford, Bounds bounds, RotationHandlePrefabCollider colliderType, CursorContextInfo.CursorAction cursorType, Vector3 colliderPadding)
+        {
+            if (colliderType == RotationHandlePrefabCollider.Box)
+            {
+                BoxCollider collider = afford.AddComponent<BoxCollider>();
+                collider.size = bounds.size;
+                collider.center = bounds.center;
+                collider.size += colliderPadding;
+            }
+            else
+            {
+                SphereCollider sphere = afford.AddComponent<SphereCollider>();
+                sphere.center = bounds.center;
+                sphere.radius = bounds.extents.x;
+                sphere.radius += Mathf.Max( Mathf.Max(colliderPadding.x, colliderPadding.y), colliderPadding.z);
+            }
+
+            // In order for the affordance to be grabbed using near interaction we need
+            // to add NearInteractionGrabbable;
+            var g = afford.EnsureComponent<NearInteractionGrabbable>();
+            g.ShowTetherWhenManipulating = drawTetherWhenManipulating;
+
+            var contextInfo = afford.EnsureComponent<CursorContextInfo>();
+            contextInfo.CurrentCursorAction = cursorType;
+            contextInfo.ObjectCenter = rigRoot.transform;
+        }
+
+        private Bounds GetMaxBounds(GameObject g)
+        {
+            var b = new Bounds();
+            foreach (Renderer r in g.GetComponentsInChildren<Renderer>())
+            {
+                if (b.size == Vector3.zero)
+                {
+                    b = r.bounds;
+                }
+                else
+                {
+                    b.Encapsulate(r.bounds);
                 }
             }
+            return b;
         }
 
         private void AddLinks()
@@ -545,27 +1312,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
 
             CalculateEdgeCenters();
 
-            for (int i = 0; i < edgeCenters.Length; ++i)
-            {
-                GameObject ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                ball.name = $"midpoint_{i}";
-                ball.transform.localScale = new Vector3(ballRadius, ballRadius, ballRadius);
-                ball.transform.position = edgeCenters[i];
-                ball.transform.parent = rigRoot.transform;
-
-                var ballRenderer = ball.GetComponent<Renderer>();
-                ballRenderers.Add(ballRenderer);
-                ballColliders.Add(ball.GetComponent<Collider>());
-                balls.Add(ball.transform);
-
-                if (handleMaterial != null)
-                {
-                    ballRenderer.material = handleMaterial;
-                }
-            }
-
             edgeAxes = new CardinalAxisType[12];
-
             edgeAxes[0] = CardinalAxisType.X;
             edgeAxes[1] = CardinalAxisType.Y;
             edgeAxes[2] = CardinalAxisType.X;
@@ -581,125 +1328,278 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
 
             for (int i = 0; i < edgeCenters.Length; ++i)
             {
-                var link = GameObject.CreatePrimitive(wireframeShape == WireframeType.Cubic
-                    ? PrimitiveType.Cube
-                    : PrimitiveType.Cylinder);
-                link.name = $"link_{i}";
+                GameObject midpoint = new GameObject();
+                midpoint.name = "midpoint_" + i.ToString();
+                midpoint.transform.position = edgeCenters[i];
+                midpoint.transform.parent = rigRoot.transform;
 
-                Vector3 linkDimensions = GetLinkDimensions();
-
-                switch (edgeAxes[i])
+                GameObject midpointVisual;
+                if (rotationHandlePrefab != null)
                 {
-                    case CardinalAxisType.Y:
-                        link.transform.localScale = new Vector3(linkRadius, linkDimensions.y, linkRadius);
-                        link.transform.Rotate(new Vector3(0.0f, 90.0f, 0.0f));
-                        break;
-                    case CardinalAxisType.Z:
-                        link.transform.localScale = new Vector3(linkRadius, linkDimensions.z, linkRadius);
-                        link.transform.Rotate(new Vector3(90.0f, 0.0f, 0.0f));
-                        break;
-                    default: //X
-                        link.transform.localScale = new Vector3(linkRadius, linkDimensions.x, linkRadius);
-                        link.transform.Rotate(new Vector3(0.0f, 0.0f, 90.0f));
-                        break;
+                    midpointVisual = Instantiate(rotationHandlePrefab);
+                }
+                else
+                {
+                    midpointVisual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    Destroy(midpointVisual.GetComponent<SphereCollider>());
                 }
 
-                link.transform.position = edgeCenters[i];
-                link.transform.parent = rigRoot.transform;
-
-                var linkRenderer = link.GetComponent<Renderer>();
-                linkRenderers.Add(linkRenderer);
-
-                if (wireframeMaterial != null)
+                // Align handle with its edge assuming that the prefab is initially aligned with the up direction 
+                if (edgeAxes[i] == CardinalAxisType.X)
                 {
-                    linkRenderer.material = wireframeMaterial;
+                    Quaternion realignment = Quaternion.FromToRotation(Vector3.up, Vector3.right);
+                    midpointVisual.transform.localRotation = realignment * midpointVisual.transform.localRotation;
+                }
+                else if (edgeAxes[i] == CardinalAxisType.Z)
+                {
+                    Quaternion realignment = Quaternion.FromToRotation(Vector3.up, Vector3.forward);
+                    midpointVisual.transform.localRotation = realignment * midpointVisual.transform.localRotation;
                 }
 
-                links.Add(link.transform);
+                Bounds midpointBounds = GetMaxBounds(midpointVisual);
+                float maxDim = Mathf.Max(
+                    Mathf.Max(midpointBounds.size.x, midpointBounds.size.y),
+                    midpointBounds.size.z);
+                float invScale = rotationHandleSize / maxDim;
+
+                midpointVisual.transform.parent = midpoint.transform;
+                midpointVisual.transform.localScale = new Vector3(invScale, invScale, invScale);
+                midpointVisual.transform.localPosition = Vector3.zero;
+
+                AddComponentsToAffordance(midpoint, new Bounds(midpointBounds.center * invScale, midpointBounds.size * invScale), rotationHandlePrefabColliderType, CursorContextInfo.CursorAction.Rotate, rotateHandleColliderPadding);
+
+                balls.Add(midpoint.transform);
+                ballVisuals.Add(midpointVisual.transform);
+
+
+                ballsProximate.Add(HandleProximityState.FullsizeNoProximity);
+                ballRenderers.Add(midpointVisual.GetComponent<Renderer>());
+                if (handleMaterial != null)
+                {
+                    Renderer renderer = midpointVisual.GetComponent<Renderer>();
+                    ApplyMaterialToAllRenderers(midpointVisual, handleMaterial);
+                }
             }
+            //if (rotationHandlePrefab == null)
+            //{
+            //    //for (int i = 0; i < edgeCenters.Length; ++i)
+            //    //{
+            //    //    GameObject ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //    //    ball.name = "midpoint_" + i.ToString();
+
+            //    //    ball.transform.localScale = new Vector3(rotationHandleSize, rotationHandleSize, rotationHandleSize);
+            //    //    ball.transform.position = edgeCenters[i];
+            //    //    ball.transform.parent = rigRoot.transform;
+
+            //    //    var contextInfo = ball.EnsureComponent<CursorContextInfo>();
+            //    //    contextInfo.CurrentCursorAction = CursorContextInfo.CursorAction.Rotate;
+            //    //    contextInfo.ObjectCenter = rigRoot.transform;
+
+            //    //    // In order for the ball to be grabbed using near interaction we need
+            //    //    // to add NearInteractionGrabbable;
+            //    //    var g = ball.EnsureComponent<NearInteractionGrabbable>();
+            //    //    g.ShowTetherWhenManipulating = drawTetherWhenManipulating;
+
+
+            //    //}
+            //}
+            //else
+            //{
+            //    for (int i = 0; i < edgeCenters.Length; ++i)
+            //    {
+            //        GameObject ball = Instantiate(rotationHandlePrefab, rigRoot.transform);
+            //        ball.name = "midpoint_" + i.ToString();
+            //        ball.transform.localPosition = edgeCenters[i];
+
+
+
+            //        balls.Add(ball.transform);
+            //        ballVisuals.Add(ball.transform);
+            //        ballsProximate.Add(HandleProximityState.FullsizeNoProximity);
+            //        Renderer renderer = ball.GetComponentInChildren<Renderer>();
+            //        ballRenderers.Add(renderer ?? null);
+            //    }
+            //}
+
+            if (links != null)
+            {
+                GameObject link;
+                for (int i = 0; i < edgeCenters.Length; ++i)
+                {
+                    if (wireframeShape == WireframeType.Cubic)
+                    {
+                        link = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        Destroy(link.GetComponent<BoxCollider>());
+                    }
+                    else
+                    {
+                        link = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                        Destroy(link.GetComponent<CapsuleCollider>());
+                    }
+                    link.name = "link_" + i.ToString();
+
+
+                    Vector3 linkDimensions = GetLinkDimensions();
+                    if (edgeAxes[i] == CardinalAxisType.Y)
+                    {
+                        link.transform.localScale = new Vector3(wireframeEdgeRadius, linkDimensions.y, wireframeEdgeRadius);
+                        link.transform.Rotate(new Vector3(0.0f, 90.0f, 0.0f));
+                    }
+                    else if (edgeAxes[i] == CardinalAxisType.Z)
+                    {
+                        link.transform.localScale = new Vector3(wireframeEdgeRadius, linkDimensions.z, wireframeEdgeRadius);
+                        link.transform.Rotate(new Vector3(90.0f, 0.0f, 0.0f));
+                    }
+                    else//X
+                    {
+                        link.transform.localScale = new Vector3(wireframeEdgeRadius, linkDimensions.x, wireframeEdgeRadius);
+                        link.transform.Rotate(new Vector3(0.0f, 0.0f, 90.0f));
+                    }
+
+                    link.transform.position = edgeCenters[i];
+                    link.transform.parent = rigRoot.transform;
+                    Renderer linkRenderer = link.GetComponent<Renderer>();
+                    linkRenderers.Add(linkRenderer);
+
+                    if (wireframeMaterial != null)
+                    {
+                        linkRenderer.material = wireframeMaterial;
+                    }
+
+                    links.Add(link.transform);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Make the handle colliders ignore specified collider. (e.g. spatial mapping's floor collider to avoid the object get lifted up)
+        /// </summary>
+        private void HandleIgnoreCollider()
+        {
+            if (handlesIgnoreCollider != null)
+            {
+                foreach (Transform corner in corners)
+                {
+                    Collider[] colliders = corner.gameObject.GetComponents<Collider>();
+                    foreach (Collider collider in colliders)
+                    {
+                        UnityEngine.Physics.IgnoreCollision(collider, handlesIgnoreCollider);
+                    }
+                }
+
+                foreach (Transform ball in balls)
+                {
+                    Collider[] colliders = ball.gameObject.GetComponents<Collider>();
+                    foreach (Collider collider in colliders)
+                    {
+                        UnityEngine.Physics.IgnoreCollision(collider, handlesIgnoreCollider);
+                    }
+                }
+            }
+        }
+
+        private void AddBoxDisplay()
+        {
+            if (boxMaterial != null)
+            {
+                bool isFlattened = flattenAxis != FlattenModeType.DoNotFlatten;
+
+                boxDisplay = GameObject.CreatePrimitive(isFlattened ? PrimitiveType.Quad : PrimitiveType.Cube);
+                Destroy(boxDisplay.GetComponent<Collider>());
+                boxDisplay.name = "bounding box";
+
+                ApplyMaterialToAllRenderers(boxDisplay, boxMaterial);
+
+                boxDisplay.transform.localScale = GetBoxDisplayScale();
+                boxDisplay.transform.parent = rigRoot.transform;
+            }
+        }
+
+        private Vector3 GetBoxDisplayScale()
+        {
+            // When a box is flattened one axis is normally scaled to zero, this doesn't always work well with visuals so we take 
+            // that flattened axis and re-scale it to the flattenAxisDisplayScale.
+            Vector3 displayScale = currentBoundsExtents;
+            displayScale.x = (flattenAxis == FlattenModeType.FlattenX) ? flattenAxisDisplayScale : displayScale.x;
+            displayScale.y = (flattenAxis == FlattenModeType.FlattenY) ? flattenAxisDisplayScale : displayScale.y;
+            displayScale.z = (flattenAxis == FlattenModeType.FlattenZ) ? flattenAxisDisplayScale : displayScale.z;
+
+            return 2.0f * displayScale;
         }
 
         private void SetBoundingBoxCollider()
         {
+            // Make sure that the bounds of all child objects are up to date before we compute bounds
+            UnityEngine.Physics.SyncTransforms();
+
             //Collider.bounds is world space bounding volume.
             //Mesh.bounds is local space bounding volume
             //Renderer.bounds is the same as mesh.bounds but in world space coords
 
-            if (boxColliderToUse != null)
+            if (boundsOverride != null)
             {
-                cachedTargetCollider = boxColliderToUse;
+                cachedTargetCollider = boundsOverride;
                 cachedTargetCollider.transform.hasChanged = true;
             }
             else
             {
                 Bounds bounds = GetTargetBounds();
-                cachedTargetCollider = targetObject.AddComponent<BoxCollider>();
-                switch (boundsMethod)
+                cachedTargetCollider = Target.AddComponent<BoxCollider>();
+                if (boundsMethod == BoundsCalculationMethod.Renderers)
                 {
-                    case BoundsCalculationMethod.Renderers:
-                        cachedTargetCollider.center = bounds.center;
-                        cachedTargetCollider.size = bounds.size;
-                        break;
-                    case BoundsCalculationMethod.Colliders:
-                        cachedTargetCollider.center = bounds.center;
-                        cachedTargetCollider.size = bounds.size;
-                        break;
-                    default:
-                        Debug.LogWarning($"Unexpected Bounds Calculation Method {boundsMethod}");
-                        break;
+                    cachedTargetCollider.center = bounds.center;
+                    cachedTargetCollider.size = bounds.size;
+                }
+                else if (boundsMethod == BoundsCalculationMethod.Colliders)
+                {
+                    // bounds.center is in world space, but cachedTargetCollider.center is in local space
+                    cachedTargetCollider.center = Target.transform.InverseTransformPoint(bounds.center);
+                    cachedTargetCollider.size = Target.transform.InverseTransformSize(bounds.size);
                 }
             }
 
-            cachedTargetCollider.size += wireframePadding;
+            Vector3 scale = cachedTargetCollider.transform.lossyScale;
+            Vector3 invScale = new Vector3(1.0f / scale[0], 1.0f / scale[1], 1.0f / scale[2]);
+            cachedTargetCollider.size += Vector3.Scale(boxPadding, invScale);
+
+            cachedTargetCollider.EnsureComponent<NearInteractionGrabbable>();
         }
 
         private Bounds GetTargetBounds()
         {
-            var bounds = new Bounds();
+            Bounds bounds = new Bounds();
 
-            if (targetObject.transform.childCount == 0)
+            List<Transform> toExplore = new List<Transform>();
+            for (int i = 0; i < Target.transform.childCount; i++)
             {
-                bounds = GetSingleObjectBounds(targetObject);
+                var child = Target.transform.GetChild(i);
+                if (!child.name.Equals(rigRootName))
+                {
+                    toExplore.Add(child);
+                }
+            }
+            if (toExplore.Count == 0)
+            {
+                bounds = GetSingleObjectBounds(Target);
                 boundsMethod = BoundsCalculationMethod.Collider;
                 return bounds;
             }
-
-            for (int i = 0; i < targetObject.transform.childCount; ++i)
+            else
             {
-                if (bounds.size == Vector3.zero)
+                for (int i = 0; i < toExplore.Count; ++i)
                 {
-                    bounds = GetSingleObjectBounds(targetObject.transform.GetChild(i).gameObject);
-                }
-                else
-                {
-                    Bounds childBounds = GetSingleObjectBounds(targetObject.transform.GetChild(i).gameObject);
-
-                    if (childBounds.size != Vector3.zero)
+                    var child = toExplore[i];
+                    if (bounds.size == Vector3.zero)
                     {
-                        bounds.Encapsulate(childBounds);
+                        bounds = GetSingleObjectBounds(child.gameObject);
                     }
-                }
-            }
-
-            if (bounds.size != Vector3.zero)
-            {
-                boundsMethod = BoundsCalculationMethod.Colliders;
-                return bounds;
-            }
-
-            //simple case: sum of existing colliders
-            Collider[] colliders = targetObject.GetComponentsInChildren<Collider>();
-            if (colliders.Length > 0)
-            {
-                //Collider.bounds is in world space.
-                bounds = colliders[0].bounds;
-
-                for (int i = 0; i < colliders.Length; ++i)
-                {
-                    Bounds colliderBounds = colliders[i].bounds;
-                    if (colliderBounds.size != Vector3.zero)
+                    else
                     {
-                        bounds.Encapsulate(colliderBounds);
+                        Bounds childBounds = GetSingleObjectBounds(child.gameObject);
+                        if (childBounds.size != Vector3.zero)
+                        {
+                            bounds.Encapsulate(childBounds);
+                        }
                     }
                 }
 
@@ -710,77 +1610,86 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
                 }
             }
 
-            //Renderer bounds is local. Requires transform to global coord system.
-            Renderer[] childRenderers = targetObject.GetComponentsInChildren<Renderer>();
+            //simple case: sum of existing colliders
+            Collider[] colliders = Target.GetComponentsInChildren<Collider>();
+            if (colliders.Length > 0)
+            {
+                //Collider.bounds is in world space.
+                bounds = colliders[0].bounds;
+                for (int i = 0; i < colliders.Length; ++i)
+                {
+                    Bounds colliderBounds = colliders[i].bounds;
+                    if (colliderBounds.size != Vector3.zero)
+                    {
+                        bounds.Encapsulate(colliderBounds);
+                    }
+                }
+                if (bounds.size != Vector3.zero)
+                {
+                    boundsMethod = BoundsCalculationMethod.Colliders;
+                    return bounds;
+                }
+            }
+
+            //Renderer bounds is local. Requires transform to global coordinate system.
+            Renderer[] childRenderers = Target.GetComponentsInChildren<Renderer>();
             if (childRenderers.Length > 0)
             {
+                bounds = new Bounds();
                 bounds = childRenderers[0].bounds;
-                var _corners = new Vector3[CORNER_COUNT];
-
                 for (int i = 0; i < childRenderers.Length; ++i)
                 {
                     bounds.Encapsulate(childRenderers[i].bounds);
                 }
 
                 GetCornerPositionsFromBounds(bounds, ref boundsCorners);
-
-                for (int cornerIndex = 0; cornerIndex < _corners.Length; ++cornerIndex)
+                for (int c = 0; c < boundsCorners.Length; ++c)
                 {
                     GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    cube.name = cornerIndex.ToString();
+                    cube.name = c.ToString();
                     cube.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-                    cube.transform.position = boundsCorners[cornerIndex];
+                    cube.transform.position = boundsCorners[c];
                 }
 
                 boundsMethod = BoundsCalculationMethod.Renderers;
                 return bounds;
             }
 
-            MeshFilter[] meshFilters = targetObject.GetComponentsInChildren<MeshFilter>();
-
+            MeshFilter[] meshFilters = Target.GetComponentsInChildren<MeshFilter>();
             if (meshFilters.Length > 0)
             {
                 //Mesh.bounds is local space bounding volume
                 bounds.size = meshFilters[0].mesh.bounds.size;
                 bounds.center = meshFilters[0].mesh.bounds.center;
-
                 for (int i = 0; i < meshFilters.Length; ++i)
                 {
                     bounds.Encapsulate(meshFilters[i].mesh.bounds);
                 }
-
                 if (bounds.size != Vector3.zero)
                 {
-                    bounds.center = targetObject.transform.position;
+                    bounds.center = Target.transform.position;
                     boundsMethod = BoundsCalculationMethod.MeshFilters;
                     return bounds;
                 }
             }
 
-            var boxCollider = targetObject.AddComponent<BoxCollider>();
+            BoxCollider boxCollider = Target.AddComponent<BoxCollider>();
             bounds = boxCollider.bounds;
             Destroy(boxCollider);
             boundsMethod = BoundsCalculationMethod.Collider;
             return bounds;
         }
 
-        private Bounds GetSingleObjectBounds(GameObject boundsObject)
+        private Bounds GetSingleObjectBounds(GameObject gameObject)
         {
-            var bounds = new Bounds(Vector3.zero, Vector3.zero);
-            Component[] components = boundsObject.GetComponents<Component>();
-
-            if (components.Length < 3)
-            {
-                return bounds;
-            }
-
-            var boxCollider = boundsObject.GetComponent<BoxCollider>();
-
+            Bounds bounds = new Bounds(Vector3.zero, Vector3.zero);
+            BoxCollider boxCollider;
+            boxCollider = gameObject.GetComponent<BoxCollider>();
             if (boxCollider == null)
             {
-                boxCollider = boundsObject.AddComponent<BoxCollider>();
+                boxCollider = gameObject.AddComponent<BoxCollider>();
                 bounds = boxCollider.bounds;
-                Destroy(boxCollider);
+                DestroyImmediate(boxCollider);
             }
             else
             {
@@ -792,57 +1701,77 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
 
         private void SetMaterials()
         {
+            //ensure materials
             if (wireframeMaterial == null)
             {
-                Shader.EnableKeyword("_InnerGlow");
+                float[] color = { 1.0f, 1.0f, 1.0f, 0.75f };
+
                 Shader shader = Shader.Find("Mixed Reality Toolkit/Standard");
 
                 wireframeMaterial = new Material(shader);
+                wireframeMaterial.EnableKeyword("_InnerGlow");
                 wireframeMaterial.SetColor("_Color", new Color(0.0f, 0.63f, 1.0f));
+                wireframeMaterial.SetFloat("_InnerGlow", 1.0f);
+                wireframeMaterial.SetFloatArray("_InnerGlowColor", color);
             }
-
             if (handleMaterial == null && handleMaterial != wireframeMaterial)
             {
                 float[] color = { 1.0f, 1.0f, 1.0f, 0.75f };
 
-                Shader.EnableKeyword("_InnerGlow");
                 Shader shader = Shader.Find("Mixed Reality Toolkit/Standard");
 
                 handleMaterial = new Material(shader);
+                handleMaterial.EnableKeyword("_InnerGlow");
                 handleMaterial.SetColor("_Color", new Color(0.0f, 0.63f, 1.0f));
                 handleMaterial.SetFloat("_InnerGlow", 1.0f);
                 handleMaterial.SetFloatArray("_InnerGlowColor", color);
             }
-
             if (handleGrabbedMaterial == null && handleGrabbedMaterial != handleMaterial && handleGrabbedMaterial != wireframeMaterial)
             {
                 float[] color = { 1.0f, 1.0f, 1.0f, 0.75f };
 
-                Shader.EnableKeyword("_InnerGlow");
                 Shader shader = Shader.Find("Mixed Reality Toolkit/Standard");
 
                 handleGrabbedMaterial = new Material(shader);
+                handleGrabbedMaterial.EnableKeyword("_InnerGlow");
                 handleGrabbedMaterial.SetColor("_Color", new Color(0.0f, 0.63f, 1.0f));
                 handleGrabbedMaterial.SetFloat("_InnerGlow", 1.0f);
                 handleGrabbedMaterial.SetFloatArray("_InnerGlowColor", color);
             }
         }
 
+        private void InitializeRigRoot()
+        {
+            var rigRootObj = new GameObject(rigRootName);
+            rigRoot = rigRootObj.transform;
+            rigRoot.parent = transform;
+
+            var pH = rigRootObj.AddComponent<PointerHandler>();
+            pH.OnPointerDown.AddListener(OnPointerDown);
+            pH.OnPointerDragged.AddListener(OnPointerDragged);
+            pH.OnPointerUp.AddListener(OnPointerUp);
+        }
+
         private void InitializeDataStructures()
         {
-            rigRoot = new GameObject("rigRoot").transform;
-            rigRoot.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
-
             boundsCorners = new Vector3[8];
 
             corners = new List<Transform>();
-            cornerColliders = new List<Collider>();
+            cornerVisuals = new List<Transform>();
+            cornersProximate = new List<HandleProximityState>();
             cornerRenderers = new List<Renderer>();
             balls = new List<Transform>();
+            ballVisuals = new List<Transform>();
+            ballsProximate = new List<HandleProximityState>();
             ballRenderers = new List<Renderer>();
-            ballColliders = new List<Collider>();
-            links = new List<Transform>();
-            linkRenderers = new List<Renderer>();
+
+            if (showWireframe)
+            {
+                links = new List<Transform>();
+                linkRenderers = new List<Renderer>();
+            }
+
+            sourcesDetected = new List<IMixedRealityController>();
         }
 
         private void CalculateEdgeCenters()
@@ -850,14 +1779,14 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
             if (boundsCorners != null && edgeCenters != null)
             {
                 edgeCenters[0] = (boundsCorners[0] + boundsCorners[1]) * 0.5f;
-                edgeCenters[1] = (boundsCorners[1] + boundsCorners[2]) * 0.5f;
-                edgeCenters[2] = (boundsCorners[2] + boundsCorners[3]) * 0.5f;
-                edgeCenters[3] = (boundsCorners[3] + boundsCorners[0]) * 0.5f;
+                edgeCenters[1] = (boundsCorners[0] + boundsCorners[2]) * 0.5f;
+                edgeCenters[2] = (boundsCorners[3] + boundsCorners[2]) * 0.5f;
+                edgeCenters[3] = (boundsCorners[3] + boundsCorners[1]) * 0.5f;
 
                 edgeCenters[4] = (boundsCorners[4] + boundsCorners[5]) * 0.5f;
-                edgeCenters[5] = (boundsCorners[5] + boundsCorners[6]) * 0.5f;
-                edgeCenters[6] = (boundsCorners[6] + boundsCorners[7]) * 0.5f;
-                edgeCenters[7] = (boundsCorners[7] + boundsCorners[4]) * 0.5f;
+                edgeCenters[5] = (boundsCorners[4] + boundsCorners[6]) * 0.5f;
+                edgeCenters[6] = (boundsCorners[7] + boundsCorners[6]) * 0.5f;
+                edgeCenters[7] = (boundsCorners[7] + boundsCorners[5]) * 0.5f;
 
                 edgeCenters[8] = (boundsCorners[0] + boundsCorners[4]) * 0.5f;
                 edgeCenters[9] = (boundsCorners[1] + boundsCorners[5]) * 0.5f;
@@ -866,180 +1795,329 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
             }
         }
 
-        private Vector3 ClampScale(Vector3 scale, out bool clamped)
+        private void CaptureInitialState()
         {
-            Vector3 finalScale = scale;
-            Vector3 maximumScale = initialScale * scaleMaximum;
-            clamped = false;
-
-            if (scale.x > maximumScale.x || scale.y > maximumScale.y || scale.z > maximumScale.z)
+            var target = Target;
+            if (target != null)
             {
-                finalScale = maximumScale;
-                clamped = true;
+                isChildOfTarget = transform.IsChildOf(target.transform);
+
+                scaleHandler = GetComponent<TransformScaleHandler>();
+                if (scaleHandler == null)
+                {
+                    scaleHandler = gameObject.AddComponent<TransformScaleHandler>();
+
+                    scaleHandler.TargetTransform = Target.transform;
+                #pragma warning disable 0618
+                    scaleHandler.ScaleMinimum = scaleMinimum;
+                    scaleHandler.ScaleMaximum = scaleMaximum;
+                #pragma warning restore 0618
+                }
             }
-
-            Vector3 minimumScale = initialScale * scaleMinimum;
-
-            if (finalScale.x < minimumScale.x || finalScale.y < minimumScale.y || finalScale.z < minimumScale.z)
-            {
-                finalScale = minimumScale;
-                clamped = true;
-            }
-
-            return finalScale;
         }
 
         private Vector3 GetLinkDimensions()
         {
-            float linkLengthAdjustor = wireframeShape == WireframeType.Cubic ? 2.0f : 1.0f - (6.0f * linkRadius);
-            return (currentBoundsSize * linkLengthAdjustor) + new Vector3(linkRadius, linkRadius, linkRadius);
+            float linkLengthAdjustor = wireframeShape == WireframeType.Cubic ? 2.0f : 1.0f - (6.0f * wireframeEdgeRadius);
+            return (currentBoundsExtents * linkLengthAdjustor) + new Vector3(wireframeEdgeRadius, wireframeEdgeRadius, wireframeEdgeRadius);
+        }
+
+        private bool ShouldRotateHandleBeVisible(CardinalAxisType axisType)
+        {
+            return
+                (axisType == CardinalAxisType.X && showRotationHandleForX) ||
+                (axisType == CardinalAxisType.Y && showRotationHandleForY) ||
+                (axisType == CardinalAxisType.Z && showRotationHandleForZ);
         }
 
         private void ResetHandleVisibility()
         {
+            if (currentPointer != null)
+            {
+                return;
+            }
+
             bool isVisible;
 
             //set balls visibility
             if (balls != null)
             {
-                isVisible = (!wireframeOnly && showRotateHandles);
-
-                for (int i = 0; i < ballRenderers.Count; ++i)
+                isVisible = (active == true && wireframeOnly == false);
+                for (int i = 0; i < balls.Count; ++i)
                 {
-                    ballRenderers[i].material = handleMaterial;
-                    ballRenderers[i].enabled = isVisible;
+                    balls[i].gameObject.SetActive(isVisible && ShouldRotateHandleBeVisible(edgeAxes[i]));
+                    ApplyMaterialToAllRenderers(balls[i].gameObject, handleMaterial);
                 }
+            }
+
+            //set link visibility
+            if (links != null)
+            {
+                isVisible = active == true;
+                for (int i = 0; i < linkRenderers.Count; ++i)
+                {
+                    if (linkRenderers[i] != null)
+                    {
+                        linkRenderers[i].enabled = isVisible;
+                    }
+                }
+            }
+
+            //set box display visibility
+            if (boxDisplay != null)
+            {
+                boxDisplay.SetActive(active);
+                ApplyMaterialToAllRenderers(boxDisplay, boxMaterial);
             }
 
             //set corner visibility
             if (corners != null)
             {
-                isVisible = (!wireframeOnly && showScaleHandles);
+                isVisible = (active == true && wireframeOnly == false && showScaleHandles == true);
 
-                for (int i = 0; i < cornerRenderers.Count; ++i)
+                for (int i = 0; i < corners.Count; ++i)
                 {
-                    cornerRenderers[i].material = handleMaterial;
-                    cornerRenderers[i].enabled = isVisible;
+                    corners[i].gameObject.SetActive(isVisible);
+                    ApplyMaterialToAllRenderers(corners[i].gameObject, handleMaterial);
                 }
             }
 
             SetHiddenHandles();
         }
 
-        private void ShowOneHandle(Transform handle)
+        private void SetHighlighted(Transform activeHandle)
         {
             //turn off all balls
-            if (ballRenderers != null)
+            if (balls != null)
             {
-                for (int i = 0; i < ballRenderers.Count; ++i)
+                for (int i = 0; i < balls.Count; ++i)
                 {
-                    ballRenderers[i].enabled = false;
+                    if (balls[i] != activeHandle)
+                    {
+                        balls[i].gameObject.SetActive(false);
+                    }
+                    else
+                    {
+                        ApplyMaterialToAllRenderers(balls[i].gameObject, handleGrabbedMaterial);
+                    }
                 }
             }
 
             //turn off all corners
-            if (cornerRenderers != null)
+            if (corners != null)
             {
-                for (int i = 0; i < cornerRenderers.Count; ++i)
+                for (int i = 0; i < corners.Count; ++i)
                 {
-                    cornerRenderers[i].enabled = false;
+                    if (corners[i] != activeHandle)
+                    {
+                        corners[i].gameObject.SetActive(false);
+                    }
+                    else
+                    {
+                        ApplyMaterialToAllRenderers(corners[i].gameObject, handleGrabbedMaterial);
+                    }
                 }
             }
 
-            //turn on one handle
-            if (handle != null)
+            //update the box material to the grabbed material
+            if (boxDisplay != null)
             {
-                var handleRenderer = handle.GetComponent<Renderer>();
-                handleRenderer.material = handleGrabbedMaterial;
-                handleRenderer.enabled = true;
+                ApplyMaterialToAllRenderers(boxDisplay, boxGrabbedMaterial);
             }
         }
 
         private void UpdateBounds()
         {
-            Vector3 boundsSize = Vector3.zero;
-            Vector3 centroid = Vector3.zero;
-
-            //store current rotation then zero out the rotation so that the bounds
-            //are computed when the object is in its 'axis aligned orientation'.
-            Quaternion currentRotation = targetObject.transform.rotation;
-            targetObject.transform.rotation = Quaternion.identity;
-
             if (cachedTargetCollider != null)
             {
-                Bounds colliderBounds = cachedTargetCollider.bounds;
-                boundsSize = colliderBounds.extents;
-                centroid = colliderBounds.center;
-            }
+                // Store current rotation then zero out the rotation so that the bounds
+                // are computed when the object is in its 'axis aligned orientation'.
+                Quaternion currentRotation = Target.transform.rotation;
+                Target.transform.rotation = Quaternion.identity;
+                UnityPhysics.SyncTransforms(); // Update collider bounds
 
-            //after bounds are computed, restore rotation...
-            targetObject.transform.rotation = currentRotation;
+                Vector3 boundsExtents = cachedTargetCollider.bounds.extents;
 
-            if (boundsSize != Vector3.zero)
-            {
-                if (flattenAxis == FlattenModeType.FlattenAuto)
+                // After bounds are computed, restore rotation...
+                Target.transform.rotation = currentRotation;
+                UnityPhysics.SyncTransforms();
+
+                if (boundsExtents != Vector3.zero)
                 {
-                    float min = Mathf.Min(boundsSize.x, Mathf.Min(boundsSize.y, boundsSize.z));
-                    flattenAxis = min.Equals(boundsSize.x) ? FlattenModeType.FlattenX : (min.Equals(boundsSize.y) ? FlattenModeType.FlattenY : FlattenModeType.FlattenZ);
+                    if (flattenAxis == FlattenModeType.FlattenAuto)
+                    {
+                        float min = Mathf.Min(boundsExtents.x, Mathf.Min(boundsExtents.y, boundsExtents.z));
+                        flattenAxis = (min == boundsExtents.x) ? FlattenModeType.FlattenX :
+                            ((min == boundsExtents.y) ? FlattenModeType.FlattenY : FlattenModeType.FlattenZ);
+                    }
+
+                    boundsExtents.x = (flattenAxis == FlattenModeType.FlattenX) ? 0.0f : boundsExtents.x;
+                    boundsExtents.y = (flattenAxis == FlattenModeType.FlattenY) ? 0.0f : boundsExtents.y;
+                    boundsExtents.z = (flattenAxis == FlattenModeType.FlattenZ) ? 0.0f : boundsExtents.z;
+                    currentBoundsExtents = boundsExtents;
+
+                    GetCornerPositionsFromBounds(new Bounds(Vector3.zero, boundsExtents * 2.0f), ref boundsCorners);
+                    CalculateEdgeCenters();
                 }
-
-                boundsSize.x = flattenAxis == FlattenModeType.FlattenX ? 0.0f : boundsSize.x;
-                boundsSize.y = flattenAxis == FlattenModeType.FlattenY ? 0.0f : boundsSize.y;
-                boundsSize.z = flattenAxis == FlattenModeType.FlattenZ ? 0.0f : boundsSize.z;
-
-                currentBoundsSize = boundsSize;
-                boundsCentroid = centroid;
-
-                boundsCorners[0] = centroid - new Vector3(centroid.x - currentBoundsSize.x, centroid.y - currentBoundsSize.y, centroid.z - currentBoundsSize.z);
-                boundsCorners[1] = centroid - new Vector3(centroid.x + currentBoundsSize.x, centroid.y - currentBoundsSize.y, centroid.z - currentBoundsSize.z);
-                boundsCorners[2] = centroid - new Vector3(centroid.x + currentBoundsSize.x, centroid.y + currentBoundsSize.y, centroid.z - currentBoundsSize.z);
-                boundsCorners[3] = centroid - new Vector3(centroid.x - currentBoundsSize.x, centroid.y + currentBoundsSize.y, centroid.z - currentBoundsSize.z);
-
-                boundsCorners[4] = centroid - new Vector3(centroid.x - currentBoundsSize.x, centroid.y - currentBoundsSize.y, centroid.z + currentBoundsSize.z);
-                boundsCorners[5] = centroid - new Vector3(centroid.x + currentBoundsSize.x, centroid.y - currentBoundsSize.y, centroid.z + currentBoundsSize.z);
-                boundsCorners[6] = centroid - new Vector3(centroid.x + currentBoundsSize.x, centroid.y + currentBoundsSize.y, centroid.z + currentBoundsSize.z);
-                boundsCorners[7] = centroid - new Vector3(centroid.x - currentBoundsSize.x, centroid.y + currentBoundsSize.y, centroid.z + currentBoundsSize.z);
-
-                CalculateEdgeCenters();
             }
         }
 
         private void UpdateRigHandles()
         {
-            if (rigRoot != null && targetObject != null)
+            if (rigRoot != null && Target != null)
             {
+                // We move the rigRoot to the scene root to ensure that non-uniform scaling performed
+                // anywhere above the rigRoot does not impact the position of rig corners / edges
+                rigRoot.parent = null;
+
                 rigRoot.rotation = Quaternion.identity;
                 rigRoot.position = Vector3.zero;
+                rigRoot.localScale = Vector3.one;
 
                 for (int i = 0; i < corners.Count; ++i)
                 {
                     corners[i].position = boundsCorners[i];
                 }
 
-                Vector3 linkDimensions = GetLinkDimensions();
+                Vector3 rootScale = rigRoot.lossyScale;
+                Vector3 invRootScale = new Vector3(1.0f / rootScale[0], 1.0f / rootScale[1], 1.0f / rootScale[2]);
+
+                // Compute the local scale that produces the desired world space dimensions
+                Vector3 linkDimensions = Vector3.Scale(GetLinkDimensions(), invRootScale);
 
                 for (int i = 0; i < edgeCenters.Length; ++i)
                 {
                     balls[i].position = edgeCenters[i];
-                    links[i].position = edgeCenters[i];
 
-                    if (edgeAxes[i] == CardinalAxisType.X)
+                    if (links != null)
                     {
-                        links[i].localScale = new Vector3(linkRadius, linkDimensions.x, linkRadius);
+                        links[i].position = edgeCenters[i];
+
+                        if (edgeAxes[i] == CardinalAxisType.X)
+                        {
+                            links[i].localScale = new Vector3(wireframeEdgeRadius, linkDimensions.x, wireframeEdgeRadius);
+                        }
+                        else if (edgeAxes[i] == CardinalAxisType.Y)
+                        {
+                            links[i].localScale = new Vector3(wireframeEdgeRadius, linkDimensions.y, wireframeEdgeRadius);
+                        }
+                        else//Z
+                        {
+                            links[i].localScale = new Vector3(wireframeEdgeRadius, linkDimensions.z, wireframeEdgeRadius);
+                        }
                     }
-                    else if (edgeAxes[i] == CardinalAxisType.Y)
-                    {
-                        links[i].localScale = new Vector3(linkRadius, linkDimensions.y, linkRadius);
-                    }
-                    else
-                    {
-                        links[i].localScale = new Vector3(linkRadius, linkDimensions.z, linkRadius);
-                    }
+                }
+
+                if (boxDisplay != null)
+                {
+                    // Compute the local scale that produces the desired world space size
+                    boxDisplay.transform.localScale = Vector3.Scale(GetBoxDisplayScale(), invRootScale);
                 }
 
                 //move rig into position and rotation
                 rigRoot.position = cachedTargetCollider.bounds.center;
-                rigRoot.rotation = targetObject.transform.rotation;
+                rigRoot.rotation = Target.transform.rotation;
+                rigRoot.parent = transform;
+            }
+        }
+
+        private HandleProximityState ScaleHandleByProximity(Transform handle, Renderer renderer, Transform handleVisual, HandleProximityState state, List<Vector3> points, float handleSize)
+        {
+            HandleProximityState newState = state;
+            float closestDistance = float.MaxValue;
+            foreach (Vector3 point in points)
+            {
+                closestDistance = Mathf.Min(closestDistance, (handle.position - point).magnitude);
+            }
+
+            if (closestDistance < handleCloseProximity)
+            {
+                newState = HandleProximityState.CloseProximity;
+            }
+            else if (closestDistance < handleMediumProximity)
+            {
+                newState = HandleProximityState.MediumProximity;
+            }
+            else//far
+            {
+                newState = HandleProximityState.FullsizeNoProximity;
+            }
+
+            ScaleHandle(handle, handleVisual, newState, handleSize);
+
+            if (renderer != null && state != newState)
+            {
+                renderer.material = newState == HandleProximityState.CloseProximity ? handleGrabbedMaterial : handleMaterial;
+            }
+            return newState;
+        }
+
+        private void ScaleHandle(Transform handleRoot, Transform handleVisual, HandleProximityState targetState, float handleSize)
+        {
+            float targetScale = targetState == HandleProximityState.CloseProximity ? closeScale : (targetState == HandleProximityState.MediumProximity ? mediumScale : farScale);
+            float weight = targetState == HandleProximityState.CloseProximity ? closeGrowRate : (targetState == HandleProximityState.MediumProximity ? mediumGrowRate : farGrowRate);
+            float newLocalScale = (handleVisual.transform.localScale.x * (1.0f - weight)) + (handleSize * targetScale * weight);
+            handleVisual.transform.localScale = new Vector3(newLocalScale, newLocalScale, newLocalScale);
+        }
+
+        private void HandleProximityScaling(bool forceFar = false)
+        {
+            if (corners?.Count > 0 || balls?.Count > 0)
+            {
+                inputPoints.Clear();
+                //only use proximity effect if nothing is being dragged or grabbed
+                if (currentPointer == null && forceFar == false)
+                {
+                    if (TryGetPointerPoint(Handedness.Left, out Vector3 point))
+                    {
+                        inputPoints.Add(point);
+                    }
+                    if (TryGetPointerPoint(Handedness.Right, out point))
+                    {
+                        inputPoints.Add(point);
+                    }
+                    if (TryGetEyeGazePoint(out point))
+                    {
+                        inputPoints.Add(point);
+                    }
+
+                    GetControllerPoints(inputPoints);
+
+                    if (inputPoints.Count > 0)
+                    {
+                        for (int i = 0; i < corners.Count; ++i)
+                        {
+                            cornersProximate[i] = ScaleHandleByProximity(corners[i], cornerRenderers.Count > 0 ? cornerRenderers[i] : null, cornerVisuals[i], cornersProximate[i], inputPoints, scaleHandleSize);
+                        }
+
+                        for (int i = 0; i < balls.Count; ++i)
+                        {
+                            ballsProximate[i] = ScaleHandleByProximity(balls[i], ballRenderers.Count > 0 ? ballRenderers[i] : null, ballVisuals[i], ballsProximate[i], inputPoints, rotationHandleSize);
+                        }
+                    }
+                }
+                else if (forceFar == true)
+                {
+                    for (int i = 0; i < corners.Count; ++i)
+                    {
+                        if (cornerRenderers[i] != null && cornersProximate[i] != HandleProximityState.FullsizeNoProximity)
+                        {
+                            cornerRenderers[i].material = handleMaterial;
+                        }
+                        cornerVisuals[i].transform.localScale = (scaleHandleSize * farScale) * Vector3.one;
+                        cornersProximate[i] = HandleProximityState.FullsizeNoProximity;
+                    }
+
+                    for (int i = 0; i < balls.Count; ++i)
+                    {
+                        if (ballRenderers[i] != null && ballsProximate[i] != HandleProximityState.FullsizeNoProximity)
+                        {
+                            ballRenderers[i].material = handleMaterial;
+                        }
+                        ballVisuals[i].transform.localScale = (scaleHandleSize * farScale) * Vector3.one;
+                        ballsProximate[i] = HandleProximityState.FullsizeNoProximity;
+                    }
+                }
             }
         }
 
@@ -1052,7 +2130,6 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
                     return HandleType.Rotation;
                 }
             }
-
             for (int i = 0; i < corners.Count; ++i)
             {
                 if (handle == corners[i])
@@ -1064,69 +2141,64 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
             return HandleType.None;
         }
 
-        private Collider GetGrabbedCollider(Ray ray, out float distance)
+        private bool TryGetPointerPoint(Handedness handed, out Vector3 point)
         {
-            Collider closestCollider = null;
-            float currentDistance;
-            float closestDistance = float.MaxValue;
-
-
-            for (int i = 0; i < cornerColliders.Count; ++i)
+            IMixedRealityHand hand = HandJointUtils.FindHand(handed);
+            if (hand != null && hand.InputSource.Pointers[0].Result != null)
             {
-                if (cornerRenderers[i].enabled && cornerColliders[i].bounds.IntersectRay(ray, out currentDistance))
-                {
-                    if (currentDistance < closestDistance)
-                    {
-                        closestDistance = currentDistance;
-                        closestCollider = cornerColliders[i];
-                    }
-                }
+                point = hand.InputSource.Pointers[0].Result.Details.Point;
+                hand = null;
+                return true;
             }
 
-            for (int i = 0; i < ballColliders.Count; ++i)
+            if (HandJointUtils.TryGetJointPose(Utilities.TrackedHandJoint.IndexTip, handed, out MixedRealityPose pose))
             {
-                if (ballRenderers[i].enabled && ballColliders[i].bounds.IntersectRay(ray, out currentDistance))
-                {
-                    if (currentDistance < closestDistance)
-                    {
-                        closestDistance = currentDistance;
-                        closestCollider = ballColliders[i];
-                    }
-                }
+                point = pose.Position;
+                return true;
             }
 
-            distance = closestDistance;
-            return closestCollider;
+            point = new Vector3(float.NaN, float.NaN, float.NaN);
+            return false;
         }
 
-        private Ray GetHandleGrabbedRay()
+        private bool TryGetEyeGazePoint(out Vector3 point)
         {
-            Ray pointerRay = new Ray();
-
-            if (currentInputSource.Pointers.Length > 0)
+            if (EyeTrackingProvider != null && EyeTrackingProvider.GazePointer != null && eyeTrackingProvider.GazePointer.Result != null)
             {
-                currentInputSource.Pointers[0].TryGetPointingRay(out pointerRay);
+                point = eyeTrackingProvider.GazePointer.Result.Details.Point;
+                return true;
             }
+            point = new Vector3(float.NaN, float.NaN, float.NaN);
+            return false;
+        }
 
-            return pointerRay;
+        private void GetControllerPoints(List<Vector3> points)
+        {
+            foreach (IMixedRealityInputSource source in inputSystem.DetectedInputSources)
+            {
+                if (source.SourceType == InputSourceType.Controller && source.Pointers[0].Result != null)
+                {
+                    points.Add(source.Pointers[0].Result.Details.Point);
+                }
+            }
         }
 
         private void Flatten()
         {
-            switch (flattenAxis)
+            if (flattenAxis == FlattenModeType.FlattenX)
             {
-                case FlattenModeType.FlattenX:
-                    flattenedHandles = new[] { 0, 4, 2, 6 };
-                    break;
-                case FlattenModeType.FlattenY:
-                    flattenedHandles = new[] { 1, 3, 5, 7 };
-                    break;
-                case FlattenModeType.FlattenZ:
-                    flattenedHandles = new[] { 9, 10, 8, 11 };
-                    break;
+                flattenedHandles = new int[] { 0, 4, 2, 6 };
+            }
+            else if (flattenAxis == FlattenModeType.FlattenY)
+            {
+                flattenedHandles = new int[] { 1, 3, 5, 7 };
+            }
+            else if (flattenAxis == FlattenModeType.FlattenZ)
+            {
+                flattenedHandles = new int[] { 9, 10, 8, 11 };
             }
 
-            if (flattenedHandles != null)
+            if (flattenedHandles != null && linkRenderers != null)
             {
                 for (int i = 0; i < flattenedHandles.Length; ++i)
                 {
@@ -1141,134 +2213,231 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX
             {
                 for (int i = 0; i < flattenedHandles.Length; ++i)
                 {
-                    ballRenderers[flattenedHandles[i]].enabled = false;
+                    balls[flattenedHandles[i]].gameObject.SetActive(false);
                 }
             }
         }
 
         private void GetCornerPositionsFromBounds(Bounds bounds, ref Vector3[] positions)
         {
-            Vector3 center = bounds.center;
-            Vector3 extents = bounds.extents;
-            float leftEdge = center.x - extents.x;
-            float rightEdge = center.x + extents.x;
-            float bottomEdge = center.y - extents.y;
-            float topEdge = center.y + extents.y;
-            float frontEdge = center.z - extents.z;
-            float backEdge = center.z + extents.z;
-
-            if (positions == null || positions.Length != CORNER_COUNT)
+            int numCorners = 1 << 3;
+            if (positions == null || positions.Length != numCorners)
             {
-                positions = new Vector3[CORNER_COUNT];
+                positions = new Vector3[numCorners];
             }
 
-            positions[LeftBottomFront] = new Vector3(leftEdge, bottomEdge, frontEdge);
-            positions[LeftBottomBack] = new Vector3(leftEdge, bottomEdge, backEdge);
-            positions[LeftTopFront] = new Vector3(leftEdge, topEdge, frontEdge);
-            positions[LeftTopBack] = new Vector3(leftEdge, topEdge, backEdge);
-            positions[RightBottonFront] = new Vector3(rightEdge, bottomEdge, frontEdge);
-            positions[RightBottomBack] = new Vector3(rightEdge, bottomEdge, backEdge);
-            positions[RightTopFront] = new Vector3(rightEdge, topEdge, frontEdge);
-            positions[RightTopBack] = new Vector3(rightEdge, topEdge, backEdge);
-        }
-
-        private static Vector3 PointToRay(Vector3 origin, Vector3 end, Vector3 closestPoint)
-        {
-            Vector3 originToPoint = closestPoint - origin;
-            Vector3 originToEnd = end - origin;
-            float magnitudeAb = originToEnd.sqrMagnitude;
-            float dotProduct = Vector3.Dot(originToPoint, originToEnd);
-            float distance = dotProduct / magnitudeAb;
-            return origin + (originToEnd * distance);
-        }
-        #endregion Private Methods
-
-        #region Used Event Handlers
-        public void OnInputDown(InputEventData eventData)
-        {
-            if (currentInputSource == null)
+            // Permutate all axes using minCorner and maxCorner.
+            Vector3 minCorner = bounds.center - bounds.extents;
+            Vector3 maxCorner = bounds.center + bounds.extents;
+            for (int c = 0; c < numCorners; c++)
             {
-                IMixedRealityPointer pointer = eventData.InputSource.Pointers[0];
-                Ray ray;
-                if (pointer.TryGetPointingRay(out ray))
-                {
-                    handleMoveType = HandleMoveType.Ray;
-                    float distance;
-                    Collider grabbedCollider = GetGrabbedCollider(ray, out distance);
+                positions[c] = new Vector3(
+                    (c & (1 << 0)) == 0 ? minCorner[0] : maxCorner[0],
+                    (c & (1 << 1)) == 0 ? minCorner[1] : maxCorner[1],
+                    (c & (1 << 2)) == 0 ? minCorner[2] : maxCorner[2]);
+            }
+        }
 
-                    if (grabbedCollider != null)
-                    {
-                        currentInputSource = eventData.InputSource;
-                        currentPointer = pointer;
-                        grabbedHandle = grabbedCollider.gameObject;
-                        Transform grabbedHandleTransform = grabbedHandle.transform;
-                        currentHandleType = GetHandleType(grabbedHandleTransform);
-                        currentRotationAxis = GetRotationAxis(grabbedHandleTransform);
-                        currentPointer.TryGetPointingRay(out initialGrabRay);
-                        initialGrabMag = distance;
-                        initialGrabbedPosition = grabbedHandle.transform.position;
-                        initialGrabbedCentroid = targetObject.transform.position;
-                        initialScale = targetObject.transform.localScale;
-                        pointer.TryGetPointerPosition(out initialGrabPoint);
-                        ShowOneHandle(grabbedHandleTransform);
-                        initialGazePoint = Vector3.zero;
-                    }
+        private static void ApplyMaterialToAllRenderers(GameObject root, Material material)
+        {
+            if (material != null)
+            {
+                Renderer[] renderers = root.GetComponentsInChildren<Renderer>();
+
+                for (int i = 0; i < renderers.Length; ++i)
+                {
+                    renderers[i].material = material;
                 }
             }
         }
 
-        public void OnInputUp(InputEventData eventData)
+        private bool DoesActivationMatchFocus(FocusEventData eventData)
         {
-            if (currentInputSource != null && eventData.InputSource.SourceId == currentInputSource.SourceId)
+            switch (activation)
             {
-                currentInputSource = null;
-                currentHandleType = HandleType.None;
-                currentPointer = null;
-                grabbedHandle = null;
+                case BoundingBoxActivationType.ActivateOnStart:
+                case BoundingBoxActivationType.ActivateManually:
+                    return false;
+                case BoundingBoxActivationType.ActivateByProximity:
+                    return eventData.Pointer is IMixedRealityNearPointer;
+                case BoundingBoxActivationType.ActivateByPointer:
+                    return eventData.Pointer is IMixedRealityPointer;
+                case BoundingBoxActivationType.ActivateByProximityAndPointer:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private void DropController()
+        {
+            HandleType lastHandleType = currentHandleType;
+            currentPointer = null;
+            currentHandleType = HandleType.None;
+            ResetHandleVisibility();
+
+            if (lastHandleType == HandleType.Scale)
+            {
+                if (debugText != null) debugText.text = "OnPointerUp:ScaleStopped";
+                ScaleStopped?.Invoke();
+            }
+            else if (lastHandleType == HandleType.Rotation)
+            {
+                if (debugText != null) debugText.text = "OnPointerUp:RotateStopped";
+                RotateStopped?.Invoke();
+            }
+        }
+
+        #endregion Private Methods
+
+
+        #region Used Event Handlers
+
+        void IMixedRealityFocusChangedHandler.OnFocusChanged(FocusEventData eventData)
+        {
+            if (proximityEffectActive && eventData.NewFocusedObject == null)
+            {
+                HandleProximityScaling(true);
+            }
+
+            if (activation == BoundingBoxActivationType.ActivateManually || activation == BoundingBoxActivationType.ActivateOnStart)
+            {
+                return;
+            }
+
+            if (!DoesActivationMatchFocus(eventData))
+            {
+                return;
+            }
+
+            bool handInProximity = eventData.NewFocusedObject != null && eventData.NewFocusedObject.transform.IsChildOf(transform);
+            if (handInProximity == wireframeOnly)
+            {
+                wireframeOnly = !handInProximity;
                 ResetHandleVisibility();
             }
         }
 
-        public void OnInputChanged(InputEventData<MixedRealityPose> eventData)
+        void IMixedRealityFocusHandler.OnFocusExit(FocusEventData eventData)
         {
-            if (currentInputSource != null && eventData.InputSource.SourceId == currentInputSource.SourceId)
+            if (currentPointer != null && eventData.Pointer == currentPointer)
             {
-                Vector3 pos = eventData.InputData.Position;
-                usingPose = true;
-                if (initialGazePoint == Vector3.zero)
-                {
-                    initialGazePoint = pos;
-                }
-                currentPosePosition = initialGrabbedPosition + (pos - initialGazePoint);
+                DropController();
             }
-            else
+        }
+
+        void IMixedRealityFocusHandler.OnFocusEnter(FocusEventData eventData) { }
+
+        private void OnPointerUp(MixedRealityPointerEventData eventData)
+        {
+            if (currentPointer != null && eventData.Pointer == currentPointer)
             {
-                usingPose = false;
+                DropController();
+                eventData.Use();
+            }
+        }
+
+        private void OnPointerDown(MixedRealityPointerEventData eventData)
+        {
+            if (currentPointer == null && !eventData.used)
+            {
+                GameObject grabbedHandle = eventData.Pointer.Result.CurrentPointerTarget;
+                Transform grabbedHandleTransform = grabbedHandle.transform;
+                currentHandleType = GetHandleType(grabbedHandleTransform);
+                if (currentHandleType != HandleType.None)
+                {
+                    currentPointer = eventData.Pointer;
+                    initialGrabPoint = currentPointer.Result.Details.Point;
+                    currentGrabPoint = initialGrabPoint;
+                    initialScaleOnGrabStart = Target.transform.localScale;
+                    initialPositionOnGrabStart = Target.transform.position;
+                    grabPointInPointer = Quaternion.Inverse(eventData.Pointer.Rotation) * (initialGrabPoint - currentPointer.Position);
+
+                    SetHighlighted(grabbedHandleTransform);
+
+                    if (currentHandleType == HandleType.Scale)
+                    {
+                        // Will use this to scale the target relative to the opposite corner
+                        oppositeCorner = rigRoot.transform.TransformPoint(-grabbedHandle.transform.localPosition);
+                        diagonalDir = (grabbedHandle.transform.position - oppositeCorner).normalized;
+
+                        ScaleStarted?.Invoke();
+
+                        if (debugText != null)
+                        {
+                            debugText.text = "OnPointerDown:ScaleStarted";
+                        }
+                    }
+                    else if (currentHandleType == HandleType.Rotation)
+                    {
+                        currentRotationAxis = GetRotationAxis(grabbedHandleTransform);
+
+                        RotateStarted?.Invoke();
+
+                        if (debugText != null)
+                        {
+                            debugText.text = "OnPointerDown:RotateStarted";
+                        }
+                    }
+
+                    eventData.Use();
+                }
+            }
+
+            if (currentPointer != null)
+            {
+                // Always mark the pointer data as used to prevent any other behavior to handle pointer events
+                // as long as BoundingBox manipulation is active.
+                // This is due to us reacting to both "Select" and "Grip" events.
+                eventData.Use();
+            }
+        }
+
+        private void OnPointerDragged(MixedRealityPointerEventData eventData) { }
+
+        public void OnSourceDetected(SourceStateEventData eventData)
+        {
+            if (eventData.Controller != null)
+            {
+                if (sourcesDetected.Count == 0 || sourcesDetected.Contains(eventData.Controller) == false)
+                {
+                    sourcesDetected.Add(eventData.Controller);
+                }
             }
         }
 
         public void OnSourceLost(SourceStateEventData eventData)
         {
-            if (currentInputSource != null && eventData.InputSource.SourceId == currentInputSource.SourceId)
+            sourcesDetected.Remove(eventData.Controller);
+
+            if (currentPointer != null && currentPointer.InputSourceParent.SourceId == eventData.SourceId)
             {
-                currentInputSource = null;
-                currentHandleType = HandleType.None;
+                HandleType lastHandleType = currentHandleType;
+
                 currentPointer = null;
-                grabbedHandle = null;
+                currentHandleType = HandleType.None;
                 ResetHandleVisibility();
+
+                if (lastHandleType == HandleType.Scale)
+                {
+                    if (debugText != null) debugText.text = "OnSourceLost:ScaleStopped";
+                    ScaleStopped?.Invoke();
+                }
+                else if (lastHandleType == HandleType.Rotation)
+                {
+                    if (debugText != null) debugText.text = "OnSourceLost:RotateStopped";
+                    RotateStopped?.Invoke();
+                }
             }
         }
+
         #endregion Used Event Handlers
 
+
         #region Unused Event Handlers
-        public void OnPointerDown(MixedRealityPointerEventData eventData) { }
-        public void OnPointerUp(MixedRealityPointerEventData eventData) { }
-        public void OnPointerClicked(MixedRealityPointerEventData eventData) { }
-        public void OnInputPressed(InputEventData<float> eventData) { }
-        public void OnPositionInputChanged(InputEventData<Vector2> eventData) { }
-        public void OnPositionChanged(InputEventData<Vector3> eventData) { }
-        public void OnRotationChanged(InputEventData<Quaternion> eventData) { }
-        public void OnSourceDetected(SourceStateEventData eventData) { }
+
+        void IMixedRealityFocusChangedHandler.OnBeforeFocusChange(FocusEventData eventData) { }
+
         #endregion Unused Event Handlers
     }
 }

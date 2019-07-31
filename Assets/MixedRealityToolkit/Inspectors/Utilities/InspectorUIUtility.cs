@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
+namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
 {
     /// <summary>
     /// This class has handy inspector UI utilities and functions.
@@ -14,27 +14,33 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
     public static class InspectorUIUtility
     {
         //Colors
-        public readonly static Color ColorTint100 = new Color(1f, 1f, 1f);
-        public readonly static Color ColorTint75 = new Color(0.75f, 0.75f, 0.75f);
-        public readonly static Color ColorTint50 = new Color(0.5f, 0.5f, 0.5f);
-        public readonly static Color ColorTint25 = new Color(0.25f, 0.25f, 0.25f);
+        public static readonly Color ColorTint100 = new Color(1f, 1f, 1f);
+        public static readonly Color ColorTint75 = new Color(0.75f, 0.75f, 0.75f);
+        public static readonly Color ColorTint50 = new Color(0.5f, 0.5f, 0.5f);
+        public static readonly Color ColorTint25 = new Color(0.25f, 0.25f, 0.25f);
 
-        // default text sizes
+        // default UI sizes
         public const int TitleFontSize = 14;
         public const int DefaultFontSize = 10;
+        public const float DocLinkWidth = 175f;
 
         // special characters
-        public readonly static string Minus = "\u2212";
-        public readonly static string Plus = "\u002B";
-        public readonly static string Astrisk = "\u2217";
-        public readonly static string Left = "\u02C2";
-        public readonly static string Right = "\u02C3";
-        public readonly static string Up = "\u02C4";
-        public readonly static string Down = "\u02C5";
-        public readonly static string Close = "\u2715";
-        public readonly static string Heart = "\u2661";
-        public readonly static string Star = "\u2606";
-        public readonly static string Emoji = "\u263A";
+        public static readonly string Minus = "\u2212";
+        public static readonly string Plus = "\u002B";
+        public static readonly string Astrisk = "\u2217";
+        public static readonly string Left = "\u02C2";
+        public static readonly string Right = "\u02C3";
+        public static readonly string Up = "\u02C4";
+        public static readonly string Down = "\u02C5";
+        public static readonly string Close = "\u2715";
+        public static readonly string Heart = "\u2661";
+        public static readonly string Star = "\u2606";
+        public static readonly string Emoji = "\u263A";
+
+        public static readonly Texture HelpIcon = EditorGUIUtility.IconContent("_Help").image;
+        public static readonly Texture SuccessIcon = EditorGUIUtility.IconContent("Collab").image;
+        public static readonly Texture WarningIcon = EditorGUIUtility.IconContent("console.warnicon").image;
+        public static readonly Texture InfoIcon = EditorGUIUtility.IconContent("console.infoicon").image;
 
         /// <summary>
         /// A data container for managing scrolling lists or nested drawers in custom inspectors.
@@ -55,7 +61,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         /// <summary>
         /// Delegate for button callbacks, multi-index for nested arrays
         /// </summary>
-        /// <param name="index">location of item in a serialized array</param>
+        /// <param name="indexArray">location of item in a serialized array</param>
         /// <param name="prop">A serialize property containing information needed if the button was clicked</param>
         public delegate void MultiListButtonEvent(int[] indexArray, SerializedProperty prop = null);
 
@@ -85,6 +91,70 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
             labelStyle.fixedHeight = size * 2;
             labelStyle.normal.textColor = color;
             return labelStyle;
+        }
+
+        /// <summary>
+        /// Helper function to render buttons correctly indented according to EditorGUI.indentLevel since GUILayout component don't respond naturally
+        /// </summary>
+        /// <param name="buttonText">text to place in button</param>
+        /// <param name="options">layout options</param>
+        /// <returns>true if button clicked, false if otherwise</returns>
+        public static bool RenderIndentedButton(string buttonText, params GUILayoutOption[] options)
+        {
+            return RenderIndentedButton(() => { return GUILayout.Button(buttonText, options); });
+        }
+
+        /// <summary>
+        /// Helper function to render buttons correctly indented according to EditorGUI.indentLevel since GUILayout component don't respond naturally
+        /// </summary>
+        /// <param name="content">What to draw in button</param>
+        /// <param name="style">Style configuration for button</param>
+        /// <param name="options">layout options</param>
+        /// <returns>true if button clicked, false if otherwise</returns>
+        public static bool RenderIndentedButton(GUIContent content, GUIStyle style, params GUILayoutOption[] options)
+        {
+            return RenderIndentedButton(() => { return GUILayout.Button(content, style, options); });
+        }
+
+        /// <summary>
+        /// Helper function to support primary overloaded version of this functionality
+        /// </summary>
+        /// <param name="renderButton">The code to render button correctly based on parameter types passed</param>
+        /// <returns>true if button clicked, false if otherwise</returns>
+        public static bool RenderIndentedButton(Func<bool> renderButton)
+        {
+            bool result = false;
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(EditorGUI.indentLevel * 15);
+            result = renderButton();
+            GUILayout.EndHorizontal();
+            return result;
+        }
+
+        /// <summary>
+        /// Render doc link attribute as clickable button routing to revelant URI
+        /// </summary>
+        /// <param name="docLink">doc link attribute information to build button</param>
+        /// <returns>true if button clicked, false otherwise</returns>
+        public static bool RenderDocLinkButton(string docURL)
+        {
+            if (!string.IsNullOrEmpty(docURL))
+            {
+                var buttonContent = new GUIContent()
+                {
+                    image = HelpIcon,
+                    text = " Documentation",
+                    tooltip = docURL,
+                };
+
+                if (GUILayout.Button(buttonContent, EditorStyles.miniButton, GUILayout.MaxWidth(DocLinkWidth)))
+                {
+                    Application.OpenURL(docURL);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -149,6 +219,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         /// A button that is as wide as the available space
         /// </summary>
         /// <param name="label"></param>
+        /// <param name="padding"></param>
         /// <param name="index"></param>
         /// <param name="callback"></param>
         /// <param name="prop"></param>
@@ -177,6 +248,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         /// A button that is as wide as the available space
         /// </summary>
         /// <param name="label"></param>
+        /// <param name="padding"></param>
         /// <param name="indexArr"></param>
         /// <param name="callback"></param>
         /// <param name="prop"></param>
@@ -258,7 +330,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         }
 
         /// <summary>
-        /// Draw a basic lable
+        /// Draw a basic label
         /// </summary>
         /// <param name="title"></param>
         /// <param name="size"></param>
@@ -339,22 +411,20 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         /// </summary>
         public static void DrawDivider()
         {
-            GUIStyle styleHR = new GUIStyle(GUI.skin.box);
-            styleHR.stretchWidth = true;
-            styleHR.fixedHeight = 1;
-            styleHR.border = new RectOffset(1, 1, 1, 0);
-            GUILayout.Box("", styleHR);
+            EditorGUILayout.LabelField(string.Empty, GUI.skin.horizontalSlider);
         }
 
         /// <summary>
         /// Draws a section start (initiated by the Header attribute)
         /// </summary>
-        /// <param name="targetName"></param>
         /// <param name="headerName"></param>
+        /// <param name="style"></param>
         /// <param name="toUpper"></param>
-        /// <param name="drawInitially"></param>
+        /// <param name="indent"></param>
+        /// <param name="open"></param>
+        /// <param name="size"></param>
         /// <returns></returns>
-        public static bool DrawSectionStart(string headerName, int indent, bool open = true, FontStyle style = FontStyle.Bold, bool toUpper = true, int size = 0)
+        public static bool DrawSectionFoldout(string headerName, bool open = true, FontStyle style = FontStyle.Bold, int size = 0)
         {
             GUIStyle sectionStyle = new GUIStyle(EditorStyles.foldout);
             sectionStyle.fontStyle = style;
@@ -363,35 +433,22 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
                 sectionStyle.fontSize = size;
                 sectionStyle.fixedHeight = size * 2;
             }
-            Color tColor = GUI.color;
-            GUI.color = MixedRealityInspectorUtility.SectionColor;
-
-            if (toUpper)
-            {
-                headerName = headerName.ToUpper();
-            }
 
             bool drawSection = false;
-            drawSection = EditorGUILayout.Foldout(open, headerName, true, sectionStyle);
-            EditorGUILayout.BeginVertical();
-            GUI.color = tColor;
-            EditorGUI.indentLevel = indent;
+
+            // To make foldout render properly, indent only this control
+            using (new EditorGUI.IndentLevelScope())
+            {
+                drawSection = EditorGUILayout.Foldout(open, headerName, true, sectionStyle);
+            }
 
             return drawSection;
         }
 
         /// <summary>
-        /// Draws section end (initiated by next Header attribute)
-        /// </summary>
-        public static void DrawSectionEnd(int indent)
-        {
-            EditorGUILayout.EndVertical();
-            EditorGUI.indentLevel = indent;
-        }
-
-        /// <summary>
         /// adjust list settings as things change
         /// </summary>
+        /// <param name="listSettings"></param>
         /// <param name="count"></param>
         public static List<ListSettings> AdjustListSettings(List<ListSettings> listSettings, int count)
         {
@@ -425,7 +482,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         }
 
         /// <summary>
-        /// Get an array of strings from a serialized list of strings, popup field helper
+        /// Get an array of strings from a serialized list of strings, pop-up field helper
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
@@ -441,7 +498,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         }
 
         /// <summary>
-        /// Get the index of a serialized array item based on it's name, popup field helper
+        /// Get the index of a serialized array item based on it's name, pop-up field helper
         /// </summary>
         /// <param name="options"></param>
         /// <param name="selection"></param>
@@ -460,7 +517,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Inspectors.Utilities
         }
 
         /// <summary>
-        /// Get the index of an array item based on it's name, popup field helper
+        /// Get the index of an array item based on it's name, pop-up field helper
         /// </summary>
         /// <param name="option"></param>
         /// <param name="options"></param>

@@ -2,27 +2,29 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
+namespace Microsoft.MixedReality.Toolkit.UI
 {
     public class ScaleOffsetColorTheme : InteractableColorTheme
     {
         protected Vector3 startPosition;
         protected Vector3 startScale;
+        protected Transform hostTransform;
 
         public override void Init(GameObject host, InteractableThemePropertySettings settings)
         {
             base.Init(host, settings);
-            startPosition = Host.transform.localPosition;
-            startScale = Host.transform.localScale;
+            hostTransform = Host.transform;
+            startPosition = hostTransform.localPosition;
+            startScale = hostTransform.localScale;
         }
 
         public ScaleOffsetColorTheme()
         {
-            Types = new Type[] { typeof(Transform), typeof(TextMesh), typeof(TextMesh), typeof(Renderer) };
+            Types = new Type[] { typeof(Transform), typeof(TextMesh), typeof(TextMesh), typeof(TextMeshPro), typeof(TextMeshProUGUI), typeof(Renderer) };
             Name = "Default: Scale, Offset, Color";
             ThemeProperties = new List<InteractableThemeProperty>();
             ThemeProperties.Add(
@@ -58,10 +60,10 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
             switch (property.Name)
             {
                 case "Scale":
-                    start.Vector3 = Host.transform.localScale;
+                    start.Vector3 = hostTransform.localScale;
                     break;
                 case "Offset":
-                    start.Vector3 = Host.transform.localPosition;
+                    start.Vector3 = hostTransform.localPosition;
                     break;
                 case "Color":
                     start = base.GetProperty(property);
@@ -77,10 +79,10 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
             switch (property.Name)
             {
                 case "Scale":
-                    Host.transform.localScale = Vector3.Lerp(property.StartValue.Vector3, Vector3.Scale(startScale, property.Values[index].Vector3), percentage);
+                    hostTransform.localScale = Vector3.Lerp(property.StartValue.Vector3, Vector3.Scale(startScale, property.Values[index].Vector3), percentage);
                     break;
                 case "Offset":
-                    Host.transform.localPosition = Vector3.Lerp(property.StartValue.Vector3, startPosition + property.Values[index].Vector3, percentage);
+                    hostTransform.localPosition = Vector3.Lerp(property.StartValue.Vector3, startPosition + property.Values[index].Vector3, percentage);
                     break;
                 case "Color":
                     base.SetValue(property, index, percentage);

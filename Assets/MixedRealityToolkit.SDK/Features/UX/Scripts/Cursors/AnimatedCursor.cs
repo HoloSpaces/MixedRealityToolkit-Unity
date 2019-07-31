@@ -1,12 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Core.Definitions.InputSystem;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Utilities;
-using Microsoft.MixedReality.Toolkit.Core.EventDatum.Input;
+using Microsoft.MixedReality.Toolkit.Utilities;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
+namespace Microsoft.MixedReality.Toolkit.Input
 {
     /// <summary>
     /// Animated cursor is a cursor driven using an animator to inject state information
@@ -17,7 +15,12 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
         [SerializeField]
         [Header("Animated Cursor State Data")]
         [Tooltip("Cursor state data to use for its various states.")]
-        private AnimatedCursorData[] cursorStateData = null;
+        private AnimatedCursorStateData[] cursorStateData = null;
+
+        [SerializeField]
+        [Header("Animated Cursor Context Data")]
+        [Tooltip("Cursor context data to use for its various contextual states.")]
+        private AnimatedCursorContextData[] cursorContextData = null;
 
         [SerializeField]
         [Tooltip("Animator parameter to set when input is enabled.")]
@@ -89,6 +92,25 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
                 if (cursorStateData[i].CursorState == state)
                 {
                     SetAnimatorParameter(cursorStateData[i].Parameter);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Override OnCursorContext change to set the correct animation state for the cursor.
+        /// </summary>
+        /// <param name="context"></param>
+        public override void OnCursorContextChange(CursorContextEnum context)
+        {
+            base.OnCursorContextChange(context);
+
+            if (context == CursorContextEnum.Contextual) { return; }
+
+            for (int i = 0; i < cursorContextData.Length; i++)
+            {
+                if (cursorContextData[i].CursorState == context)
+                {
+                    SetAnimatorParameter(cursorContextData[i].Parameter);
                 }
             }
         }

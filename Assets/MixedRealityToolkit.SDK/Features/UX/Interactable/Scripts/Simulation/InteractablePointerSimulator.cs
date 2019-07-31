@@ -3,7 +3,7 @@
 
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Simulation
+namespace Microsoft.MixedReality.Toolkit.UI
 {
     /// <summary>
     /// A way to test button state feedback while in the editor
@@ -49,7 +49,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Simulation
 
             if (isClicked != Clicked)
             {
-                Button.OnPointerClicked(null);
+                Button.TriggerOnClick();
                 Clicked = isClicked;
             }
         }

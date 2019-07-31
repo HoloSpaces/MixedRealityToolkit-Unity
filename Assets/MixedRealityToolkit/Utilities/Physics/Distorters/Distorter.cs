@@ -4,7 +4,7 @@
 using System;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.Core.Utilities.Physics.Distorters
+namespace Microsoft.MixedReality.Toolkit.Physics
 {
     public abstract class Distorter : MonoBehaviour, IComparable<Distorter>
     {
@@ -34,18 +34,7 @@ namespace Microsoft.MixedReality.Toolkit.Core.Utilities.Physics.Distorters
             get { return distortOrder; }
             set
             {
-                if (value < 0)
-                {
-                    distortOrder = 0;
-                }
-                else if (value > 10)
-                {
-                    distortOrder = 10;
-                }
-                else
-                {
-                    distortOrder = value;
-                }
+                distortOrder = Mathf.Clamp(value, 0, 10);
             }
         }
 

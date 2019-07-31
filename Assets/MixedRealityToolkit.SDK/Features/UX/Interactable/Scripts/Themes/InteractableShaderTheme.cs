@@ -2,17 +2,20 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
+namespace Microsoft.MixedReality.Toolkit.UI
 {
     public class InteractableShaderTheme : InteractableThemeBase
     {
+        private static InteractableThemePropertyValue emptyValue = new InteractableThemePropertyValue();
+
         protected MaterialPropertyBlock propertyBlock;
         protected List<ShaderProperties> shaderProperties;
+        protected Renderer renderer;
+
+        private InteractableThemePropertyValue startValue = new InteractableThemePropertyValue();
 
         public InteractableShaderTheme()
         {
@@ -43,6 +46,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
             }
 
             propertyBlock = InteractableThemeShaderUtils.GetMaterialPropertyBlock(host, shaderProperties.ToArray());
+
+            renderer = Host.GetComponent<Renderer>();
         }
 
         public override void SetValue(InteractableThemeProperty property, int index, float percentage)
@@ -50,7 +55,9 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
             if (Host == null)
                 return;
 
-            string propId = property.GetShaderPropId();
+            renderer.GetPropertyBlock(propertyBlock);
+
+            int propId = property.GetShaderPropertyId();
             float newValue;
             switch (property.Type)
             {
@@ -70,35 +77,38 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
                     break;
             }
 
-            SetPropertyBlock(Host, propertyBlock);
+            renderer.SetPropertyBlock(propertyBlock);
         }
 
         public override InteractableThemePropertyValue GetProperty(InteractableThemeProperty property)
         {
             if (Host == null)
-                return new InteractableThemePropertyValue();
+                return emptyValue;
 
-            InteractableThemePropertyValue start = new InteractableThemePropertyValue();
-            string propId = property.GetShaderPropId();
+            renderer.GetPropertyBlock(propertyBlock);
+
+            startValue.Reset();
+            
+            int propId = property.GetShaderPropertyId();
             switch (property.Type)
             {
                 case InteractableThemePropertyValueTypes.Color:
-                    start.Color = propertyBlock.GetVector(propId);
+                    startValue.Color = propertyBlock.GetVector(propId);
                     break;
                 case InteractableThemePropertyValueTypes.ShaderFloat:
-                    start.Float = propertyBlock.GetFloat(propId);
+                    startValue.Float = propertyBlock.GetFloat(propId);
                     break;
                 case InteractableThemePropertyValueTypes.shaderRange:
-                    start.Float = propertyBlock.GetFloat(propId);
+                    startValue.Float = propertyBlock.GetFloat(propId);
                     break;
                 default:
                     break;
             }
 
-            return start;
+            return startValue;
         }
 
-        public static float GetFloat(GameObject host, string propId)
+        public static float GetFloat(GameObject host, int propId)
         {
             if (host == null)
                 return 0;
@@ -113,7 +123,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
             renderer.SetPropertyBlock(block);
         }
 
-        public static MaterialPropertyBlock SetFloat(MaterialPropertyBlock block, float value, string propId)
+        public static MaterialPropertyBlock SetFloat(MaterialPropertyBlock block, float value, int propId)
         {
             if (block == null)
                 return null;
@@ -122,7 +132,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
             return block;
         }
 
-        public static Color GetColor(GameObject host, string propId)
+        public static Color GetColor(GameObject host, int propId)
         {
             if (host == null)
                 return Color.white;
@@ -131,7 +141,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Interactable.Themes
             return block.GetVector(propId);
         }
 
-        public static MaterialPropertyBlock SetColor(MaterialPropertyBlock block, Color color, string propId)
+        public static MaterialPropertyBlock SetColor(MaterialPropertyBlock block, Color color, int propId)
         {
             if (block == null)
                 return null;

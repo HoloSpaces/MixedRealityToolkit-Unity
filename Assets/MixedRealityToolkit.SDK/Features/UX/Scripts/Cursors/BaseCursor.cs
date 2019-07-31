@@ -1,23 +1,38 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Core.Definitions.InputSystem;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Physics;
-using Microsoft.MixedReality.Toolkit.Core.EventDatum.Input;
-using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem;
-using Microsoft.MixedReality.Toolkit.Core.Services;
-using Microsoft.MixedReality.Toolkit.SDK.UX.Pointers;
-using Microsoft.MixedReality.Toolkit.Services.InputSystem;
+using Microsoft.MixedReality.Toolkit.Physics;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
+namespace Microsoft.MixedReality.Toolkit.Input
 {
     /// <summary>
-    /// Object that represents a cursor in 3D space controlled by gaze.
+    /// Object that represents a cursor in 3D space.
     /// </summary>
-    public class BaseCursor : InputSystemGlobalListener, IMixedRealityCursor
+    public class BaseCursor : MonoBehaviour, IMixedRealityCursor
     {
+        private IMixedRealityInputSystem inputSystem = null;
+
+        /// <summary>
+        /// The active instance of the input system.
+        /// </summary>
+        protected IMixedRealityInputSystem InputSystem
+        {
+            get
+            {
+                if (inputSystem == null)
+                {
+                    MixedRealityServiceRegistry.TryGetService<IMixedRealityInputSystem>(out inputSystem);
+                }
+                return inputSystem;
+            }
+        }
+
         public CursorStateEnum CursorState { get; private set; } = CursorStateEnum.None;
+
+        public CursorContextEnum CursorContext { get; private set; } = CursorContextEnum.None;
 
         /// <summary>
         /// Surface distance to place the cursor off of the surface at
@@ -26,22 +41,72 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
         [Tooltip("The distance from the hit surface to place the cursor")]
         private float surfaceCursorDistance = 0.02f;
 
+        public float SurfaceCursorDistance
+        {
+            get { return surfaceCursorDistance; }
+        }
+
+        /// <summary>
+        /// When lerping, use unscaled time. This is useful for games that have a pause mechanism or otherwise adjust the game timescale.
+        /// </summary>
+        public bool UseUnscaledTime
+        {
+            get { return useUnscaledTime; }
+            set { useUnscaledTime = value; }
+        }
+
         [Header("Motion")]
         [SerializeField]
         [Tooltip("When lerping, use unscaled time. This is useful for games that have a pause mechanism or otherwise adjust the game timescale.")]
         private bool useUnscaledTime = true;
 
+        /// <summary>
+        /// Blend value for surface normal to user facing lerp.
+        /// </summary>
+        public float PositionLerpTime
+        {
+            get { return positionLerpTime; }
+            set { positionLerpTime = value; }
+        }
+
         [SerializeField]
         [Tooltip("Blend value for surface normal to user facing lerp")]
         private float positionLerpTime = 0.01f;
+
+        /// <summary>
+        /// Blend value for surface normal to user facing lerp.
+        /// </summary>
+        public float ScaleLerpTime
+        {
+            get { return scaleLerpTime; }
+            set { scaleLerpTime = value; }
+        }
 
         [SerializeField]
         [Tooltip("Blend value for surface normal to user facing lerp")]
         private float scaleLerpTime = 0.01f;
 
+        /// <summary>
+        /// Blend value for surface normal to user facing lerp.
+        /// </summary>
+        public float RotationLerpTime
+        {
+            get { return rotationLerpTime; }
+            set { rotationLerpTime = value; }
+        }
+
         [SerializeField]
         [Tooltip("Blend value for surface normal to user facing lerp")]
         private float rotationLerpTime = 0.01f;
+
+        /// <summary>
+        /// Blend value for surface normal to user facing lerp.
+        /// </summary>
+        public float LookRotationBlend
+        {
+            get { return lookRotationBlend; }
+            set { lookRotationBlend = value; }
+        }
 
         [Range(0, 1)]
         [SerializeField]
@@ -55,11 +120,17 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
 
         protected bool IsSourceDetected => visibleSourcesCount > 0;
 
-        protected bool IsPointerDown = false;
+        public List<uint> SourceDownIds = new List<uint>();
+        public bool IsPointerDown => SourceDownIds.Count > 0;
 
         protected GameObject TargetedObject = null;
 
         private uint visibleSourcesCount = 0;
+        public uint VisibleSourcesCount
+        {
+            get { return visibleSourcesCount; }
+            set { visibleSourcesCount = value; }
+        }
 
         private Vector3 targetPosition;
         private Vector3 targetScale;
@@ -111,6 +182,15 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
         }
 
         /// <inheritdoc />
+        public virtual void Destroy()
+        {
+            // Cursor needs to unregister its input handlers explicitly, while input system is still active.
+            // If this would be done from OnDestroy, it will happen in the end of Update loop,
+            // when the input system itself is already destroyed.
+            UnregisterManagers();
+        }
+
+        /// <inheritdoc />
         public bool IsVisible => PrimaryCursorVisual != null ? PrimaryCursorVisual.gameObject.activeInHierarchy : gameObject.activeInHierarchy;
 
         /// <inheritdoc />
@@ -118,6 +198,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
 
         /// <inheritdoc />
         public GameObject GameObjectReference => gameObject;
+
+        private FocusDetails focusDetails;
 
         #endregion IMixedRealityCursor Implementation
 
@@ -161,7 +243,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
                         if (basePointer != null &&
                             basePointer.DestroyOnSourceLost)
                         {
-                            IsPointerDown = false;
+                            SourceDownIds.Remove(eventData.SourceId);
                             Destroy(gameObject);
                             return;
                         }
@@ -173,7 +255,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
 
             if (!IsSourceDetected)
             {
-                IsPointerDown = false;
+                SourceDownIds.Remove(eventData.SourceId);
 
                 if (SetVisibilityOnSourceDetected)
                 {
@@ -209,10 +291,13 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
             {
                 if (sourcePointer.PointerId == Pointer.PointerId)
                 {
-                    IsPointerDown = true;
+                    SourceDownIds.Add(eventData.SourceId);
                 }
             }
         }
+
+        /// <inheritdoc />
+        public virtual void OnPointerDragged(MixedRealityPointerEventData eventData) { }
 
         /// <inheritdoc />
         public virtual void OnPointerClicked(MixedRealityPointerEventData eventData) { }
@@ -224,7 +309,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
             {
                 if (sourcePointer.PointerId == Pointer.PointerId)
                 {
-                    IsPointerDown = false;
+                    SourceDownIds.Remove(eventData.SourceId);
                 }
             }
         }
@@ -235,27 +320,28 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
 
         private void Update()
         {
+            if (!InputSystem.FocusProvider.TryGetFocusDetails(Pointer, out focusDetails))
+            {
+                if (InputSystem.FocusProvider.IsPointerRegistered(Pointer))
+                {
+                    Debug.LogError($"{name}: Unable to get focus details for {pointer.GetType().Name}!");
+                }
+            }
+
             UpdateCursorState();
             UpdateCursorTransform();
         }
 
-        protected override void OnEnable()
+        protected virtual void OnEnable()
         {
-            // We don't call base.OnEnable because we handle registering the global listener a bit differently.
             OnCursorStateChange(CursorStateEnum.None);
         }
 
-        protected override void OnDisable()
+        protected virtual void OnDisable()
         {
-            // We don't call base.OnDisable because we handle unregistering the global listener a bit differently.
             TargetedObject = null;
             visibleSourcesCount = 0;
             OnCursorStateChange(CursorStateEnum.Contextual);
-        }
-
-        private void OnDestroy()
-        {
-            UnregisterManagers();
         }
 
         #endregion MonoBehaviour Implementation
@@ -266,10 +352,10 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
         protected virtual void RegisterManagers()
         {
             // Register the cursor as a listener, so that it can always get input events it cares about
-            MixedRealityToolkit.InputSystem.Register(gameObject);
+            InputSystem.RegisterHandler<IMixedRealityCursor>(this);
 
             // Setup the cursor to be able to respond to input being globally enabled / disabled
-            if (MixedRealityToolkit.InputSystem.IsInputEnabled)
+            if (InputSystem.IsInputEnabled)
             {
                 OnInputEnabled();
             }
@@ -278,8 +364,8 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
                 OnInputDisabled();
             }
 
-            MixedRealityToolkit.InputSystem.InputEnabled += OnInputEnabled;
-            MixedRealityToolkit.InputSystem.InputDisabled += OnInputDisabled;
+            InputSystem.InputEnabled += OnInputEnabled;
+            InputSystem.InputDisabled += OnInputDisabled;
         }
 
         /// <summary>
@@ -287,11 +373,11 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
         /// </summary>
         protected virtual void UnregisterManagers()
         {
-            if (MixedRealityToolkit.InputSystem != null)
+            if (InputSystem != null)
             {
-                MixedRealityToolkit.InputSystem.InputEnabled -= OnInputEnabled;
-                MixedRealityToolkit.InputSystem.InputDisabled -= OnInputDisabled;
-                MixedRealityToolkit.InputSystem.Unregister(gameObject);
+                InputSystem.InputEnabled -= OnInputEnabled;
+                InputSystem.InputDisabled -= OnInputDisabled;
+                InputSystem.UnregisterHandler<IMixedRealityCursor>(this);
             }
         }
 
@@ -306,19 +392,7 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
                 return;
             }
 
-            FocusDetails focusDetails;
-
-            if (!MixedRealityToolkit.InputSystem.FocusProvider.TryGetFocusDetails(Pointer, out focusDetails))
-            {
-                if (MixedRealityToolkit.InputSystem.FocusProvider.IsPointerRegistered(Pointer))
-                {
-                    Debug.LogError($"{name}: Unable to get focus details for {pointer.GetType().Name}!");
-                }
-
-                return;
-            }
-
-            GameObject newTargetedObject = MixedRealityToolkit.InputSystem.FocusProvider.GetFocusedObject(Pointer);
+            GameObject newTargetedObject = InputSystem.FocusProvider.GetFocusedObject(Pointer);
             Vector3 lookForward;
 
             // Normalize scale on before update
@@ -389,10 +463,15 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
         private void UpdateCursorState()
         {
             CursorStateEnum newState = CheckCursorState();
-
             if (CursorState != newState)
             {
                 OnCursorStateChange(newState);
+            }
+
+            CursorContextEnum newContext = CheckCursorContext();
+            if (CursorContext != newContext)
+            {
+                OnCursorContextChange(newContext);
             }
         }
 
@@ -425,12 +504,133 @@ namespace Microsoft.MixedReality.Toolkit.SDK.UX.Cursors
         }
 
         /// <summary>
+        /// Gets three axes where the forward is as close to the provided normal as
+        /// possible but where the axes are aligned to the TargetObject's transform
+        /// </summary>
+        private bool GetCursorTargetAxes(Vector3 normal, ref Vector3 right, ref Vector3 up, ref Vector3 forward)
+        {
+            if (TargetedObject)
+            {
+                Vector3 objRight = TargetedObject.transform.TransformDirection(Vector3.right);
+                Vector3 objUp = TargetedObject.transform.TransformDirection(Vector3.up);
+                Vector3 objForward = TargetedObject.transform.TransformDirection(Vector3.forward);
+
+                float dotRight = Vector3.Dot(normal, objRight);
+                float dotUp = Vector3.Dot(normal, objUp);
+                float dotForward = Vector3.Dot(normal, objForward);
+
+                if (Math.Abs(dotRight) > Math.Abs(dotUp) && 
+                    Math.Abs(dotRight) > Math.Abs(dotForward))
+                {
+                    forward = (dotRight > 0 ? objRight : -objRight).normalized;
+                }
+                else if (Math.Abs(dotUp) > Math.Abs(dotForward))
+                {
+                    forward = (dotUp > 0 ? objUp : -objUp).normalized;
+                }
+                else
+                {
+                    forward = (dotForward > 0 ? objForward : -objForward).normalized;
+                }
+
+                right = Vector3.Cross(Vector3.up, forward).normalized;
+                if (right == Vector3.zero)
+                {
+                    right = Vector3.Cross(objForward, forward).normalized;
+                }
+                up = Vector3.Cross(forward, right).normalized;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Virtual function for checking cursor context changes.
+        /// </summary>
+        public virtual CursorContextEnum CheckCursorContext()
+        {
+            if (CursorContext != CursorContextEnum.Contextual)
+            {
+                var cursorAction = CursorContextInfo.CursorAction.None;
+                Transform contextCenter = null;
+                if (TargetedObject)
+                {
+                    var contextInfo = TargetedObject.GetComponent<CursorContextInfo>();
+                    if (contextInfo != null)
+                    {
+                        cursorAction = contextInfo.CurrentCursorAction;
+                        contextCenter = contextInfo.ObjectCenter;
+                    }
+                }
+
+                Vector3 right = Vector3.zero;
+                Vector3 up = Vector3.zero;
+                Vector3 forward = Vector3.zero;
+                if (!GetCursorTargetAxes(focusDetails.Normal, ref right, ref up, ref forward))
+                {
+                    return CursorContextEnum.None;
+                }
+
+                if (cursorAction == CursorContextInfo.CursorAction.Move)
+                {
+                    return CursorContextEnum.MoveCross;
+                }
+                else if (cursorAction == CursorContextInfo.CursorAction.Scale)
+                {
+                    if (contextCenter != null)
+                    {
+                        Vector3 adjustedCursorPos = Position - contextCenter.position;
+
+                        if (Vector3.Dot(adjustedCursorPos, up) * Vector3.Dot(adjustedCursorPos, right) > 0) // quadrant 1 and 3
+                        {
+                            return CursorContextEnum.MoveNorthwestSoutheast;
+                        }
+                        else // quadrant 2 and 4
+                        {
+                            return CursorContextEnum.MoveNortheastSouthwest;
+                        }
+                    }
+                }
+                else if (cursorAction == CursorContextInfo.CursorAction.Rotate)
+                {
+                    if (contextCenter != null)
+                    {
+                        Vector3 adjustedCursorPos = Position - contextCenter.position;
+
+                        if (Math.Abs(Vector3.Dot(adjustedCursorPos, right)) > 
+                            Math.Abs(Vector3.Dot(adjustedCursorPos, up)))
+                        {
+                            return CursorContextEnum.RotateEastWest;
+                        }
+                        else
+                        {
+                            return CursorContextEnum.RotateNorthSouth;
+                        }
+                    }
+                }
+                return CursorContextEnum.None;
+            }
+            return CursorContextEnum.Contextual;
+        }
+
+        /// <summary>
         /// Change the cursor state to the new state.  Override in cursor implementations.
         /// </summary>
         /// <param name="state"></param>
         public virtual void OnCursorStateChange(CursorStateEnum state)
         {
             CursorState = state;
+        }
+
+        /// <summary>
+        /// Change the cursor context state to the new context.  Override in cursor implementations.
+        /// </summary>
+        /// <param name="context"></param>
+        public virtual void OnCursorContextChange(CursorContextEnum context)
+        {
+            CursorContext = context;
         }
     }
 }
