@@ -3,16 +3,14 @@
 
 using UnityEngine.XR;
 using System.Collections.Generic;
-using Microsoft.MixedReality.Toolkit.Core.Attributes;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Devices;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Utilities;
-using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem;
-using Microsoft.MixedReality.Toolkit.Core.Providers.UnityInput;
+using Microsoft.MixedReality.Toolkit.Input;
+using Microsoft.MixedReality.Toolkit.Utilities;
+using Microsoft.MixedReality.Toolkit.Input.UnityInput;
 
 namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
 {
     [MixedRealityController(
-        SupportedControllerType.GenericOculusAndroid,
+        SupportedControllerType.GenericAndroid,
         new[] { Handedness.Left, Handedness.Right },
         flags: MixedRealityControllerConfigurationFlags.UseCustomInteractionMappings)]
     public class GenericOculusAndroidController : GenericJoystickController

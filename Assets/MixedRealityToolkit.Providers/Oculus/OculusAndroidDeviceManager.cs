@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Core.Attributes;
-using Microsoft.MixedReality.Toolkit.Core.Definitions;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Devices;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.Utilities;
-using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem;
-using Microsoft.MixedReality.Toolkit.Core.Providers.UnityInput;
-using Microsoft.MixedReality.Toolkit.Core.Services;
+using Microsoft.MixedReality.Toolkit.Input;
+using Microsoft.MixedReality.Toolkit.Input.UnityInput;
+using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using UnityEngine;
 
@@ -27,7 +23,12 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
         /// <param name="name">Friendly name of the service.</param>
         /// <param name="priority">Service priority. Used to determine order of instantiation.</param>
         /// <param name="profile">The service's configuration profile.</param>
-        public OculusAndroidDeviceManager(string name, uint priority, BaseMixedRealityProfile profile) : base(name, priority, profile) { }
+        public OculusAndroidDeviceManager(
+            IMixedRealityServiceRegistrar registrar,
+            IMixedRealityInputSystem inputSystem,
+            string name,
+            uint priority,
+            BaseMixedRealityProfile profile) : base(registrar, inputSystem, name, priority, profile) { }
 
         #region Controller Utilities
 
@@ -62,7 +63,7 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
 
             switch (currentControllerType)
             {
-                case SupportedControllerType.GenericOculusAndroid:
+                case SupportedControllerType.GenericAndroid:
                     controllerType = typeof(GenericOculusAndroidController);
                     break;
                 case SupportedControllerType.OculusGoRemote:
@@ -72,7 +73,7 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
                     return null;
             }
 
-            var pointers = RequestPointers(controllerType, controllingHand);
+            var pointers = RequestPointers(currentControllerType, controllingHand);
             var inputSource = MixedRealityToolkit.InputSystem?.RequestNewGenericInputSource($"{currentControllerType} Controller {controllingHand}", pointers);
             var detectedController = Activator.CreateInstance(controllerType, TrackingState.NotTracked, controllingHand, inputSource, null) as GenericJoystickController;
 
@@ -102,11 +103,6 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
         /// <inheritdoc />
         protected override SupportedControllerType GetCurrentControllerType(string joystickName)
         {
-            if (string.IsNullOrEmpty(joystickName))
-            {
-                return SupportedControllerType.None;
-            }
-
             if (joystickName.Contains("Oculus Tracked Remote"))
             {
                 return SupportedControllerType.OculusGoRemote;
@@ -114,7 +110,7 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
 
             Debug.Log($"{joystickName} does not have a defined controller type, falling back to generic controller type");
 
-            return SupportedControllerType.GenericOculusAndroid;
+            return SupportedControllerType.GenericAndroid;
         }
 
         #endregion Controller Utilities
