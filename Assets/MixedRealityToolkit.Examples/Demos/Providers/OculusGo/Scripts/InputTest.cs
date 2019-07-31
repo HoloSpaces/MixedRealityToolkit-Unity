@@ -1,10 +1,8 @@
-﻿using UnityEngine;
-using Microsoft.MixedReality.Toolkit.Core.EventDatum.Input;
-using Microsoft.MixedReality.Toolkit.Core.Interfaces.InputSystem.Handlers;
-using Microsoft.MixedReality.Toolkit.Services.InputSystem;
-using Microsoft.MixedReality.Toolkit.Core.Definitions.InputSystem;
+﻿using Microsoft.MixedReality.Toolkit;
+using Microsoft.MixedReality.Toolkit.Input;
+using UnityEngine;
 
-public class InputTest : InputSystemGlobalListener, IMixedRealityInputHandler, IMixedRealityInputHandler<Vector2>
+public class InputTest : InputSystemGlobalHandlerListener, IMixedRealityInputHandler, IMixedRealityInputHandler<Vector2>
 {
     public void OnInputChanged(InputEventData<Vector2> eventData)
     {
@@ -24,6 +22,18 @@ public class InputTest : InputSystemGlobalListener, IMixedRealityInputHandler, I
     public void OnInputUp(InputEventData eventData){ }
 
     public void OnPositionInputChanged(InputEventData<Vector2> eventData) { }
+
+    protected override void RegisterHandlers()
+    {
+        MixedRealityToolkit.InputSystem.RegisterHandler<IMixedRealityInputHandler>(this);
+        MixedRealityToolkit.InputSystem.RegisterHandler<IMixedRealityInputHandler<Vector2>>(this);
+    }
+
+    protected override void UnregisterHandlers()
+    {
+        MixedRealityToolkit.InputSystem.UnregisterHandler<IMixedRealityInputHandler>(this);
+        MixedRealityToolkit.InputSystem.UnregisterHandler<IMixedRealityInputHandler<Vector2>>(this);
+    }
 
     private string ToString(MixedRealityInputAction action)
     {
