@@ -15,10 +15,11 @@ MonoBehaviour:
   isCustomProfile: 1
   dataProviderConfigurations:
   - componentType:
-      reference: 
-    componentName: New data provider 0
+      reference: Microsoft.MixedReality.Toolkit.Providers.OculusAndroid.OculusAndroidDeviceManager,
+        MixedRealityToolkit.Providers.Oculus
+    componentName: OculusAndroidDeviceManager
     priority: 0
-    runtimePlatform: -1
+    runtimePlatform: 32
     deviceManagerProfile: {fileID: 0}
   focusProviderType:
     reference: Microsoft.MixedReality.Toolkit.Input.FocusProvider, Microsoft.MixedReality.Toolkit.Services.InputSystem
