@@ -247,7 +247,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Solvers
                     break;
                 case ReferenceObjectType.BodyPart:
 
-                    if (transformTarget == null && trackedObjectToFace == SolverHandler.TrackedObjectToReference)
+                    if (transformTarget == null && trackedObjectToFace == SolverHandler.TrackedTargetType)
                     {
                         faceTarget = transformTarget;
                         break;
@@ -258,22 +258,26 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Solvers
                         case TrackedObjectType.Head:
                             faceTarget = CameraCache.Main.transform;
                             break;
-                        case TrackedObjectType.MotionControllerLeft:
-                            faceTarget = controllerFinder.GetControllerTransform(Handedness.Left);
-                            break;
-                        case TrackedObjectType.MotionControllerRight:
-                            faceTarget = controllerFinder.GetControllerTransform(Handedness.Right);
+
+                        case TrackedObjectType.MotionController:
 
                             break;
-                        case TrackedObjectType.HandJointLeft:
+
+                        case TrackedObjectType.HandJoint:
                             // Set to None, so the underlying ControllerFinder doesn't attach to a controller.
                             // TODO: Make this more generic / configurable for hands vs controllers. Also resolve the duplicate Handedness variables.
-                            controllerFinder.GetControllerTransform(Handedness.None);
-                            faceTarget = SolverHandler.RequestEnableHandJoint(Handedness.Left);
-                            break;
-                        case TrackedObjectType.HandJointRight:
-                            controllerFinder.GetControllerTransform(Handedness.None);
-                            faceTarget = SolverHandler.RequestEnableHandJoint(Handedness.Right);
+                            switch (SolverHandler.CurrentTrackedHandedness)
+                            {
+                                case Handedness.Left:
+                                    controllerFinder.GetControllerTransform(Handedness.None);
+                                    faceTarget = controllerFinder.GetControllerTransform(Handedness.Left);
+                                    break;
+
+                                case Handedness.Right:
+                                    controllerFinder.GetControllerTransform(Handedness.None);
+                                    faceTarget = controllerFinder.GetControllerTransform(Handedness.Right);
+                                    break;
+                            }
                             break;
                     }
                     break;
