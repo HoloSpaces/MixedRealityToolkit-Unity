@@ -86,6 +86,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
             return activeControllers;
         }
 
+#if UNITY_EDITOR
         /// <inheritdoc />
         public override void Initialize()
         {
@@ -96,6 +97,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         {
             ArticulatedHandPose.ResetGesturePoses();
         }
+#endif
 
         /// <inheritdoc />
         public override void Enable()
