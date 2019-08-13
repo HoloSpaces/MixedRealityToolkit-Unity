@@ -35,6 +35,8 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
         /// <inheritdoc />
         protected override GenericJoystickController GetOrAddController(string joystickName)
         {
+            Debug.Log($"Found joystick:{joystickName}");
+
             // If a device is already registered with the ID provided, just return it.
             if (ActiveControllers.ContainsKey(joystickName))
             {
