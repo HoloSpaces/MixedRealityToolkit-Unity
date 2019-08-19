@@ -1,17 +1,17 @@
-# Determining platform capabilities
+# Detecting platform capabilities
 
 A common question asked of the MRTK involves knowing which specific device (ex: Microsoft HoloLens 2) is being
 used to run an application. Identifying the exact hardware can be challenging on different platforms. The MRTK
 instead provides a way identify specific capabilities of the system (for example, if the system has the articulated
 hands capability).
 
-## Capabilites
+## Capabilities
 
 The Mixed Reality Toolkit provides the [MixedRealityCapability](xref:Microsoft.MixedReality.Toolkit.MixedRealityCapability)
 enumeration which defines a set of capabilities for which an application can query at runtime. This enum contains the 
 complete set of capabilities for which the Mixed Reality Toolkit supports checking.
 
-### Input System capabilies
+### Input System capabilities
 
 The input system supports querying the following capabilities.
 
@@ -21,7 +21,7 @@ The input system supports querying the following capabilities.
 | EyeTracking | Eye gaze targeting |
 | GGVHand | Gaze-Gesture-Voice hand input |
 | MotionController | Motion controller input |
-| VoiceCommand | Coice commands using app defined keywords |
+| VoiceCommand | Voice commands using app defined keywords |
 | VoiceDictation | Voice to text dictation |
 
 This example checks to see if the input system has loaded a data provider with support for articulated hands.
