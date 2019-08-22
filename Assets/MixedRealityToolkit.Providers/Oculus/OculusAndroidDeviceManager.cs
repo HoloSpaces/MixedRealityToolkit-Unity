@@ -76,7 +76,7 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
             }
 
             var pointers = RequestPointers(currentControllerType, controllingHand);
-            var inputSource = MixedRealityToolkit.InputSystem?.RequestNewGenericInputSource($"{currentControllerType} Controller {controllingHand}", pointers);
+            var inputSource = CoreServices.InputSystem?.RequestNewGenericInputSource($"{currentControllerType} Controller {controllingHand}", pointers);
             var detectedController = Activator.CreateInstance(controllerType, TrackingState.NotTracked, controllingHand, inputSource, null) as GenericJoystickController;
 
             if (detectedController == null)

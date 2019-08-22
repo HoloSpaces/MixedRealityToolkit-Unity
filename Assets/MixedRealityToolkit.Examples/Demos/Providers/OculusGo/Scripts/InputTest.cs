@@ -25,14 +25,14 @@ public class InputTest : InputSystemGlobalHandlerListener, IMixedRealityInputHan
 
     protected override void RegisterHandlers()
     {
-        MixedRealityToolkit.InputSystem.RegisterHandler<IMixedRealityInputHandler>(this);
-        MixedRealityToolkit.InputSystem.RegisterHandler<IMixedRealityInputHandler<Vector2>>(this);
+        CoreServices.InputSystem.RegisterHandler<IMixedRealityInputHandler>(this);
+        CoreServices.InputSystem.RegisterHandler<IMixedRealityInputHandler<Vector2>>(this);
     }
 
     protected override void UnregisterHandlers()
     {
-        MixedRealityToolkit.InputSystem.UnregisterHandler<IMixedRealityInputHandler>(this);
-        MixedRealityToolkit.InputSystem.UnregisterHandler<IMixedRealityInputHandler<Vector2>>(this);
+        CoreServices.InputSystem.UnregisterHandler<IMixedRealityInputHandler>(this);
+        CoreServices.InputSystem.UnregisterHandler<IMixedRealityInputHandler<Vector2>>(this);
     }
 
     private string ToString(MixedRealityInputAction action)
