@@ -98,7 +98,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Utilities
             return (gameObject.scene.name != null);
         }
 
-        private static bool CanSupportMrtkInput(Canvas canvas)
+        public static bool CanSupportMrtkInput(Canvas canvas)
         {
             return (canvas.isRootCanvas && (canvas.renderMode == RenderMode.WorldSpace));
         }
