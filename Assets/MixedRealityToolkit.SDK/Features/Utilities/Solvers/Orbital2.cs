@@ -175,8 +175,9 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Solvers
             controllerFinder = GetComponent<ControllerFinderOrbital2>();
         }
 
-        private void Start()
+        protected override void Start()
         {
+            base.Start();
             TrackNewFaceTarget();
         }
 
