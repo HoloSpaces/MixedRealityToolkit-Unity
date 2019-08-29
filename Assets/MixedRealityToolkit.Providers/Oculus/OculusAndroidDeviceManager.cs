@@ -10,12 +10,13 @@ using UnityEngine;
 namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
 {
     /// <summary>
-    /// Manages Open VR Devices using unity's input system.
+    /// Manages Oculus Android native devices.
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
-        SupportedPlatforms.Android)]
-    public class OculusAndroidDeviceManager : UnityJoystickManager
+        SupportedPlatforms.Android,
+        "Oculus Device Manager")]
+    public class OculusAndroidDeviceManager : UnityJoystickManager, IMixedRealityCapabilityCheck
     {
         /// <summary>
         /// Constructor.
@@ -29,6 +30,12 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
             string name,
             uint priority,
             BaseMixedRealityProfile profile) : base(registrar, inputSystem, name, priority, profile) { }
+
+#region IMixedRealityCapabilityCheck Implementation
+
+        public bool CheckCapability(MixedRealityCapability capability) => capability == MixedRealityCapability.MotionController;
+        
+#endregion IMixedRealityCapabilityCheck Implementation
 
         #region Controller Utilities
 
@@ -45,39 +52,26 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
                 return controller;
             }
 
-            Handedness controllingHand;
+            GenericJoystickController detectedController = CreateDetectedController(joystickName);
 
-            if (joystickName.Contains("Left"))
+            for (int i = 0; i < detectedController.InputSource?.Pointers?.Length; i++)
             {
-                controllingHand = Handedness.Left;
-            }
-            else if (joystickName.Contains("Right"))
-            {
-                controllingHand = Handedness.Right;
-            }
-            else
-            {
-                controllingHand = Handedness.None;
+                detectedController.InputSource.Pointers[i].Controller = detectedController;
             }
 
-            var currentControllerType = GetCurrentControllerType(joystickName);
-            Type controllerType;
+            ActiveControllers.Add(joystickName, detectedController);
+            return detectedController;
+        }
 
-            switch (currentControllerType)
-            {
-                case SupportedControllerType.GenericAndroid:
-                    controllerType = typeof(GenericOculusAndroidController);
-                    break;
-                case SupportedControllerType.OculusGoRemote:
-                    controllerType = typeof(OculusGoRemoteController);
-                    break;
-                default:
-                    return null;
-            }
+        private GenericJoystickController CreateDetectedController(string joystickName)
+        {
+            Handedness controllingHand = GetHandedness(joystickName);
+            SupportedControllerType currentControllerType = GetCurrentControllerType(joystickName);
+            Type controllerType = GetControllerType(currentControllerType);
 
-            var pointers = RequestPointers(currentControllerType, controllingHand);
-            var inputSource = CoreServices.InputSystem?.RequestNewGenericInputSource($"{currentControllerType} Controller {controllingHand}", pointers);
-            var detectedController = Activator.CreateInstance(controllerType, TrackingState.NotTracked, controllingHand, inputSource, null) as GenericJoystickController;
+            IMixedRealityPointer[] pointers = RequestPointers(currentControllerType, controllingHand);
+            IMixedRealityInputSource inputSource = CoreServices.InputSystem?.RequestNewGenericInputSource($"{currentControllerType} Controller {controllingHand}", pointers);
+            GenericJoystickController detectedController = Activator.CreateInstance(controllerType, TrackingState.NotTracked, controllingHand, inputSource, null) as GenericJoystickController;
 
             if (detectedController == null)
             {
@@ -87,19 +81,26 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
 
             if (!detectedController.SetupConfiguration(controllerType))
             {
-                // Controller failed to be setup correctly.
                 Debug.LogError($"Failed to Setup {controllerType.Name} controller");
-                // Return null so we don't raise the source detected.
                 return null;
             }
 
-            for (int i = 0; i < detectedController.InputSource?.Pointers?.Length; i++)
-            {
-                detectedController.InputSource.Pointers[i].Controller = detectedController;
-            }
-
-            ActiveControllers.Add(joystickName, detectedController);
             return detectedController;
+        }
+
+        private Handedness GetHandedness(string deviceName) => deviceName.Contains("Left") ? Handedness.Left : deviceName.Contains("Right") ? Handedness.Right : Handedness.None;
+
+        private Type GetControllerType(SupportedControllerType supportedControllerType)
+        {
+            switch (supportedControllerType)
+            {
+                case SupportedControllerType.GenericAndroid:
+                    return typeof(GenericOculusAndroidController);
+                case SupportedControllerType.OculusGoRemote:
+                    return typeof(OculusGoRemoteController);
+                default:
+                    return null;
+            }
         }
 
         /// <inheritdoc />
