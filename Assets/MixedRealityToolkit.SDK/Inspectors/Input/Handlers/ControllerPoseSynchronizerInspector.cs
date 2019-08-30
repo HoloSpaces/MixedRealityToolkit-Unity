@@ -51,7 +51,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
             if (DrawHandednessProperty)
             {
-                HandednessInspectorGui.DrawControllerHandednessDropdown(handedness);
+                HandednessInspectorGUI.DrawControllerHandednessDropdown(handedness);
             }
 
             EditorGUILayout.PropertyField(useSourcePoseData);
