@@ -3,6 +3,7 @@
 
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Input.UnityInput;
+using Microsoft.MixedReality.Toolkit.OpenVR.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using UnityEngine;
@@ -42,8 +43,6 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
         /// <inheritdoc />
         protected override GenericJoystickController GetOrAddController(string joystickName)
         {
-            Debug.Log($"Found joystick:{joystickName}");
-
             // If a device is already registered with the ID provided, just return it.
             if (ActiveControllers.ContainsKey(joystickName))
             {
@@ -98,6 +97,8 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
                     return typeof(GenericOculusAndroidController);
                 case SupportedControllerType.OculusGoRemote:
                     return typeof(OculusGoRemoteController);
+                case SupportedControllerType.OculusTouch:
+                    return typeof(OculusTouchController);
                 default:
                     return null;
             }
@@ -106,9 +107,13 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
         /// <inheritdoc />
         protected override SupportedControllerType GetCurrentControllerType(string joystickName)
         {
-            if (joystickName.Contains("Oculus Tracked Remote"))
+            if (joystickName.StartsWith("Oculus Tracked Remote"))
             {
                 return SupportedControllerType.OculusGoRemote;
+            }
+            else if(joystickName.StartsWith("Oculus Quest Controller"))
+            {
+                return SupportedControllerType.OculusTouch;
             }
 
             Debug.Log($"{joystickName} does not have a defined controller type, falling back to generic controller type");
