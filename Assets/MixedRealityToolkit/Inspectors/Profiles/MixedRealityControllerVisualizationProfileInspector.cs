@@ -195,7 +195,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     EditorGUILayout.HelpBox("A controller type must be defined!", MessageType.Error);
                 }
 
-
+                HandednessInspectorGui.DrawControllerHandednessDropdown(mixedRealityControllerHandedness);
 
                 var overrideModel = controllerSetting.FindPropertyRelative("overrideModel");
                 var overrideModelPrefab = overrideModel.objectReferenceValue as GameObject;
@@ -203,7 +203,6 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                 var controllerUseDefaultModelOverride = controllerSetting.FindPropertyRelative("useDefaultModel");
                 EditorGUILayout.PropertyField(controllerUseDefaultModelOverride);
 
-                HandednessInspectorGui.DrawControllerHandednessDropdown(mixedRealityControllerHandedness);
 
                 if (controllerUseDefaultModelOverride.boolValue && overrideModelPrefab != null)
                 {

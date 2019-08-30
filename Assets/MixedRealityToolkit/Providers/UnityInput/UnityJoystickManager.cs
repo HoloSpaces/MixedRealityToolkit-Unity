@@ -44,17 +44,18 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         /// <inheritdoc />
         public override void Update()
         {
-            RefreshDevices();
+            deviceRefreshTimer += Time.unscaledDeltaTime;
+
+            if (deviceRefreshTimer >= DeviceRefreshInterval)
+            {
+                deviceRefreshTimer = 0.0f;
+                RefreshDevices();
+            }
 
             foreach (var controller in ActiveControllers)
             {
                 controller.Value?.UpdateController();
             }
-        }
-
-        public override void Enable()
-        {
-            RefreshDevices();
         }
 
         /// <inheritdoc />
@@ -81,15 +82,6 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
 
         private void RefreshDevices()
         {
-            deviceRefreshTimer += Time.unscaledDeltaTime;
-
-            if (deviceRefreshTimer < DeviceRefreshInterval)
-            {
-                return;
-            }
-
-            deviceRefreshTimer = 0.0f;
-
             IMixedRealityInputSystem inputSystem = Service as IMixedRealityInputSystem;
 
             var joystickNames = UInput.GetJoystickNames();
