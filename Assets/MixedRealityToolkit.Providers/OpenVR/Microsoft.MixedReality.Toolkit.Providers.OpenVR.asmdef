@@ -5,7 +5,6 @@
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
-        "Android",
         "Editor",
         "LinuxStandalone64",
         "macOSStandalone",

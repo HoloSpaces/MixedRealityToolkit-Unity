@@ -961,89 +961,6 @@ MonoBehaviour:
       invertXAxis: 0
       invertYAxis: 0
   - controllerType:
-      reference: Microsoft.MixedReality.Toolkit.Providers.OculusAndroid.OculusGoRemoteController,
-        MixedRealityToolkit.Providers.Oculus
-    handedness: 3
-    interactions:
-    - id: 0
-      description: Spatial Pointer
-      axisType: 7
-      inputType: 3
-      inputAction:
-        id: 4
-        description: Pointer Pose
-        axisConstraint: 7
-      keyCode: 0
-      axisCodeX: 
-      axisCodeY: 
-      invertXAxis: 0
-      invertYAxis: 0
-    - id: 1
-      description: Trigger
-      axisType: 2
-      inputType: 7
-      inputAction:
-        id: 1
-        description: Select
-        axisConstraint: 2
-      keyCode: 344
-      axisCodeX: 
-      axisCodeY: 
-      invertXAxis: 0
-      invertYAxis: 0
-    - id: 2
-      description: Back
-      axisType: 2
-      inputType: 7
-      inputAction:
-        id: 2
-        description: Menu
-        axisConstraint: 2
-      keyCode: 336
-      axisCodeX: 
-      axisCodeY: 
-      invertXAxis: 0
-      invertYAxis: 0
-    - id: 3
-      description: PrimaryTouchpad Touch
-      axisType: 2
-      inputType: 22
-      inputAction:
-        id: 0
-        description: None
-        axisConstraint: 0
-      keyCode: 346
-      axisCodeX: 
-      axisCodeY: 
-      invertXAxis: 0
-      invertYAxis: 0
-    - id: 4
-      description: PrimaryTouchpad Click
-      axisType: 2
-      inputType: 24
-      inputAction:
-        id: 0
-        description: None
-        axisConstraint: 0
-      keyCode: 338
-      axisCodeX: 
-      axisCodeY: 
-      invertXAxis: 0
-      invertYAxis: 0
-    - id: 5
-      description: PrimaryTouchpad Axis
-      axisType: 4
-      inputType: 49
-      inputAction:
-        id: 5
-        description: Teleport Direction
-        axisConstraint: 4
-      keyCode: 0
-      axisCodeX: AXIS_4
-      axisCodeY: AXIS_5
-      invertXAxis: 0
-      invertYAxis: 0
-  - controllerType:
       reference: Microsoft.MixedReality.Toolkit.OpenVR.Input.OculusRemoteController,
         Microsoft.MixedReality.Toolkit.Providers.OpenVR
     handedness: 0
@@ -2665,37 +2582,6 @@ MonoBehaviour:
   - controllerType:
       reference: Microsoft.MixedReality.Toolkit.Services.InputSimulation.SimulatedGestureHand,
         Microsoft.MixedReality.Toolkit.Services.InputSimulation
-    handedness: 1
-    interactions:
-    - id: 0
-      description: Select
-      axisType: 2
-      inputType: 25
-      inputAction:
-        id: 1
-        description: Select
-        axisConstraint: 2
-      keyCode: 0
-      axisCodeX: 
-      axisCodeY: 
-      invertXAxis: 0
-      invertYAxis: 0
-    - id: 1
-      description: Grip Pose
-      axisType: 7
-      inputType: 14
-      inputAction:
-        id: 3
-        description: Grip Pose
-        axisConstraint: 7
-      keyCode: 0
-      axisCodeX: 
-      axisCodeY: 
-      invertXAxis: 0
-      invertYAxis: 0
-  - controllerType:
-      reference: Microsoft.MixedReality.Toolkit.Services.InputSimulation.SimulatedGestureHand,
-        Microsoft.MixedReality.Toolkit.Services.InputSimulation
     handedness: 2
     interactions:
     - id: 0
@@ -3206,6 +3092,37 @@ MonoBehaviour:
       inputAction:
         id: 13
         description: Index Finger Pose
+        axisConstraint: 7
+      keyCode: 0
+      axisCodeX: 
+      axisCodeY: 
+      invertXAxis: 0
+      invertYAxis: 0
+  - controllerType:
+      reference: Microsoft.MixedReality.Toolkit.Services.InputSimulation.SimulatedGestureHand,
+        Microsoft.MixedReality.Toolkit.Services.InputSimulation
+    handedness: 1
+    interactions:
+    - id: 0
+      description: Select
+      axisType: 2
+      inputType: 25
+      inputAction:
+        id: 1
+        description: Select
+        axisConstraint: 2
+      keyCode: 0
+      axisCodeX: 
+      axisCodeY: 
+      invertXAxis: 0
+      invertYAxis: 0
+    - id: 1
+      description: Grip Pose
+      axisType: 7
+      inputType: 14
+      inputAction:
+        id: 3
+        description: Grip Pose
         axisConstraint: 7
       keyCode: 0
       axisCodeX: 
