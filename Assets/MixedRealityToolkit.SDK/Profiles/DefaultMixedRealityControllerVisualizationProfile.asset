@@ -34,6 +34,9 @@ MonoBehaviour:
     handedness: 1
     useDefaultModel: 1
     overrideModel: {fileID: 0}
+    controllerVisualizationType:
+      reference: Microsoft.MixedReality.Toolkit.Input.MixedRealityControllerVisualizer,
+        Microsoft.MixedReality.Toolkit.SDK
   - description: Windows Mixed Reality Controller
     controllerType:
       reference: Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input.WindowsMixedRealityController,
@@ -41,6 +44,9 @@ MonoBehaviour:
     handedness: 2
     useDefaultModel: 1
     overrideModel: {fileID: 0}
+    controllerVisualizationType:
+      reference: Microsoft.MixedReality.Toolkit.Input.MixedRealityControllerVisualizer,
+        Microsoft.MixedReality.Toolkit.SDK
   - description: Oculus Go Remote Controller
     controllerType:
       reference: Microsoft.MixedReality.Toolkit.Providers.OculusAndroid.OculusGoRemoteController,
@@ -49,6 +55,9 @@ MonoBehaviour:
     useDefaultModel: 0
     overrideModel: {fileID: 8735967793943966864, guid: 7d16c20048a26cd40a120301c8a4f93d,
       type: 3}
+    controllerVisualizationType:
+      reference: Microsoft.MixedReality.Toolkit.Providers.OculusAndroid.OculusGoControllerVisualizer,
+        MixedRealityToolkit.Providers.Oculus
   - description: Oculus Touch Controller
     controllerType:
       reference: Microsoft.MixedReality.Toolkit.OpenVR.Input.OculusTouchController,
@@ -57,3 +66,6 @@ MonoBehaviour:
     useDefaultModel: 0
     overrideModel: {fileID: 8735967793943966864, guid: 2a79241dfb000814ab40775f9c6c429a,
       type: 3}
+    controllerVisualizationType:
+      reference: Microsoft.MixedReality.Toolkit.Providers.OculusAndroid.OculusQuestControllerVisualizer,
+        MixedRealityToolkit.Providers.Oculus
