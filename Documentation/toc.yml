@@ -27,8 +27,6 @@
       href: Architecture/InputSystem/CoreSystem.md
     - name: Controllers, Pointers, and Focus
       href: Architecture/InputSystem/ControllersPointersAndFocus.md
-- name: Systems, Extension Services and Data Providers
-  href: Architecture/SystemsExtensionsProviders.md
 - name: Feature Overviews
   items:
   - name: Profiles
@@ -61,8 +59,6 @@
       href: Input/Gaze.md
     - name: Eyes
       href: EyeTracking/EyeTracking_Main.md
-    - name: Creating a data provider
-      href: Input/CreateDataProvider.md
   - name: In-Editor Input Simulation
     href: InputSimulation/InputSimulationService.md
   - name: UX Building Blocks
@@ -109,8 +105,6 @@
       href: SpatialAwareness/SpatialObjectMeshObserver.md
     - name: Usage Guide
       href: SpatialAwareness/UsageGuide.md
-    - name: Creating a data provider
-      href: SpatialAwareness/CreateDataProvider.md
   - name: Multi Scene System
     items:
     - name: Multi Scene System Overview
@@ -145,8 +139,6 @@
       href: MixedRealityServices.md
     - name: What are the MixedRealityServiceRegistry and IMixedRealityServiceRegistrar
       href: ServiceUtilities/MixedRealityServiceRegistryAndIMixedRealityServiceRegistrar.md
-    - name: Extension services
-      href: Extensions/ExtensionServices.md
   - name: Packages
     items:
     - name: MRTK Packages
