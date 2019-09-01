@@ -1,9 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.﻿
 
-using Microsoft.MixedReality.Toolkit.Utilities;
-using Microsoft.MixedReality.Toolkit.Utilities.Editor;
 using UnityEditor;
+using Microsoft.MixedReality.Toolkit.Utilities.Editor;
 
 namespace Microsoft.MixedReality.Toolkit.Input.Editor
 {
@@ -11,7 +10,6 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
     public class ControllerPoseSynchronizerInspector : UnityEditor.Editor
     {
         private const string SynchronizationSettingsKey = "MRTK_Inspector_SynchronizationSettingsFoldout";
-        private static readonly string[] HandednessLabels = { "Left", "Right" };
 
         private static bool synchronizationSettingsFoldout = true;
 
@@ -53,17 +51,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
             if (DrawHandednessProperty)
             {
-                var currentHandedness = (Handedness)handedness.enumValueIndex;
-                var handIndex = currentHandedness == Handedness.Right ? 1 : 0;
-
-                EditorGUI.BeginChangeCheck();
-                var newHandednessIndex = EditorGUILayout.Popup(handedness.displayName, handIndex, HandednessLabels);
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    currentHandedness = newHandednessIndex == 0 ? Handedness.Left : Handedness.Right;
-                    handedness.enumValueIndex = (int)currentHandedness;
-                }
+                HandednessInspectorGUI.DrawControllerHandednessDropdown(handedness);
             }
 
             EditorGUILayout.PropertyField(useSourcePoseData);

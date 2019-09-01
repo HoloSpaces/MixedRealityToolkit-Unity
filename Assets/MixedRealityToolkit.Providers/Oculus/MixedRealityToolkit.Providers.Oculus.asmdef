@@ -1,0 +1,21 @@
+{
+    "name": "MixedRealityToolkit.Providers.Oculus",
+    "references": [
+        "Microsoft.MixedReality.Toolkit",
+        "Microsoft.MixedReality.Toolkit.SDK",
+        "Microsoft.MixedReality.Toolkit.Services.InputSystem",
+        "Microsoft.MixedReality.Toolkit.Providers.OpenVR",
+        "Oculus.VR"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Android",
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
