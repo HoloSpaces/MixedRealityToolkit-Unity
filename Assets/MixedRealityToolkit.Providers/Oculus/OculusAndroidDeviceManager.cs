@@ -98,7 +98,7 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
                 case SupportedControllerType.OculusGoRemote:
                     return typeof(OculusGoRemoteController);
                 case SupportedControllerType.OculusTouch:
-                    return typeof(OculusTouchController);
+                    return typeof(OculusQuestTouchController);
                 default:
                     return null;
             }
