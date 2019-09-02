@@ -3,18 +3,17 @@
 
 using UnityEngine;
 using UnityEngine.XR;
-using System.Collections.Generic;
+using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.Toolkit.Input.UnityInput;
 using Microsoft.MixedReality.Toolkit.Utilities;
 
-namespace Microsoft.MixedReality.Toolkit.OpenVR.Input
+namespace HoloSpaces.MixedReality.Input
 {
     [MixedRealityController(
         SupportedControllerType.OculusTouch,
         new[] { Handedness.Left, Handedness.Right },
         "StandardAssets/Textures/OculusControllersTouch")]
-    public class OculusQuestTouchController : GenericJoystickController
+    public class OculusQuestTouchController : GenericOculusAndroidController
     {
         /// <summary>
         /// Constructor.
@@ -27,20 +26,7 @@ namespace Microsoft.MixedReality.Toolkit.OpenVR.Input
             IMixedRealityInputSource inputSource = null, MixedRealityInteractionMapping[] interactions = null)
             : base(trackingState, controllerHandedness, inputSource, interactions)
         {
-            nodeType = controllerHandedness == Handedness.Left ? XRNode.LeftHand : XRNode.RightHand;
         }
-
-        private XRNode nodeType;
-
-        /// <summary>
-        /// The current source state reading for this OpenVR Controller.
-        /// </summary>
-        public XRNodeState LastXrNodeStateReading { get; protected set; }
-
-        /// <summary>
-        /// Tracking states returned from the InputTracking state tracking manager
-        /// </summary>
-        private readonly List<XRNodeState> nodeStates = new List<XRNodeState>();
 
         /// <inheritdoc />
         public override MixedRealityInteractionMapping[] DefaultLeftHandedInteractions => new[]
@@ -91,60 +77,17 @@ namespace Microsoft.MixedReality.Toolkit.OpenVR.Input
             AssignControllerMappings(controllerHandedness == Handedness.Left ? DefaultLeftHandedInteractions : DefaultRightHandedInteractions);
         }
 
-        /// <inheritdoc />
-        public override void UpdateController()
-        {
-            if (!Enabled) { return; }
-
-            InputTracking.GetNodeStates(nodeStates);
-
-            for (int i = 0; i < nodeStates.Count; i++)
-            {
-                if (nodeStates[i].nodeType == nodeType)
-                {
-                    var xrNodeState = nodeStates[i];
-                    UpdateControllerData(xrNodeState);
-                    LastXrNodeStateReading = xrNodeState;
-                    break;
-                }
-            }
-
-            base.UpdateController();
-        }
-
         /// <summary>
         /// Update the "Controller" input from the device
         /// </summary>
         /// <param name="state"></param>
-        protected void UpdateControllerData(XRNodeState state)
+        protected override void UpdateControllerData(XRNodeState state)
         {
+            base.UpdateControllerData(state);
+
             var lastState = TrackingState;
 
             LastControllerPose = CurrentControllerPose;
-
-            if (nodeType == XRNode.LeftHand || nodeType == XRNode.RightHand)
-            {
-                // The source is either a hand or a controller that supports pointing.
-                // We can now check for position and rotation.
-                IsPositionAvailable = state.TryGetPosition(out CurrentControllerPosition);
-                IsPositionApproximate = false;
-
-                IsRotationAvailable = state.TryGetRotation(out CurrentControllerRotation);
-
-                // Devices are considered tracked if we receive position OR rotation data from the sensors.
-                TrackingState = (IsPositionAvailable || IsRotationAvailable) ? TrackingState.Tracked : TrackingState.NotTracked;
-
-                CurrentControllerPosition = MixedRealityPlayspace.TransformPoint(CurrentControllerPosition);
-                CurrentControllerRotation = MixedRealityPlayspace.Rotation * CurrentControllerRotation;
-            }
-            else
-            {
-                // The input source does not support tracking.
-                TrackingState = TrackingState.NotApplicable;
-            }
-
-            CurrentControllerPose.Position = CurrentControllerPosition;
-            CurrentControllerPose.Rotation = CurrentControllerRotation;
 
             // Raise input system events if it is enabled.
             if (lastState != TrackingState)
@@ -154,15 +97,18 @@ namespace Microsoft.MixedReality.Toolkit.OpenVR.Input
 
             if (TrackingState == TrackingState.Tracked && LastControllerPose != CurrentControllerPose)
             {
-                if (IsPositionAvailable && IsRotationAvailable)
+                if (IsPositionAvailable)
                 {
-                    InputSystem?.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
+                    if (IsRotationAvailable)
+                    {
+                        InputSystem?.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
+                    }
+                    else
+                    {
+                        InputSystem?.RaiseSourcePositionChanged(InputSource, this, CurrentControllerPosition);
+                    }
                 }
-                else if (IsPositionAvailable && !IsRotationAvailable)
-                {
-                    InputSystem?.RaiseSourcePositionChanged(InputSource, this, CurrentControllerPosition);
-                }
-                else if (!IsPositionAvailable && IsRotationAvailable)
+                else if (IsRotationAvailable)
                 {
                     InputSystem?.RaiseSourceRotationChanged(InputSource, this, CurrentControllerRotation);
                 }

@@ -3,11 +3,12 @@
 
 using UnityEngine.XR;
 using System.Collections.Generic;
+using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using Microsoft.MixedReality.Toolkit.Input.UnityInput;
 
-namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
+namespace HoloSpaces.MixedReality.Input
 {
     [MixedRealityController(
         SupportedControllerType.GenericAndroid,
@@ -21,7 +22,7 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
             nodeType = controllerHandedness == Handedness.Left ? XRNode.LeftHand : XRNode.RightHand;
         }
 
-        private readonly XRNode nodeType;
+        protected readonly XRNode nodeType;
 
         /// <summary>
         /// The current source state reading for this OpenVR Controller.
@@ -58,28 +59,33 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
         /// Update the "Controller" input from the device
         /// </summary>
         /// <param name="state"></param>
-        protected void UpdateControllerData(XRNodeState state)
+        protected virtual void UpdateControllerData(XRNodeState state)
         {
             var lastState = TrackingState;
 
             LastControllerPose = CurrentControllerPose;
 
-            if (nodeType == XRNode.LeftHand || nodeType == XRNode.RightHand)
+            switch (nodeType)
             {
-                // The source is either a hand or a controller that supports pointing.
-                // We can now check for position and rotation.
-                IsPositionAvailable = state.TryGetPosition(out CurrentControllerPosition);
-                IsPositionApproximate = false;
+                case XRNode.LeftHand:
+                case XRNode.RightHand:
+                    // The source is either a hand or a controller that supports pointing.
+                    // We can now check for position and rotation.
+                    IsPositionAvailable = state.TryGetPosition(out CurrentControllerPosition);
+                    IsPositionApproximate = false;
 
-                IsRotationAvailable = state.TryGetRotation(out CurrentControllerRotation);
+                    IsRotationAvailable = state.TryGetRotation(out CurrentControllerRotation);
 
-                // Devices are considered tracked if we receive position OR rotation data from the sensors.
-                TrackingState = (IsPositionAvailable || IsRotationAvailable) ? TrackingState.Tracked : TrackingState.NotTracked;
-            }
-            else
-            {
-                // The input source does not support tracking.
-                TrackingState = TrackingState.NotApplicable;
+                    // Devices are considered tracked if we receive position OR rotation data from the sensors.
+                    TrackingState = (IsPositionAvailable || IsRotationAvailable) ? TrackingState.Tracked : TrackingState.NotTracked;
+
+                    CurrentControllerPosition = MixedRealityPlayspace.TransformPoint(CurrentControllerPosition);
+                    CurrentControllerRotation = MixedRealityPlayspace.Rotation * CurrentControllerRotation;
+                    break;
+                default:
+                    // The input source does not support tracking.
+                    TrackingState = TrackingState.NotApplicable;
+                    break;
             }
 
             CurrentControllerPose.Position = CurrentControllerPosition;
