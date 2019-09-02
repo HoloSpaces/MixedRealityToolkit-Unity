@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using UnityEngine;
 using Microsoft.MixedReality.Toolkit.Input;
 
-namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
+namespace HoloSpaces.MixedReality.Input
 {
     [RequireComponent(typeof(OVRControllerHelper))]
     public abstract class OculusAndroidControllerVisualizer : ControllerPoseSynchronizer, IMixedRealityControllerVisualizer

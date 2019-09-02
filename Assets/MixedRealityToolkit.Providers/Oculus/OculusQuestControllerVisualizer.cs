@@ -3,7 +3,7 @@
 
 using Microsoft.MixedReality.Toolkit.Input;
 
-namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
+namespace HoloSpaces.MixedReality.Input
 {
     /// <summary>
     /// Responsible for synchronizing the user's current input with Oculus Quest controller models.
@@ -17,7 +17,7 @@ namespace Microsoft.MixedReality.Toolkit.Providers.OculusAndroid
             set
             {
                 base.Controller = value;
-                GetComponent<OVRControllerHelper>().m_controller = (value.ControllerHandedness & Utilities.Handedness.Left) != 0 ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
+                GetComponent<OVRControllerHelper>().m_controller = (value.ControllerHandedness & Microsoft.MixedReality.Toolkit.Utilities.Handedness.Left) != 0 ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
             }
         }
     }
