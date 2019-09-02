@@ -4,8 +4,7 @@
         "Microsoft.MixedReality.Toolkit",
         "Microsoft.MixedReality.Toolkit.SDK",
         "Microsoft.MixedReality.Toolkit.Services.InputSystem",
-        "Microsoft.MixedReality.Toolkit.Providers.OpenVR",
-        "OculusIntegration"
+        "Oculus.VR"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
