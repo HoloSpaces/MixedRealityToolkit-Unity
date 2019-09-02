@@ -10,7 +10,7 @@ using Microsoft.MixedReality.Toolkit.Utilities;
 namespace HoloSpaces.MixedReality.Input
 {
     [MixedRealityController(
-        SupportedControllerType.OculusTouch,
+        SupportedControllerType.OculusQuestRemote,
         new[] { Handedness.Left, Handedness.Right },
         "StandardAssets/Textures/OculusControllersTouch")]
     public class OculusQuestTouchController : GenericOculusAndroidController
@@ -85,12 +85,8 @@ namespace HoloSpaces.MixedReality.Input
         {
             base.UpdateControllerData(state);
 
-            var lastState = TrackingState;
-
-            LastControllerPose = CurrentControllerPose;
-
             // Raise input system events if it is enabled.
-            if (lastState != TrackingState)
+            if (lastTrackingState != TrackingState)
             {
                 InputSystem?.RaiseSourceTrackingStateChanged(InputSource, this, TrackingState);
             }

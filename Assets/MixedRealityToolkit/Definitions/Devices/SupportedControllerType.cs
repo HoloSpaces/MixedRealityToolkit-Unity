@@ -27,6 +27,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         ArticulatedHand = 1 << 10,
         GGVHand = 1 << 11,
         GenericAndroid = 1 << 12,
-        OculusGoRemote = 1 << 13
+        OculusGoRemote = 1 << 13,
+        OculusQuestRemote = 1 << 14
     }
 }

@@ -23,6 +23,7 @@ namespace HoloSpaces.MixedReality.Input
         }
 
         protected readonly XRNode nodeType;
+        protected TrackingState lastTrackingState = TrackingState.NotTracked;
 
         /// <summary>
         /// The current source state reading for this OpenVR Controller.
@@ -61,7 +62,7 @@ namespace HoloSpaces.MixedReality.Input
         /// <param name="state"></param>
         protected virtual void UpdateControllerData(XRNodeState state)
         {
-            var lastState = TrackingState;
+            lastTrackingState = TrackingState;
 
             LastControllerPose = CurrentControllerPose;
 
