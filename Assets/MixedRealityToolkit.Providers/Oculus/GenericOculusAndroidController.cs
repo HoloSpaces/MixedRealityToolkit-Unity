@@ -81,7 +81,10 @@ namespace HoloSpaces.MixedReality.Input
                     TrackingState = (IsPositionAvailable || IsRotationAvailable) ? TrackingState.Tracked : TrackingState.NotTracked;
 
                     CurrentControllerPosition = MixedRealityPlayspace.TransformPoint(CurrentControllerPosition);
-                    CurrentControllerRotation = MixedRealityPlayspace.Rotation * CurrentControllerRotation;
+
+                    if (IsRotationAvailable)
+                        CurrentControllerRotation = MixedRealityPlayspace.Rotation * CurrentControllerRotation;
+
                     break;
                 default:
                     // The input source does not support tracking.
