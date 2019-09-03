@@ -7,6 +7,7 @@ using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using Microsoft.MixedReality.Toolkit.Input.UnityInput;
+using UnityEngine;
 
 namespace HoloSpaces.MixedReality.Input
 {
@@ -75,7 +76,8 @@ namespace HoloSpaces.MixedReality.Input
                     IsPositionAvailable = state.TryGetPosition(out CurrentControllerPosition);
                     IsPositionApproximate = false;
 
-                    IsRotationAvailable = state.TryGetRotation(out CurrentControllerRotation);
+                    Quaternion rotation;
+                    IsRotationAvailable = state.TryGetRotation(out rotation);
 
                     // Devices are considered tracked if we receive position OR rotation data from the sensors.
                     TrackingState = (IsPositionAvailable || IsRotationAvailable) ? TrackingState.Tracked : TrackingState.NotTracked;
@@ -83,7 +85,7 @@ namespace HoloSpaces.MixedReality.Input
                     CurrentControllerPosition = MixedRealityPlayspace.TransformPoint(CurrentControllerPosition);
 
                     if (IsRotationAvailable)
-                        CurrentControllerRotation = MixedRealityPlayspace.Rotation * CurrentControllerRotation;
+                        CurrentControllerRotation = MixedRealityPlayspace.Rotation * rotation;
 
                     break;
                 default:
