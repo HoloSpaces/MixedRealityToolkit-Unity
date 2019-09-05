@@ -88,7 +88,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
             var keyButton = UInput.GetKey(interactionMapping.KeyCode);
 
             // Update the interaction data source
-            interactionMapping.BoolData = keyButton;
+            interactionMapping.BoolData = interactionMapping.KeyCode != KeyCode.None ? UInput.GetKey(interactionMapping.KeyCode) : UInput.GetAxisRaw(interactionMapping.AxisCodeX) == 1;
 
             // If our value changed raise it.
             if (interactionMapping.Changed)
