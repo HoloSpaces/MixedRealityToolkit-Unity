@@ -29,8 +29,8 @@ namespace HoloSpaces.MixedReality.Input
         /// <inheritdoc />
         public override MixedRealityInteractionMapping[] DefaultInteractions => new[]
         {
-            new MixedRealityInteractionMapping(0, "Spatial Pointer", AxisType.SixDof, DeviceInputType.SpatialPointer, MixedRealityInputAction.None),
-            new MixedRealityInteractionMapping(1, "Trigger", AxisType.Digital, DeviceInputType.ButtonPress, KeyCode.JoystickButton14),
+            new MixedRealityInteractionMapping(0, "Spatial Pointer", AxisType.SixDof, DeviceInputType.SpatialPointer, new MixedRealityInputAction(4, "Pointer Pose", AxisType.SixDof)),
+            new MixedRealityInteractionMapping(1, "Trigger", AxisType.Digital, DeviceInputType.ButtonPress, new MixedRealityInputAction(1, "Select", AxisType.Digital), KeyCode.JoystickButton14),
             new MixedRealityInteractionMapping(2, "Back", AxisType.Digital, DeviceInputType.ButtonPress, KeyCode.JoystickButton6),
             new MixedRealityInteractionMapping(3, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton16),
             new MixedRealityInteractionMapping(4, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton8),

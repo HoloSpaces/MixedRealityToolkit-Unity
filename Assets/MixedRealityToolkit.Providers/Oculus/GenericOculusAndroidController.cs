@@ -7,6 +7,7 @@ using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using Microsoft.MixedReality.Toolkit.Input.UnityInput;
+using UnityEngine;
 
 namespace HoloSpaces.MixedReality.Input
 {
@@ -23,6 +24,7 @@ namespace HoloSpaces.MixedReality.Input
         }
 
         protected readonly XRNode nodeType;
+        protected TrackingState lastTrackingState = TrackingState.NotTracked;
 
         /// <summary>
         /// The current source state reading for this OpenVR Controller.
@@ -61,7 +63,7 @@ namespace HoloSpaces.MixedReality.Input
         /// <param name="state"></param>
         protected virtual void UpdateControllerData(XRNodeState state)
         {
-            var lastState = TrackingState;
+            lastTrackingState = TrackingState;
 
             LastControllerPose = CurrentControllerPose;
 
@@ -74,13 +76,17 @@ namespace HoloSpaces.MixedReality.Input
                     IsPositionAvailable = state.TryGetPosition(out CurrentControllerPosition);
                     IsPositionApproximate = false;
 
-                    IsRotationAvailable = state.TryGetRotation(out CurrentControllerRotation);
+                    Quaternion rotation;
+                    IsRotationAvailable = state.TryGetRotation(out rotation);
 
                     // Devices are considered tracked if we receive position OR rotation data from the sensors.
                     TrackingState = (IsPositionAvailable || IsRotationAvailable) ? TrackingState.Tracked : TrackingState.NotTracked;
 
                     CurrentControllerPosition = MixedRealityPlayspace.TransformPoint(CurrentControllerPosition);
-                    CurrentControllerRotation = MixedRealityPlayspace.Rotation * CurrentControllerRotation;
+
+                    if (IsRotationAvailable)
+                        CurrentControllerRotation = MixedRealityPlayspace.Rotation * rotation;
+
                     break;
                 default:
                     // The input source does not support tracking.
