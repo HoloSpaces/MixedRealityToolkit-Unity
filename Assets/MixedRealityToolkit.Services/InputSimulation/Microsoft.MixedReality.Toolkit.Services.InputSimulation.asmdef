@@ -6,11 +6,8 @@
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
-        "Android",
         "Editor",
-        "WSA",
-        "WindowsStandalone32",
-        "WindowsStandalone64"
+        "WSA"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
