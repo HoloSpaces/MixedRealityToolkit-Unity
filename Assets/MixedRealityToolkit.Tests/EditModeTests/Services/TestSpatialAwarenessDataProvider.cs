@@ -18,7 +18,7 @@ namespace Microsoft.MixedReality.Toolkit.Tests.Services
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealitySpatialAwarenessSystem),
-        (SupportedPlatforms)(-1), // All platforms supported by Unity
+        null, // All platforms supported by Unity
         "Test Spatial Awareness Data Provider",
         "Profiles/DefaultMixedRealitySpatialAwarenessMeshObserverProfile.asset",
         "MixedRealityToolkit.SDK")]

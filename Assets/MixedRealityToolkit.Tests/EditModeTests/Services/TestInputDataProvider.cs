@@ -11,7 +11,7 @@ namespace Microsoft.MixedReality.Toolkit.Tests.Services
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
-        (SupportedPlatforms)(-1), // All platforms supported by Unity
+        null, // All platforms supported by Unity
         "Test Input Data Provider")]
     public class TestInputDataProvider : TestBaseDataProvider, ITestInputDataProvider
     {

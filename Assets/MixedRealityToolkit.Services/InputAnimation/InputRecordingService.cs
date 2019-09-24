@@ -13,7 +13,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
-        (SupportedPlatforms)(-1), // Supported on all platforms
+        null, // Supported on all platforms
         "Input Recording Service",
         "Profiles/DefaultMixedRealityInputRecordingProfile.asset",
         "MixedRealityToolkit.SDK")]

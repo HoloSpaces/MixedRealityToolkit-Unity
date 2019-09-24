@@ -132,14 +132,11 @@ namespace Microsoft.MixedReality.Toolkit
         /// <returns>True if the data provider was successfully registered, false otherwise.</returns>
         protected bool RegisterDataProvider<T>(
             Type concreteType,
-            SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1),
+            IPlatformSupport[] supportedPlatforms = null,
             params object[] args) where T : IMixedRealityDataProvider
         {
-#if !UNITY_EDITOR
-            if (!Application.platform.IsPlatformSupported(supportedPlatforms))
-#else
-            if (!EditorUserBuildSettings.activeBuildTarget.IsPlatformSupported(supportedPlatforms))
-#endif
+
+            if (!supportedPlatforms.IsPlatformSupported())
             {
                 return false;
             }
