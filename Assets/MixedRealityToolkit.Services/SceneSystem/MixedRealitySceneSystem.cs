@@ -18,7 +18,7 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
     /// Because so much of this service's functionality is editor-only, it has been split into a partial class.
     /// This part handles the runtime parts of the service.
     /// </summary>
-    [DocLink("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/MixedRealityConfigurationGuide.html#scenesystem")]
+    [HelpURL("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/SceneSystem/SceneSystemGettingStarted.html")]
     public partial class MixedRealitySceneSystem : BaseCoreSystem, IMixedRealitySceneSystem
     {
         /// <summary>
@@ -54,6 +54,9 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         private SceneContentTracker contentTracker;
         // Lighting executor instance
         private SceneLightingExecutor lightingExecutor;
+
+        /// <inheritdoc/>
+        public override string Name { get; protected set; } = "Mixed Reality Scene System";
 
         #region Actions
 
@@ -129,26 +132,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
 
         /// <inheritdoc />
         public string SourceName { get; } = "Mixed Reality Scene System";
-
-        /// <summary>
-        /// Returns the manager scene found in profile.
-        /// </summary>
-        public SceneInfo ManagerScene => profile.ManagerScene;
-
-        /// <summary>
-        /// Returns all lighting scenes found in profile.
-        /// </summary>
-        public SceneInfo[] LightingScenes => contentTracker.SortedLightingScenes;
-
-        /// <summary>
-        /// Returns all content scenes found in profile.
-        /// </summary>
-        public SceneInfo[] ContentScenes => contentTracker.SortedContentScenes;
-
-        /// <summary>
-        /// Returns all content tags found in profile scenes.
-        /// </summary>
-        public IEnumerable<string> ContentTags => profile.ContentTags;
 
         #endregion
 
@@ -316,8 +299,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <inheritdoc />
         public async void SetLightingScene(string newLightingSceneName, LightingSceneTransitionType transitionType = LightingSceneTransitionType.None, float transitionDuration = 1f)
         {
-            Debug.Log("Set lighting scene: " + newLightingSceneName);
-
             if (ActiveLightingScene == newLightingSceneName)
             {   // Nothing to do here
                 return;
@@ -356,7 +337,7 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
 
             List<string> lightingSceneNames = new List<string>();
             // Create a list of lighting scenes to unload
-            foreach (SceneInfo lso in LightingScenes)
+            foreach (SceneInfo lso in profile.LightingScenes)
             {
                 if (lso.Name != newLightingSceneName)
                 {
@@ -374,7 +355,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <summary>
         /// Loads the manager scene.
         /// </summary>
-        /// <param name="managerSceneName"></param>
         private async void SetManagerScene(string managerSceneName)
         {
             Scene scene = SceneManager.GetSceneByName(managerSceneName);
@@ -389,13 +369,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <summary>
         /// Internal method to handle scene loads
         /// </summary>
-        /// <param name="scenesToLoad"></param>
-        /// <param name="sceneType"></param>
-        /// <param name="activationToken"></param>
-        /// <param name="progressOffset"></param>
-        /// <param name="progressTarget"></param>
-        /// <param name="sceneOpInProgressWhenFinished"></param>
-        /// <returns></returns>
         private async Task LoadScenesInternal(
             IEnumerable<string> scenesToLoad,
             SceneType sceneType,
@@ -533,12 +506,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <summary>
         /// Internal method to handles scene unloads
         /// </summary>
-        /// <param name="scenesToUnload"></param>
-        /// <param name="sceneType"></param>
-        /// <param name="progressOffset"></param>
-        /// <param name="progressTarget"></param>
-        /// <param name="sceneOpInProgressWhenFinished"></param>
-        /// <returns></returns>
         private async Task UnloadScenesInternal(
             IEnumerable<string> scenesToUnload, 
             SceneType sceneType,
@@ -808,7 +775,8 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         public Scene GetScene(string sceneName)
         {
             Scene scene = default(Scene);
-            RuntimeSceneUtils.FindScene(sceneName, out scene, out int sceneIndex);
+            int sceneIndex;
+            RuntimeSceneUtils.FindScene(sceneName, out scene, out sceneIndex);
             return scene;
         }
 
@@ -816,8 +784,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// Checks whether any content scenes are loaded
         /// If they are, adds them to loadedContentScenes and returns true
         /// </summary>
-        /// <param name="loadedContentScenes"></param>
-        /// <returns></returns>
         private bool GetLoadedContentScenes(out IEnumerable<string> loadedContentScenes)
         {
             List<string> loadedContentScenesList = new List<string>();

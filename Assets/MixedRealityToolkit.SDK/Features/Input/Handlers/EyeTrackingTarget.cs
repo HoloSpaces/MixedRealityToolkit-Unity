@@ -11,7 +11,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
     /// <summary>
     /// A game object with the "EyeTrackingTarget" script attached reacts to being looked at independent of other available inputs.
     /// </summary>
-    public class EyeTrackingTarget : InputSystemGlobalListener, IMixedRealityPointerHandler, IMixedRealitySpeechHandler
+    public class EyeTrackingTarget : InputSystemGlobalHandlerListener, IMixedRealityPointerHandler, IMixedRealitySpeechHandler
     {
         [Tooltip("Select action that are specific to when the target is looked at.")]
         [SerializeField]
@@ -94,6 +94,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         public UnityEvent OnSelected
         {
             get { return onSelected; }
+            set { onSelected = value; }
         }
         
         [SerializeField]
@@ -121,7 +122,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         public bool IsDwelledOn { get; private set; } = false;
         
         private DateTime lookAtStartTime;
-        
+
         /// <summary>
         /// Duration in milliseconds to indicate that if more time than this passes without new eye tracking data, then timeout. 
         /// </summary>
@@ -149,6 +150,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
             LookedAtTarget = null;
             LookedAtEyeTarget = null;
         }
+
         private void Update()
         {
             // Try to manually poll the eye tracking data
@@ -182,7 +184,21 @@ namespace Microsoft.MixedReality.Toolkit.Input
         {
             base.OnDisable();
             OnEyeFocusStop();
-        }      
+        }
+
+        /// <inheritdoc />
+        protected override void RegisterHandlers()
+        {
+            InputSystem?.RegisterHandler<IMixedRealityPointerHandler>(this);
+            InputSystem?.RegisterHandler<IMixedRealitySpeechHandler>(this);
+        }
+
+        /// <inheritdoc />
+        protected override void UnregisterHandlers()
+        {
+            InputSystem?.UnregisterHandler<IMixedRealityPointerHandler>(this);
+            InputSystem?.UnregisterHandler<IMixedRealitySpeechHandler>(this);
+        }
 
         private void UpdateHitTarget()
         {

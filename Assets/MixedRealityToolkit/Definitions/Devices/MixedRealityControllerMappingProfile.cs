@@ -14,7 +14,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
     /// New controller types can be registered by adding the MixedRealityControllerAttribute to
     /// the controller class.
     /// </summary>
-    [CreateAssetMenu(menuName = "Mixed Reality Toolkit/Mixed Reality Controller Mapping Profile", fileName = "MixedRealityControllerMappingProfile", order = (int)CreateProfileMenuItemIndices.ControllerMapping)]
+    [CreateAssetMenu(menuName = "Mixed Reality Toolkit/Profiles/Mixed Reality Controller Mapping Profile", fileName = "MixedRealityControllerMappingProfile", order = (int)CreateProfileMenuItemIndices.ControllerMapping)]
     public class MixedRealityControllerMappingProfile : BaseMixedRealityProfile
     {
         [SerializeField]
@@ -132,6 +132,10 @@ namespace Microsoft.MixedReality.Toolkit.Input
                         idx = mixedRealityControllerMappingProfiles.Length;
                         Array.Resize(ref mixedRealityControllerMappingProfiles, idx + 1);
                         mixedRealityControllerMappingProfiles[idx] = newMapping;
+                    }
+                    else
+                    {
+                        mixedRealityControllerMappingProfiles[idx].UpdateInteractionSettingsFromDefault();
                     }
                 }
             }

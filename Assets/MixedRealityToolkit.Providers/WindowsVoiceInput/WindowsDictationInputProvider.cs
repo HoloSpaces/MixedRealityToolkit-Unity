@@ -17,8 +17,8 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
         typeof(IMixedRealityInputSystem),
         new[] { typeof(WindowsStandalone), typeof(UniversalWindows) },
         "Windows Dictation Input")]
-    [DocLink("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Input/Dictation.html")]
-    public class WindowsDictationInputProvider : BaseInputDeviceManager, IMixedRealityDictationSystem
+    [HelpURL("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Input/Dictation.html")]
+    public class WindowsDictationInputProvider : BaseInputDeviceManager, IMixedRealityDictationSystem, IMixedRealityCapabilityCheck
     {
         /// <summary>
         /// Constructor.
@@ -37,6 +37,16 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
 
         /// <inheritdoc />
         public bool IsListening { get; private set; } = false;
+
+        #region IMixedRealityCapabilityCheck Implementation
+
+        /// <inheritdoc />
+        public bool CheckCapability(MixedRealityCapability capability)
+        {
+            return (capability == MixedRealityCapability.VoiceDictation);
+        }
+
+        #endregion IMixedRealityCapabilityCheck Implementation
 
         /// <inheritdoc />
         public async void StartRecording(GameObject listener, float initialSilenceTimeout = 5, float autoSilenceTimeout = 20, int recordingTime = 10, string micDeviceName = "")

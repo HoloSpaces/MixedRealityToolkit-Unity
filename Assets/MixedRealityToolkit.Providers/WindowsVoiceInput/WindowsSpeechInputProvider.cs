@@ -17,8 +17,8 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
         typeof(IMixedRealityInputSystem),
         new[] { typeof(WindowsStandalone), typeof(UniversalWindows) },
         "Windows Speech Input")]
-    [DocLink("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Input/Speech.html")]
-    public class WindowsSpeechInputProvider : BaseInputDeviceManager, IMixedRealitySpeechSystem
+    [HelpURL("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Input/Speech.html")]
+    public class WindowsSpeechInputProvider : BaseInputDeviceManager, IMixedRealitySpeechSystem, IMixedRealityCapabilityCheck
     {
         /// <summary>
         /// Constructor.
@@ -38,7 +38,7 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
         /// <summary>
         /// The keywords to be recognized and optional keyboard shortcuts.
         /// </summary>
-        private static SpeechCommands[] Commands => MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile.SpeechCommandsProfile.SpeechCommands;
+        private SpeechCommands[] Commands => InputSystemProfile.SpeechCommandsProfile.SpeechCommands;
 
         /// <summary>
         /// The Input Source for Windows Speech Input.
@@ -56,6 +56,16 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
             keywordRecognizer?.IsRunning ??
 #endif
             false;
+
+        #region IMixedRealityCapabilityCheck Implementation
+
+        /// <inheritdoc />
+        public bool CheckCapability(MixedRealityCapability capability)
+        {
+            return (capability == MixedRealityCapability.VoiceCommand);
+        }
+
+        #endregion IMixedRealityCapabilityCheck Implementation
 
         /// <inheritdoc />
         public void StartRecognition()
@@ -96,7 +106,9 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
         /// <inheritdoc />
         public override void Enable()
         {
-            if (!Application.isPlaying || Commands.Length == 0) { return; }
+            if (!Application.isPlaying || 
+                (Commands == null) ||
+                (Commands.Length == 0)) { return; }
 
             if (InputSystemProfile == null) { return; }
 
@@ -119,7 +131,7 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
                 {
                     keywordRecognizer = new KeywordRecognizer(newKeywords, (ConfidenceLevel)RecognitionConfidenceLevel);
                 }
-                catch (UnityException ex)
+                catch (Exception ex)
                 {
                     Debug.LogWarning($"Failed to start keyword recognizer. Are microphone permissions granted? Exception: {ex}");
                     keywordRecognizer = null;

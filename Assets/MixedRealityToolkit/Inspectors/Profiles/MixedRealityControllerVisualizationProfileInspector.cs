@@ -146,16 +146,20 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
             EditorGUILayout.Space();
 
-            if (MixedRealityEditorUtility.RenderIndentedButton(ControllerAddButtonContent, EditorStyles.miniButton))
+            if (InspectorUIUtility.RenderIndentedButton(ControllerAddButtonContent, EditorStyles.miniButton))
             {
                 controllerList.InsertArrayElementAtIndex(controllerList.arraySize);
                 var index = controllerList.arraySize - 1;
                 var controllerSetting = controllerList.GetArrayElementAtIndex(index);
+
                 var mixedRealityControllerMappingDescription = controllerSetting.FindPropertyRelative("description");
                 mixedRealityControllerMappingDescription.stringValue = typeof(GenericJoystickController).Name;
+
                 var mixedRealityControllerHandedness = controllerSetting.FindPropertyRelative("handedness");
                 mixedRealityControllerHandedness.intValue = 1;
+
                 serializedObject.ApplyModifiedProperties();
+
                 thisProfile.ControllerVisualizationSettings[index].ControllerType.Type = typeof(GenericJoystickController);
                 return;
             }
