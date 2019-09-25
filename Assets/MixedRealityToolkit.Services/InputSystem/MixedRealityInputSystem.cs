@@ -245,6 +245,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
                         configuration.ComponentType.Type,
                         configuration.RuntimePlatform,
                         configuration.CustomizedRuntimePlatform,
+                        configuration.RuntimeModes,
                         args);
                 }
             }

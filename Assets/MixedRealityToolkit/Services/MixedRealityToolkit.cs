@@ -160,23 +160,16 @@ namespace Microsoft.MixedReality.Toolkit
             Type concreteType,
             SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1),
             IPlatformSupport[] customizedSupportedPlatforms = null,
+            SupportedApplicationModes applicationModes = (SupportedApplicationModes)(-1),
             params object[] args) where T : IMixedRealityService
         {
-            if (isApplicationQuitting)
-            {
-                return false;
-            }
+            if (isApplicationQuitting ||
+                !PlatformUtility.IsPlatformSupported(supportedPlatforms) ||
+                !PlatformUtility.IsSupportedApplicationMode(applicationModes) ||
 
-            if ((supportedPlatforms & SupportedPlatforms.Custom) != 0 && (customizedSupportedPlatforms == null || !customizedSupportedPlatforms.IsPlatformSupported()))
-            {
-                return false;
-            }
-            else
-#if !UNITY_EDITOR
-            if (!Application.platform.IsPlatformSupported(supportedPlatforms))
-#else
-            if (!EditorUserBuildSettings.activeBuildTarget.IsPlatformSupported(supportedPlatforms))
-#endif
+
+(supportedPlatforms & SupportedPlatforms.Custom) != 0 && !customizedSupportedPlatforms.IsPlatformSupported()
+)
             {
                 return false;
             }
@@ -419,7 +412,7 @@ namespace Microsoft.MixedReality.Toolkit
                     if (typeof(IMixedRealityExtensionService).IsAssignableFrom(configuration.ComponentType.Type))
                     {
                         object[] args = { this, configuration.ComponentName, configuration.Priority, configuration.ConfigurationProfile };
-                        if (!RegisterService<IMixedRealityExtensionService>(configuration.ComponentType, configuration.RuntimePlatform, configuration.CustomizedRuntimePlatform, args))
+                        if (!RegisterService<IMixedRealityExtensionService>(configuration.ComponentType, configuration.RuntimePlatform, configuration.CustomizedRuntimePlatform, configuration.RuntimeModes, args:args))
                         {
                             Debug.LogError($"Failed to register {configuration.ComponentName}");
                         }

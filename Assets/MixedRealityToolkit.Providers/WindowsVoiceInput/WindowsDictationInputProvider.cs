@@ -15,7 +15,8 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
 {
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
-        new[] { typeof(WindowsStandalone), typeof(UniversalWindows) },
+        SupportedPlatforms.WindowsStandalone | SupportedPlatforms.WindowsUniversal, 
+        null,
         "Windows Dictation Input")]
     [HelpURL("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Input/Dictation.html")]
     public class WindowsDictationInputProvider : BaseInputDeviceManager, IMixedRealityDictationSystem, IMixedRealityCapabilityCheck

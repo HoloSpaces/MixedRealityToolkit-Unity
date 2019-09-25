@@ -14,7 +14,8 @@ namespace Microsoft.MixedReality.Toolkit.OpenVR.Input
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
-        new[] { typeof(WindowsStandalone), typeof(MacStandalone), typeof(LinuxStandalone) },
+        SupportedPlatforms.WindowsStandalone | SupportedPlatforms.MacStandalone | SupportedPlatforms.LinuxStandalone,
+        null,
         "OpenVR Device Manager")]
     public class OpenVRDeviceManager : UnityJoystickManager, IMixedRealityCapabilityCheck
     {

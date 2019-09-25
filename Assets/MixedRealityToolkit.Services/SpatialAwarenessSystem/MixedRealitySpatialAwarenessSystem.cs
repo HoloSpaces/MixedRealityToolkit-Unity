@@ -106,6 +106,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness
                         configuration.ComponentType.Type,
                         configuration.RuntimePlatform,
                         configuration.CustomizedRuntimePlatform,
+                        configuration.RuntimeModes,
                         args);
                 }
             }

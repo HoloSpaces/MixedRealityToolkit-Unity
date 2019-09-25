@@ -17,12 +17,16 @@ namespace Microsoft.MixedReality.Toolkit
         /// </summary>
         public Type ServiceInterfaceType { get; }
 
+        /// <inheritdoc/>
         public MixedRealityDataProviderAttribute(
             Type serviceInterfaceType,
-            Type[] runtimePlatforms,
+            SupportedPlatforms runtimePlatforms,
+            Type[] customizedRuntimePlatform,
             string name = "",
             string profilePath = "",
-            string packageFolder = "MixedRealityToolkit") : base(runtimePlatforms, name, profilePath, packageFolder)
+            string packageFolder = "MixedRealityToolkit",
+            SupportedApplicationModes runtimeModes = (SupportedApplicationModes)(-1)
+            ) : base(runtimePlatforms, customizedRuntimePlatform, name, profilePath, packageFolder, runtimeModes)
         {
             ServiceInterfaceType = serviceInterfaceType;
         }

@@ -63,19 +63,28 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 {
                     list.InsertArrayElementAtIndex(list.arraySize);
                     SerializedProperty managerConfig = list.GetArrayElementAtIndex(list.arraySize - 1);
+
                     var componentName = managerConfig.FindPropertyRelative("componentName");
                     componentName.stringValue = $"New Configuration {list.arraySize - 1}";
+
                     var priority = managerConfig.FindPropertyRelative("priority");
                     priority.intValue = 10;
+
                     var runtimePlatform = managerConfig.FindPropertyRelative("runtimePlatform");
                     runtimePlatform.intValue = -1;
                     var customizedRuntimePlatform = managerConfig.FindPropertyRelative("customizedRuntimePlatform");
                     customizedRuntimePlatform.objectReferenceValue = null;
+                    var runtimeModes = managerConfig.FindPropertyRelative("runtimeModes");
+                    runtimeModes.intValue = -1;
+
                     var configurationProfile = managerConfig.FindPropertyRelative("configurationProfile");
                     configurationProfile.objectReferenceValue = null;
+
                     serializedObject.ApplyModifiedProperties();
+
                     var componentType = ((MixedRealityRegisteredServiceProvidersProfile)serializedObject.targetObject).Configurations[list.arraySize - 1].ComponentType;
                     componentType.Type = null;
+
                     configFoldouts = new bool[list.arraySize];
                     return;
                 }
@@ -102,6 +111,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     var priority = managerConfig.FindPropertyRelative("priority");
                     var runtimePlatform = managerConfig.FindPropertyRelative("runtimePlatform");
                     var customizedRuntimePlatform = managerConfig.FindPropertyRelative("customizedRuntimePlatform");
+                    var runtimeModes = managerConfig.FindPropertyRelative("runtimeModes");
                     var configurationProfile = managerConfig.FindPropertyRelative("configurationProfile");
 
                     using (new EditorGUILayout.VerticalScope())
@@ -133,15 +143,17 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                                 {
                                     // Try to assign default configuration profile when type changes.
                                     serializedObject.ApplyModifiedProperties();
-                                    AssignDefaultConfigurationValues(((MixedRealityRegisteredServiceProvidersProfile)serializedObject.targetObject).Configurations[i].ComponentType, configurationProfile, customizedRuntimePlatform, i);
+                                    Type type = ((MixedRealityRegisteredServiceProvidersProfile)serializedObject.targetObject).Configurations[i].ComponentType;
+                                    ApplyDataProviderConfiguration(type, componentName, configurationProfile, runtimePlatform, customizedRuntimePlatform, runtimeModes);
                                     changed = true;
                                     break;
                                 }
 
                                 EditorGUI.BeginChangeCheck();
                                 EditorGUILayout.PropertyField(priority);
+                                EditorGUILayout.PropertyField(runtimePlatform, RuntimePlatformContent);
                                 RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i);
-
+                                RenderRuntimeMode(runtimeModes);
                                 changed |= EditorGUI.EndChangeCheck();
 
                                 Type serviceType = null;
@@ -166,16 +178,16 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             }
         }
 
-        private void AssignDefaultConfigurationValues(System.Type componentType, SerializedProperty configurationProfile, SerializedProperty runtimePlatform, int index)
+        private void AssignDefaultConfigurationValues(Type componentType, SerializedProperty configurationProfile, SerializedProperty runtimePlatform)
         {
             configurationProfile.objectReferenceValue = null;
-            runtimePlatform.objectReferenceValue = null;
+            runtimePlatform.intValue = -1;
 
             if (componentType != null &&
                 MixedRealityExtensionServiceAttribute.Find(componentType) is MixedRealityExtensionServiceAttribute attr)
             {
                 configurationProfile.objectReferenceValue = attr.DefaultProfile;
-                ApplyMaskToProperty(runtimePlatform, runtimePlatformMasks[index]);
+                runtimePlatform.intValue = (int)attr.RuntimePlatforms;
             }
 
             serializedObject.ApplyModifiedProperties();

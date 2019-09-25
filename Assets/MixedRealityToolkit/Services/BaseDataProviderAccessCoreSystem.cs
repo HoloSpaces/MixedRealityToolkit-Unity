@@ -134,19 +134,14 @@ namespace Microsoft.MixedReality.Toolkit
             Type concreteType,
             SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1),
             IPlatformSupport[] customizedSupportedPlatforms = null,
+            SupportedApplicationModes supportedApplicationModes = (SupportedApplicationModes)(-1),
             params object[] args) where T : IMixedRealityDataProvider
         {
+            if (!PlatformUtility.IsPlatformSupported(supportedPlatforms) ||
+                !PlatformUtility.IsSupportedApplicationMode(supportedApplicationModes)||
 
-            if (supportedPlatforms == SupportedPlatforms.Custom && (customizedSupportedPlatforms == null || !customizedSupportedPlatforms.IsPlatformSupported()))
-            {
-                return false;
-            }
-            else
-#if !UNITY_EDITOR
-            if (!Application.platform.IsPlatformSupported(supportedPlatforms))
-#else
-            if (!EditorUserBuildSettings.activeBuildTarget.IsPlatformSupported(supportedPlatforms))
-#endif
+supportedPlatforms == SupportedPlatforms.Custom && !customizedSupportedPlatforms.IsPlatformSupported()
+)
             {
                 return false;
             }

@@ -11,7 +11,7 @@ namespace Microsoft.MixedReality.Toolkit
     /// Defines a system, feature, or manager to be registered with as a <see cref="IMixedRealityExtensionService"/> on startup.
     /// </summary>
     [Serializable]
-    public struct MixedRealityServiceConfiguration : IMixedRealityServiceConfiguration
+    public class MixedRealityServiceConfiguration : IMixedRealityServiceConfiguration
     {
         /// <summary>
         /// Constructor.
@@ -19,7 +19,8 @@ namespace Microsoft.MixedReality.Toolkit
         /// <param name="componentType">The concrete type for the system, feature or manager.</param>
         /// <param name="componentName">The simple, human readable name for the system, feature, or manager.</param>
         /// <param name="priority">The priority this system, feature, or manager will be initialized in.</param>
-        /// <param name="runtimePlatform">The runtime platform(s) to run this system, feature, or manager on.</param>
+        /// <param name="runtimePlatform">The runtime build target platform(s) to run this system, feature, or manager on.</param>
+        /// <param name="runtimeModes">The runtime environment mode(s) to run this system, feature, or manager</param>
         /// <param name="configurationProfile">The configuration profile for the service.</param>
         public MixedRealityServiceConfiguration(
             SystemType componentType,
@@ -27,6 +28,7 @@ namespace Microsoft.MixedReality.Toolkit
             uint priority,
             SupportedPlatforms runtimePlatform,
             IPlatformSupport[] customizedRuntimePlatform,
+            SupportedApplicationModes runtimeModes,
             BaseMixedRealityProfile configurationProfile)
         {
             this.componentType = componentType;
@@ -36,6 +38,7 @@ namespace Microsoft.MixedReality.Toolkit
             this.customizedRuntimePlatform = customizedRuntimePlatform.Convert();
             this._customizedRuntimePlatform = customizedRuntimePlatform;
             this.configurationProfile = configurationProfile;
+            this.runtimeModes = runtimeModes;
         }
 
         [SerializeField]
@@ -57,12 +60,31 @@ namespace Microsoft.MixedReality.Toolkit
         /// <inheritdoc />
         public uint Priority => priority;
 
-        [SerializeField]
         [EnumFlags]
-        private SupportedPlatforms runtimePlatform;
+        [SerializeField]
+        private SupportedPlatforms runtimePlatform = (SupportedPlatforms)(-1);
 
         /// <inheritdoc />
         public SupportedPlatforms RuntimePlatform => runtimePlatform;
+
+        [EnumFlags]
+        [SerializeField]
+        private SupportedApplicationModes runtimeModes = (SupportedApplicationModes)(-1);
+
+        /// <inheritdoc />
+        public SupportedApplicationModes RuntimeModes
+        {
+            get
+            {
+                // Flag cannot be none
+                if (runtimeModes == (SupportedApplicationModes)0)
+                {
+                    runtimeModes = (SupportedApplicationModes)(-1);
+                }
+
+                return runtimeModes;
+            }
+        }
 
         [SerializeField]
         [Implements(typeof(IPlatformSupport), TypeGrouping.ByNamespaceFlat)]

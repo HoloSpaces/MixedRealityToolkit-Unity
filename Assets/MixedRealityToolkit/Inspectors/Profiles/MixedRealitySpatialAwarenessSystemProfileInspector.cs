@@ -15,9 +15,6 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
         private static readonly GUIContent AddObserverContent = new GUIContent("+ Add Spatial Observer", "Add Spatial Observer");
         private static readonly GUIContent RemoveObserverContent = new GUIContent("-", "Remove Spatial Observer");
 
-        private static readonly GUIContent ComponentTypeContent = new GUIContent("Type");
-        private static readonly GUIContent RuntimePlatformContent = new GUIContent("Supported Platform(s)");
-
         private SerializedProperty observerConfigurations;
 
         private const string ProfileTitle = "Spatial Awareness System Settings";
@@ -84,6 +81,9 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     SerializedProperty customizedRuntimePlatform = observer.FindPropertyRelative("customizedRuntimePlatform");
                     customizedRuntimePlatform.objectReferenceValue = null;
 
+                    SerializedProperty applicationMode = observer.FindPropertyRelative("runtimeModes");
+                    applicationMode.intValue = -1;
+
                     SerializedProperty configurationProfile = observer.FindPropertyRelative("observerProfile");
                     configurationProfile.objectReferenceValue = null;
 
@@ -110,6 +110,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     SerializedProperty observerProfile = observer.FindPropertyRelative("observerProfile");
                     SerializedProperty runtimePlatform = observer.FindPropertyRelative("runtimePlatform");
                     SerializedProperty customizedRuntimePlatform = observer.FindPropertyRelative("customizedRuntimePlatform");
+                    SerializedProperty runtimeApplicationModes = observer.FindPropertyRelative("runtimeModes");
 
                     using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                     {
@@ -128,27 +129,26 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
                         if (observerFoldouts[i])
                         {
+                            EditorGUI.BeginChangeCheck();
+                            EditorGUILayout.PropertyField(observerType, ComponentTypeContent);
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                serializedObject.ApplyModifiedProperties();
+                                System.Type type = ((MixedRealitySpatialAwarenessSystemProfile)serializedObject.targetObject).ObserverConfigurations[i].ComponentType.Type;
+                                ApplyDataProviderConfiguration(type, observerName, observerProfile, runtimePlatform, customizedRuntimePlatform, runtimeApplicationModes);
+                                break;
+                            }
+
+                            EditorGUI.BeginChangeCheck();
+                            EditorGUILayout.PropertyField(runtimePlatform, RuntimePlatformContent);
+                            RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
+                            RenderRuntimeMode(runtimeApplicationModes);
+                            changed |= EditorGUI.EndChangeCheck();
+
                             System.Type serviceType = null;
                             if (observerProfile.objectReferenceValue != null)
                             {
-                                EditorGUI.BeginChangeCheck();
-                                EditorGUILayout.PropertyField(observerType, ComponentTypeContent);
-                                if (EditorGUI.EndChangeCheck())
-                                {
-                                    serializedObject.ApplyModifiedProperties();
-                                    System.Type type = ((MixedRealitySpatialAwarenessSystemProfile)serializedObject.targetObject).ObserverConfigurations[i].ComponentType.Type;
-                                    ApplyObserverConfiguration(type, observerName, observerProfile, customizedRuntimePlatform, i);
-                                    break;
-                                }
-
-                                EditorGUI.BeginChangeCheck();
-                                RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
-                                changed |= EditorGUI.EndChangeCheck();
-
-                                if (observerProfile.objectReferenceValue != null)
-                                {
-                                    serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
-                                }
+                                serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
                             }
 
                             changed |= RenderProfile(observerProfile, null, true, false, serviceType);
@@ -164,13 +164,11 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                 }
             }
         }
-
         private void ApplyObserverConfiguration(
             System.Type type, 
             SerializedProperty observerName,
             SerializedProperty configurationProfile,
-            SerializedProperty runtimePlatform,
-            int index)
+            SerializedProperty runtimePlatform)
         {
             if (type != null)
             {
@@ -179,8 +177,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                 {
                     observerName.stringValue = !string.IsNullOrWhiteSpace(observerAttribute.Name) ? observerAttribute.Name : type.Name;
                     configurationProfile.objectReferenceValue = observerAttribute.DefaultProfile;
-                    ApplyMaskToProperty(runtimePlatform, runtimePlatformMasks[index]);
-
+                    runtimePlatform.intValue = (int)observerAttribute.RuntimePlatforms;
                 }
                 else
                 {

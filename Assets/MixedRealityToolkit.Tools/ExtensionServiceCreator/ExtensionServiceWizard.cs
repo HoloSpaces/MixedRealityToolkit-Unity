@@ -135,19 +135,46 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Choose which platforms your service will support.", EditorStyles.miniLabel);
-            creatorPlatformMask = EditorGUILayout.MaskField(creatorPlatformMask, creatorPlatformNames);
-            if (creatorPlatformMask != 0)
-                creator.Platforms = new SystemType[MathExtensions.CountBits(creatorPlatformMask)];
-            int arrayIndex = 0;
-            for (int i = 0; i < creatorPlatformTypes.Length; i++)
+
+            creator.Platforms = (SupportedPlatforms)EditorGUILayout.EnumFlagsField("Platforms", creator.Platforms);
+
+            readyToProgress &= creator.ValidatePlatforms(errors);
+            foreach (string error in errors)
             {
-                if ((creatorPlatformMask & 1 << i) != 0)
+                EditorGUILayout.HelpBox(error, MessageType.Error);
+            }
+
+            if ((creator.Platforms & SupportedPlatforms.Custom) != 0)
+            {
+                creatorPlatformMask = EditorGUILayout.MaskField("Customizations", creatorPlatformMask, creatorPlatformNames);
+
+                if (creatorPlatformMask != 0)
                 {
-                    creator.Platforms[arrayIndex++] = creatorPlatformTypes[i];
+                    creator.CustomizedPlatforms = new SystemType[MathExtensions.CountBits(creatorPlatformMask)];
+                }
+
+                int arrayIndex = 0;
+
+                for (int i = 0; i < creatorPlatformTypes.Length; i++)
+                {
+                    if ((creatorPlatformMask & 1 << i) != 0)
+                    {
+                        creator.CustomizedPlatforms[arrayIndex++] = creatorPlatformTypes[i];
+                    }
+                }
+
+                readyToProgress &= creator.ValidateCustomizedPlatforms(errors);
+                foreach (string error in errors)
+                {
+                    EditorGUILayout.HelpBox(error, MessageType.Error);
                 }
             }
 
-            readyToProgress &= creator.ValidatePlatforms(errors);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Choose which environment modes your service will support.", EditorStyles.miniLabel);
+
+            creator.ApplicationModes = (SupportedApplicationModes)EditorGUILayout.EnumFlagsField("Environment Modes", creator.ApplicationModes);
+            readyToProgress &= creator.ValidateApplicationModes(errors);
             foreach (string error in errors)
             {
                 EditorGUILayout.HelpBox(error, MessageType.Error);
@@ -401,6 +428,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             SerializedProperty priority = newConfig.FindPropertyRelative("priority");
             SerializedProperty runtimePlatform = newConfig.FindPropertyRelative("runtimePlatform");
             SerializedProperty customizedRuntimePlatform = newConfig.FindPropertyRelative("customizedRuntimePlatform");
+            SerializedProperty runtimeModes = newConfig.FindPropertyRelative("runtimeModes");
             SerializedProperty configurationProfile = newConfig.FindPropertyRelative("configurationProfile");
 
             componentTypeReference.stringValue = creator.ServiceType.AssemblyQualifiedName;
@@ -409,15 +437,16 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             priority.intValue = 0;
             configurationProfile.objectReferenceValue = creator.ProfileInstance;
 
-            runtimePlatform.intValue = (int)(SupportedPlatforms.Custom);
+            runtimePlatform.intValue = (int)creator.Platforms;
 
-            customizedRuntimePlatform.arraySize = creator.Platforms.Length;
-            for (int i = 0; i < creator.Platforms.Length; i++)
+            customizedRuntimePlatform.arraySize = creator.CustomizedPlatforms.Length;
+            for (int i = 0; i < creator.CustomizedPlatforms.Length; i++)
             {
                 customizedRuntimePlatform.InsertArrayElementAtIndex(i);
                 var arrayEntry = customizedRuntimePlatform.GetArrayElementAtIndex(i).FindPropertyRelative("reference");
-                arrayEntry.stringValue = creator.Platforms[i].Type.AssemblyQualifiedName;
+                arrayEntry.stringValue = creator.CustomizedPlatforms[i].Type.AssemblyQualifiedName;
             }
+            runtimeModes.intValue = (int)creator.ApplicationModes;
 
             servicesProfileObject.ApplyModifiedProperties();
 

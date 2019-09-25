@@ -14,9 +14,6 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
         private static readonly GUIContent AddProviderContent = new GUIContent("+ Add Data Provider", "Add Data Provider");
         private static readonly GUIContent RemoveProviderContent = new GUIContent("-", "Remove Data Provider");
 
-        private static readonly GUIContent ComponentTypeContent = new GUIContent("Type");
-        private static readonly GUIContent RuntimePlatformContent = new GUIContent("Platform(s)");
-
         private static bool showDataProviders = false;
         private const string ShowInputSystem_DataProviders_PreferenceKey = "ShowInputSystem_DataProviders_PreferenceKey";
         private SerializedProperty dataProviderConfigurations;
@@ -217,6 +214,9 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     SerializedProperty customizedRuntimePlatform = dataProvider.FindPropertyRelative("customizedRuntimePlatform");
                     customizedRuntimePlatform.objectReferenceValue = null;
 
+                    SerializedProperty applicationMode = dataProvider.FindPropertyRelative("runtimeModes");
+                    applicationMode.intValue = -1;
+
                     serializedObject.ApplyModifiedProperties();
 
                     SystemType providerType = ((MixedRealityInputSystemProfile)serializedObject.targetObject).DataProviderConfigurations[list.arraySize - 1].ComponentType;
@@ -243,6 +243,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     SerializedProperty configurationProfile = dataProvider.FindPropertyRelative("deviceManagerProfile");
                     SerializedProperty runtimePlatform = dataProvider.FindPropertyRelative("runtimePlatform");
                     SerializedProperty customizedRuntimePlatform = dataProvider.FindPropertyRelative("customizedRuntimePlatform");
+                    SerializedProperty runtimeApplicationModes = dataProvider.FindPropertyRelative("runtimeModes");
 
                     using (new EditorGUILayout.VerticalScope())
                     {
@@ -269,13 +270,15 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                                 {
                                     serializedObject.ApplyModifiedProperties();
                                     System.Type type = ((MixedRealityInputSystemProfile)serializedObject.targetObject).DataProviderConfigurations[i].ComponentType.Type;
-                                    ApplyDataProviderConfiguration(type, providerName, configurationProfile, customizedRuntimePlatform, i);
+                                    ApplyDataProviderConfiguration(type, providerName, configurationProfile, runtimePlatform, customizedRuntimePlatform, runtimeApplicationModes);
                                     changed = true;
                                     break;
                                 }
 
                                 EditorGUI.BeginChangeCheck();
+                                EditorGUILayout.PropertyField(runtimePlatform, RuntimePlatformContent);
                                 RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
+                                RenderRuntimeMode(runtimeApplicationModes);
                                 changed |= EditorGUI.EndChangeCheck();
 
                                 System.Type serviceType = null;
@@ -303,8 +306,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
             System.Type type,
             SerializedProperty providerName,
             SerializedProperty configurationProfile,
-            SerializedProperty runtimePlatform,
-            int index)
+            SerializedProperty runtimePlatform)
         {
             if (type != null)
             {
@@ -313,7 +315,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                 {
                     providerName.stringValue = !string.IsNullOrWhiteSpace(providerAttribute.Name) ? providerAttribute.Name : type.Name;
                     configurationProfile.objectReferenceValue = providerAttribute.DefaultProfile;
-                    ApplyMaskToProperty(runtimePlatform, runtimePlatformMasks[index]);
+                    runtimePlatform.intValue = (int)providerAttribute.RuntimePlatforms;
                 }
                 else
                 {

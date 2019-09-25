@@ -13,7 +13,8 @@ namespace Microsoft.MixedReality.Toolkit.Input
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
-        null, // Supported on all platforms
+        (SupportedPlatforms)(-1),
+        null,
         "Input Playback Service")]
     public class InputPlaybackService :
         BaseInputSimulationService,

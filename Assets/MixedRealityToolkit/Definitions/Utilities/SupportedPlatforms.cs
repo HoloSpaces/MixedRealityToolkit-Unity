@@ -6,7 +6,7 @@ using System;
 namespace Microsoft.MixedReality.Toolkit.Utilities
 {
     /// <summary>
-    /// The supported platforms for Mixed Reality Toolkit Components and Features.
+    /// The supported build target platforms for Mixed Reality Toolkit Components and Features.
     /// </summary>
     [Flags]
     public enum SupportedPlatforms
@@ -22,6 +22,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
         IOS                 = 1 << 8,
         Web                 = 1 << 9,
         Lumin               = 1 << 10,
-        Custom              = 1 << 32
+        Custom              = 1 << 31
     }
 }

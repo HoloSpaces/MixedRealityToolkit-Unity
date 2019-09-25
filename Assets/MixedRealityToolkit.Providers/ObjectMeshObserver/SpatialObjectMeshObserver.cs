@@ -14,7 +14,8 @@ namespace Microsoft.MixedReality.Toolkit.SpatialObjectMeshObserver
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealitySpatialAwarenessSystem),
-        new[] { typeof(WindowsEditor) },
+        SupportedPlatforms.WindowsEditor,
+        null,
         "Spatial Object Mesh Observer",
         "ObjectMeshObserver/Profiles/DefaultObjectMeshObserverProfile.asset",
         "MixedRealityToolkit.Providers")]
