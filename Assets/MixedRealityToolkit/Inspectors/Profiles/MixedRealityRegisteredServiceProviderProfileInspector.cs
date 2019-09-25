@@ -68,7 +68,9 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     var priority = managerConfig.FindPropertyRelative("priority");
                     priority.intValue = 10;
                     var runtimePlatform = managerConfig.FindPropertyRelative("runtimePlatform");
-                    runtimePlatform.objectReferenceValue = null;
+                    runtimePlatform.intValue = -1;
+                    var customizedRuntimePlatform = managerConfig.FindPropertyRelative("customizedRuntimePlatform");
+                    customizedRuntimePlatform.objectReferenceValue = null;
                     var configurationProfile = managerConfig.FindPropertyRelative("configurationProfile");
                     configurationProfile.objectReferenceValue = null;
                     serializedObject.ApplyModifiedProperties();
@@ -99,6 +101,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     var componentType = managerConfig.FindPropertyRelative("componentType");
                     var priority = managerConfig.FindPropertyRelative("priority");
                     var runtimePlatform = managerConfig.FindPropertyRelative("runtimePlatform");
+                    var customizedRuntimePlatform = managerConfig.FindPropertyRelative("customizedRuntimePlatform");
                     var configurationProfile = managerConfig.FindPropertyRelative("configurationProfile");
 
                     using (new EditorGUILayout.VerticalScope())
@@ -130,14 +133,14 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                                 {
                                     // Try to assign default configuration profile when type changes.
                                     serializedObject.ApplyModifiedProperties();
-                                    AssignDefaultConfigurationValues(((MixedRealityRegisteredServiceProvidersProfile)serializedObject.targetObject).Configurations[i].ComponentType, configurationProfile, runtimePlatform, i);
+                                    AssignDefaultConfigurationValues(((MixedRealityRegisteredServiceProvidersProfile)serializedObject.targetObject).Configurations[i].ComponentType, configurationProfile, customizedRuntimePlatform, i);
                                     changed = true;
                                     break;
                                 }
 
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(priority);
-                    RenderSupportedPlatforms(runtimePlatform, i);
+                                EditorGUI.BeginChangeCheck();
+                                EditorGUILayout.PropertyField(priority);
+                                RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i);
 
                                 changed |= EditorGUI.EndChangeCheck();
 

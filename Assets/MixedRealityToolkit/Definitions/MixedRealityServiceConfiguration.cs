@@ -25,14 +25,16 @@ namespace Microsoft.MixedReality.Toolkit
             SystemType componentType,
             string componentName,
             uint priority,
-            IPlatformSupport[] runtimePlatform,
+            SupportedPlatforms runtimePlatform,
+            IPlatformSupport[] customizedRuntimePlatform,
             BaseMixedRealityProfile configurationProfile)
         {
             this.componentType = componentType;
             this.componentName = componentName;
             this.priority = priority;
-            this.runtimePlatform = runtimePlatform.Convert();
-            this._runtimePlatform = runtimePlatform;
+            this.runtimePlatform = runtimePlatform;
+            this.customizedRuntimePlatform = customizedRuntimePlatform.Convert();
+            this._customizedRuntimePlatform = customizedRuntimePlatform;
             this.configurationProfile = configurationProfile;
         }
 
@@ -56,22 +58,30 @@ namespace Microsoft.MixedReality.Toolkit
         public uint Priority => priority;
 
         [SerializeField]
-        [Implements(typeof(IPlatformSupport), TypeGrouping.ByNamespaceFlat)]
-        private SystemType[] runtimePlatform;
-
-        private IPlatformSupport[] _runtimePlatform;
+        [EnumFlags]
+        private SupportedPlatforms runtimePlatform;
 
         /// <inheritdoc />
-        public IPlatformSupport[] RuntimePlatform
+        public SupportedPlatforms RuntimePlatform => runtimePlatform;
+
+        [SerializeField]
+        [Implements(typeof(IPlatformSupport), TypeGrouping.ByNamespaceFlat)]
+        private SystemType[] customizedRuntimePlatform;
+
+        /// <inheritdoc />
+        private IPlatformSupport[] _customizedRuntimePlatform;
+
+        /// <inheritdoc />
+        public IPlatformSupport[] CustomizedRuntimePlatform
         {
             get
             {
-                if (_runtimePlatform == null)
+                if (_customizedRuntimePlatform == null)
                 {
-                    _runtimePlatform = runtimePlatform.Convert();
+                    _customizedRuntimePlatform = customizedRuntimePlatform.Convert();
                 }
 
-                return _runtimePlatform;
+                return _customizedRuntimePlatform;
             }
         }
 

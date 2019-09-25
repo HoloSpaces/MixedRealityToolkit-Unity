@@ -400,6 +400,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             SerializedProperty componentName = newConfig.FindPropertyRelative("componentName");
             SerializedProperty priority = newConfig.FindPropertyRelative("priority");
             SerializedProperty runtimePlatform = newConfig.FindPropertyRelative("runtimePlatform");
+            SerializedProperty customizedRuntimePlatform = newConfig.FindPropertyRelative("customizedRuntimePlatform");
             SerializedProperty configurationProfile = newConfig.FindPropertyRelative("configurationProfile");
 
             componentTypeReference.stringValue = creator.ServiceType.AssemblyQualifiedName;
@@ -408,12 +409,13 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             priority.intValue = 0;
             configurationProfile.objectReferenceValue = creator.ProfileInstance;
 
-            
-            runtimePlatform.arraySize = creator.Platforms.Length;
+            runtimePlatform.intValue = (int)(SupportedPlatforms.Custom);
+
+            customizedRuntimePlatform.arraySize = creator.Platforms.Length;
             for (int i = 0; i < creator.Platforms.Length; i++)
             {
-                runtimePlatform.InsertArrayElementAtIndex(i);
-                var arrayEntry = runtimePlatform.GetArrayElementAtIndex(i).FindPropertyRelative("reference");
+                customizedRuntimePlatform.InsertArrayElementAtIndex(i);
+                var arrayEntry = customizedRuntimePlatform.GetArrayElementAtIndex(i).FindPropertyRelative("reference");
                 arrayEntry.stringValue = creator.Platforms[i].Type.AssemblyQualifiedName;
             }
 

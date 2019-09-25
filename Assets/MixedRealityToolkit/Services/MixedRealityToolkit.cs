@@ -158,7 +158,8 @@ namespace Microsoft.MixedReality.Toolkit
         /// <inheritdoc />
         public bool RegisterService<T>(
             Type concreteType,
-            IPlatformSupport[] supportedPlatforms = null,
+            SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1),
+            IPlatformSupport[] customizedSupportedPlatforms = null,
             params object[] args) where T : IMixedRealityService
         {
             if (isApplicationQuitting)
@@ -166,7 +167,16 @@ namespace Microsoft.MixedReality.Toolkit
                 return false;
             }
 
-            if (!supportedPlatforms.IsPlatformSupported())
+            if ((supportedPlatforms & SupportedPlatforms.Custom) != 0 && (customizedSupportedPlatforms == null || !customizedSupportedPlatforms.IsPlatformSupported()))
+            {
+                return false;
+            }
+            else
+#if !UNITY_EDITOR
+            if (!Application.platform.IsPlatformSupported(supportedPlatforms))
+#else
+            if (!EditorUserBuildSettings.activeBuildTarget.IsPlatformSupported(supportedPlatforms))
+#endif
             {
                 return false;
             }
@@ -409,7 +419,7 @@ namespace Microsoft.MixedReality.Toolkit
                     if (typeof(IMixedRealityExtensionService).IsAssignableFrom(configuration.ComponentType.Type))
                     {
                         object[] args = { this, configuration.ComponentName, configuration.Priority, configuration.ConfigurationProfile };
-                        if (!RegisterService<IMixedRealityExtensionService>(configuration.ComponentType, configuration.RuntimePlatform, args))
+                        if (!RegisterService<IMixedRealityExtensionService>(configuration.ComponentType, configuration.RuntimePlatform, configuration.CustomizedRuntimePlatform, args))
                         {
                             Debug.LogError($"Failed to register {configuration.ComponentName}");
                         }

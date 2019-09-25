@@ -148,9 +148,9 @@ namespace Microsoft.MixedReality.Toolkit.Experimental
         }
 
         /// <inheritdoc />
-        public bool RegisterService<T>(Type concreteType, IPlatformSupport[] supportedPlatforms = null, params object[] args) where T : IMixedRealityService
+        public bool RegisterService<T>(Type concreteType, SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1), IPlatformSupport[] customizedSupportedPlatforms = null, params object[] args) where T : IMixedRealityService
         {
-            T serviceInstance = ActivateInstance<T>(concreteType, supportedPlatforms, args);
+            T serviceInstance = ActivateInstance<T>(concreteType, supportedPlatforms, customizedSupportedPlatforms, args);
 
             if (serviceInstance == null)
             {
@@ -190,11 +190,19 @@ namespace Microsoft.MixedReality.Toolkit.Experimental
         /// <param name="supportedPlatforms">The platform(s) on which the concrete type is supported.</param>
         /// <param name="args">Collection of arguments to provide to the concrete type's constructor.</param>
         /// <returns>An instance of the concrete type. Returns a default value of T (typically null) in the event of a failure.</returns>
-        private T ActivateInstance<T>(Type concreteType, IPlatformSupport[] supportedPlatforms = null, params object[] args) where T : IMixedRealityService
+        private T ActivateInstance<T>(Type concreteType, SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1), IPlatformSupport[] customizedSupportedPlatforms = null, params object[] args) where T : IMixedRealityService
         {
             if (concreteType == null) { return default(T); }
 
-            if (!supportedPlatforms.IsPlatformSupported())
+#if !UNITY_EDITOR
+            if (!Application.platform.IsPlatformSupported(supportedPlatforms))
+#else
+            if (!UnityEditor.EditorUserBuildSettings.activeBuildTarget.IsPlatformSupported(supportedPlatforms))
+#endif
+            {
+                return default(T);
+            }
+            else if ((supportedPlatforms & SupportedPlatforms.Custom) != 0 && !customizedSupportedPlatforms.IsPlatformSupported())
             {
                 return default(T);
             }
@@ -226,9 +234,9 @@ namespace Microsoft.MixedReality.Toolkit.Experimental
         /// <param name="concreteType">The concrete type of the service to initialize.</param>
         /// <param name="supportedPlatforms">The platoform(s) on which the service is supported.</param>
         /// <param name="args">Arguments to provide to the service class constructor.</param>
-        protected virtual void Initialize<T>(Type concreteType, IPlatformSupport[] supportedPlatforms = null, params object[] args) where T : IMixedRealityService
+        protected virtual void Initialize<T>(Type concreteType, SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1), IPlatformSupport[] customizedSupportedPlatforms = null, params object[] args) where T : IMixedRealityService
         {
-            if (!RegisterService<T>(concreteType, supportedPlatforms, args))
+            if (!RegisterService<T>(concreteType, supportedPlatforms, customizedSupportedPlatforms, args))
             {
                 Debug.LogError($"Failed to register the {concreteType.Name} service.");
             }

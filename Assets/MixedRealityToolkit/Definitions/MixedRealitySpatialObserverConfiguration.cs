@@ -30,23 +30,30 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness
         public uint Priority => priority;
 
         [SerializeField]
+        [EnumFlags]
+        private SupportedPlatforms runtimePlatform;
+
+        /// <inheritdoc />
+        public SupportedPlatforms RuntimePlatform => runtimePlatform;
+
+        [SerializeField]
         [Implements(typeof(IPlatformSupport), TypeGrouping.ByNamespaceFlat)]
-        private SystemType[] runtimePlatform;
+        private SystemType[] customizedRuntimePlatform;
 
         /// <inheritdoc />
-        private IPlatformSupport[] _runtimePlatform;
+        private IPlatformSupport[] _customizedRuntimePlatform;
 
         /// <inheritdoc />
-        public IPlatformSupport[] RuntimePlatform
+        public IPlatformSupport[] CustomizedRuntimePlatform
         {
             get
             {
-                if (_runtimePlatform == null)
+                if (_customizedRuntimePlatform == null)
                 {
-                    _runtimePlatform = runtimePlatform.Convert();
+                    _customizedRuntimePlatform = customizedRuntimePlatform.Convert();
                 }
 
-                return _runtimePlatform;
+                return _customizedRuntimePlatform;
             }
         }
 
@@ -70,14 +77,16 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness
             SystemType componentType,
             string componentName,
             uint priority,
-            IPlatformSupport[] runtimePlatform,
+            SupportedPlatforms runtimePlatform,
+            IPlatformSupport[] customizedRuntimePlatform,
             BaseSpatialAwarenessObserverProfile configurationProfile)
         {
             this.componentType = componentType;
             this.componentName = componentName;
             this.priority = priority;
-            this.runtimePlatform = runtimePlatform.Convert();
-            this._runtimePlatform = runtimePlatform;
+            this.runtimePlatform = runtimePlatform;
+            this.customizedRuntimePlatform = customizedRuntimePlatform.Convert();
+            this._customizedRuntimePlatform = customizedRuntimePlatform;
             this.observerProfile = configurationProfile;
         }
     }

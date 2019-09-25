@@ -212,7 +212,10 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     configurationProfile.objectReferenceValue = null;
 
                     SerializedProperty runtimePlatform = dataProvider.FindPropertyRelative("runtimePlatform");
-                    runtimePlatform.objectReferenceValue = null;
+                    runtimePlatform.intValue = -1;
+
+                    SerializedProperty customizedRuntimePlatform = dataProvider.FindPropertyRelative("customizedRuntimePlatform");
+                    customizedRuntimePlatform.objectReferenceValue = null;
 
                     serializedObject.ApplyModifiedProperties();
 
@@ -239,6 +242,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     SerializedProperty providerType = dataProvider.FindPropertyRelative("componentType");
                     SerializedProperty configurationProfile = dataProvider.FindPropertyRelative("deviceManagerProfile");
                     SerializedProperty runtimePlatform = dataProvider.FindPropertyRelative("runtimePlatform");
+                    SerializedProperty customizedRuntimePlatform = dataProvider.FindPropertyRelative("customizedRuntimePlatform");
 
                     using (new EditorGUILayout.VerticalScope())
                     {
@@ -265,13 +269,13 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                                 {
                                     serializedObject.ApplyModifiedProperties();
                                     System.Type type = ((MixedRealityInputSystemProfile)serializedObject.targetObject).DataProviderConfigurations[i].ComponentType.Type;
-                                    ApplyDataProviderConfiguration(type, providerName, configurationProfile, runtimePlatform, i);
+                                    ApplyDataProviderConfiguration(type, providerName, configurationProfile, customizedRuntimePlatform, i);
                                     changed = true;
                                     break;
                                 }
 
                                 EditorGUI.BeginChangeCheck();
-                                RenderSupportedPlatforms(runtimePlatform, i, RuntimePlatformContent);
+                                RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
                                 changed |= EditorGUI.EndChangeCheck();
 
                                 System.Type serviceType = null;

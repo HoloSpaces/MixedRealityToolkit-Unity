@@ -35,6 +35,8 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
             {
                 observerFoldouts = new bool[observerConfigurations.arraySize];
             }
+
+            GatherSupportedPlatforms(observerConfigurations);
         }
 
         public override void OnInspectorGUI()
@@ -77,7 +79,10 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     observerName.stringValue = $"New spatial observer {list.arraySize - 1}";
 
                     SerializedProperty runtimePlatform = observer.FindPropertyRelative("runtimePlatform");
-                    runtimePlatform.objectReferenceValue = null;
+                    runtimePlatform.intValue = -1;
+
+                    SerializedProperty customizedRuntimePlatform = observer.FindPropertyRelative("customizedRuntimePlatform");
+                    customizedRuntimePlatform.objectReferenceValue = null;
 
                     SerializedProperty configurationProfile = observer.FindPropertyRelative("observerProfile");
                     configurationProfile.objectReferenceValue = null;
@@ -104,6 +109,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     SerializedProperty observerType = observer.FindPropertyRelative("componentType");
                     SerializedProperty observerProfile = observer.FindPropertyRelative("observerProfile");
                     SerializedProperty runtimePlatform = observer.FindPropertyRelative("runtimePlatform");
+                    SerializedProperty customizedRuntimePlatform = observer.FindPropertyRelative("customizedRuntimePlatform");
 
                     using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                     {
@@ -131,12 +137,12 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                                 {
                                     serializedObject.ApplyModifiedProperties();
                                     System.Type type = ((MixedRealitySpatialAwarenessSystemProfile)serializedObject.targetObject).ObserverConfigurations[i].ComponentType.Type;
-                                    ApplyObserverConfiguration(type, observerName, observerProfile, runtimePlatform, i);
+                                    ApplyObserverConfiguration(type, observerName, observerProfile, customizedRuntimePlatform, i);
                                     break;
                                 }
 
                                 EditorGUI.BeginChangeCheck();
-                                RenderSupportedPlatforms(runtimePlatform, i, RuntimePlatformContent);
+                                RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
                                 changed |= EditorGUI.EndChangeCheck();
 
                                 if (observerProfile.objectReferenceValue != null)
