@@ -1,8 +1,8 @@
 ﻿using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Editor;
 using Microsoft.MixedReality.Toolkit.Utilities;
-using Microsoft.MixedReality.Toolkit.Utilities.Editor;
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ public class BaseMixedRealityToolkitRuntimePlatformConfigurationProfileInspector
 
     protected static string[] runtimePlatformNames;
     protected static Type[] runtimePlatformTypes;
-    protected static int[] runtimePlatformMasks;
+    protected static List<int> runtimePlatformMasks = new List<int>();
 
     protected override bool IsProfileInActiveInstance()
     {
@@ -20,33 +20,53 @@ public class BaseMixedRealityToolkitRuntimePlatformConfigurationProfileInspector
                MixedRealityToolkit.Instance.HasActiveProfile;
     }
 
-    protected void GatherSupportedPlatforms(SerializedProperty serializedProperty)
+    protected static void DefaultRuntimeSettings(SerializedProperty dataProviderConfiguration)
+    {
+        var runtimePlatform = dataProviderConfiguration.FindPropertyRelative("runtimePlatform");
+        runtimePlatform.intValue = 1 << (int)(SupportedPlatforms.Custom);
+
+        var runtimeModes = dataProviderConfiguration.FindPropertyRelative("runtimeModes");
+        runtimeModes.intValue = -1;
+    }
+
+    protected static void GatherSupportedPlatforms(SerializedProperty mixedRealitySpatialObserverConfigurations)
     {
         runtimePlatformTypes = PlatformSupportExtension.GetSupportedPlatformTypes();
         runtimePlatformNames = PlatformSupportExtension.GetSupportedPlatformNames();
-
-        runtimePlatformMasks = new int[serializedProperty.arraySize];
-        SerializedProperty supportedPlatformsArray;
-        string platformName;
-        for (int i = 0; i < serializedProperty.arraySize; i++)
+        for (int i = 0; i < mixedRealitySpatialObserverConfigurations.arraySize; i++)
         {
-            supportedPlatformsArray = serializedProperty.GetArrayElementAtIndex(i).FindPropertyRelative("customizedRuntimePlatform");
+            CreateRuntimePlatformMask(mixedRealitySpatialObserverConfigurations, i);
+        }
+    }
 
-            for (int j = 0; j < runtimePlatformTypes.Length; j++)
+    protected static void CreateRuntimePlatformMask(SerializedProperty mixedRealitySpatialObserverConfigurationsProvider, int index)
+    {
+        string platformName;
+        SerializedProperty supportedPlatformsArray = mixedRealitySpatialObserverConfigurationsProvider.GetArrayElementAtIndex(index).FindPropertyRelative("customizedRuntimePlatform");
+
+        if (index < runtimePlatformMasks.Count)
+        {
+            runtimePlatformMasks[index] = 0;
+        }
+        else
+        {
+            runtimePlatformMasks.Add(0);
+        }
+
+        for (int j = 0; j < runtimePlatformTypes.Length; j++)
+        {
+            platformName = SystemType.GetReference(runtimePlatformTypes[j]);
+            for (int k = 0; k < supportedPlatformsArray.arraySize; k++)
             {
-                platformName = SystemType.GetReference(runtimePlatformTypes[j]);
-                for (int k = 0; k < supportedPlatformsArray.arraySize; k++)
+                if (platformName.Equals(supportedPlatformsArray.GetArrayElementAtIndex(k).FindPropertyRelative("reference").stringValue))
                 {
-                    if (platformName.Equals(supportedPlatformsArray.GetArrayElementAtIndex(k).FindPropertyRelative("reference").stringValue))
-                    {
-                        runtimePlatformMasks[i] |= 1 << j;
-                    }
+                    runtimePlatformMasks[index] |= 1 << j;
                 }
             }
         }
     }
 
-    protected static void RenderSupportedPlatforms(SerializedProperty runtimePlatform, SerializedProperty customRuntimePlatform, int index, UnityEngine.GUIContent runtimePlatformContent = null)
+    protected static void RenderSupportedPlatforms(SerializedProperty runtimePlatform, SerializedProperty customRuntimePlatform, int index, GUIContent runtimePlatformContent = null)
     {
         EditorGUILayout.PropertyField(runtimePlatform, runtimePlatformContent);
 

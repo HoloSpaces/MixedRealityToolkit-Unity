@@ -72,17 +72,12 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                     list.InsertArrayElementAtIndex(list.arraySize);
                     SerializedProperty observer = list.GetArrayElementAtIndex(list.arraySize - 1);
 
+                    CreateRuntimePlatformMask(list, list.arraySize - 1);
+
                     SerializedProperty observerName = observer.FindPropertyRelative("componentName");
                     observerName.stringValue = $"New spatial observer {list.arraySize - 1}";
 
-                    SerializedProperty runtimePlatform = observer.FindPropertyRelative("runtimePlatform");
-                    runtimePlatform.intValue = -1;
-
-                    SerializedProperty customizedRuntimePlatform = observer.FindPropertyRelative("customizedRuntimePlatform");
-                    customizedRuntimePlatform.objectReferenceValue = null;
-
-                    SerializedProperty applicationMode = observer.FindPropertyRelative("runtimeModes");
-                    applicationMode.intValue = -1;
+                    DefaultRuntimeSettings(observer);
 
                     SerializedProperty configurationProfile = observer.FindPropertyRelative("observerProfile");
                     configurationProfile.objectReferenceValue = null;
@@ -140,7 +135,6 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                             }
 
                             EditorGUI.BeginChangeCheck();
-                            EditorGUILayout.PropertyField(runtimePlatform, RuntimePlatformContent);
                             RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
                             RenderRuntimeMode(runtimeApplicationModes);
                             changed |= EditorGUI.EndChangeCheck();

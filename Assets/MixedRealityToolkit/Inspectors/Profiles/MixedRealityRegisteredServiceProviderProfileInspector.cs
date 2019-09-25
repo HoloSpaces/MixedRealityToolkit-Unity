@@ -64,18 +64,15 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     list.InsertArrayElementAtIndex(list.arraySize);
                     SerializedProperty managerConfig = list.GetArrayElementAtIndex(list.arraySize - 1);
 
+                    CreateRuntimePlatformMask(list, list.arraySize - 1);
+
                     var componentName = managerConfig.FindPropertyRelative("componentName");
                     componentName.stringValue = $"New Configuration {list.arraySize - 1}";
 
                     var priority = managerConfig.FindPropertyRelative("priority");
                     priority.intValue = 10;
 
-                    var runtimePlatform = managerConfig.FindPropertyRelative("runtimePlatform");
-                    runtimePlatform.intValue = -1;
-                    var customizedRuntimePlatform = managerConfig.FindPropertyRelative("customizedRuntimePlatform");
-                    customizedRuntimePlatform.objectReferenceValue = null;
-                    var runtimeModes = managerConfig.FindPropertyRelative("runtimeModes");
-                    runtimeModes.intValue = -1;
+                    DefaultRuntimeSettings(managerConfig);
 
                     var configurationProfile = managerConfig.FindPropertyRelative("configurationProfile");
                     configurationProfile.objectReferenceValue = null;
@@ -151,8 +148,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
                                 EditorGUI.BeginChangeCheck();
                                 EditorGUILayout.PropertyField(priority);
-                                EditorGUILayout.PropertyField(runtimePlatform, RuntimePlatformContent);
-                                RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i);
+                                RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
                                 RenderRuntimeMode(runtimeModes);
                                 changed |= EditorGUI.EndChangeCheck();
 

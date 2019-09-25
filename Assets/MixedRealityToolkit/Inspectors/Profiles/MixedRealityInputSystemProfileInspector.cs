@@ -199,23 +199,19 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                     list.InsertArrayElementAtIndex(list.arraySize);
                     SerializedProperty dataProvider = list.GetArrayElementAtIndex(list.arraySize - 1);
 
+                    CreateRuntimePlatformMask(list, list.arraySize - 1);
+
                     SerializedProperty providerName = dataProvider.FindPropertyRelative("componentName");
                     providerName.stringValue = $"New data provider {list.arraySize - 1}";
 
                     SerializedProperty priority = dataProvider.FindPropertyRelative("priority");
                     priority.intValue = 0;
 
+                    DefaultRuntimeSettings(dataProvider);
+
                     SerializedProperty configurationProfile = dataProvider.FindPropertyRelative("deviceManagerProfile");
                     configurationProfile.objectReferenceValue = null;
 
-                    SerializedProperty runtimePlatform = dataProvider.FindPropertyRelative("runtimePlatform");
-                    runtimePlatform.intValue = -1;
-
-                    SerializedProperty customizedRuntimePlatform = dataProvider.FindPropertyRelative("customizedRuntimePlatform");
-                    customizedRuntimePlatform.objectReferenceValue = null;
-
-                    SerializedProperty applicationMode = dataProvider.FindPropertyRelative("runtimeModes");
-                    applicationMode.intValue = -1;
 
                     serializedObject.ApplyModifiedProperties();
 
@@ -276,7 +272,6 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                                 }
 
                                 EditorGUI.BeginChangeCheck();
-                                EditorGUILayout.PropertyField(runtimePlatform, RuntimePlatformContent);
                                 RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
                                 RenderRuntimeMode(runtimeApplicationModes);
                                 changed |= EditorGUI.EndChangeCheck();

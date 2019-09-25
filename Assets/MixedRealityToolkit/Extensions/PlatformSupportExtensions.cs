@@ -13,7 +13,7 @@ public static class PlatformSupportExtension
 
         foreach (var item in platformSupports)
         {
-            if (item.IsEditorOrRuntimePlatform())
+            if (item.IsSupported())
                 return true;
         }
 
