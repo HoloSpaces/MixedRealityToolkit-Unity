@@ -45,7 +45,7 @@ namespace Microsoft.MixedReality.Toolkit.UI.Editor
             themeStates = theme.States?.StateList.ToArray();
             if (themeStates == null)
             {
-                themeStates = new State[0];
+                themeStates = Array.Empty<State>();
             }
 
             // If no theme properties assigned, add a default one
@@ -83,7 +83,6 @@ namespace Microsoft.MixedReality.Toolkit.UI.Editor
         {
             using (new EditorGUILayout.VerticalScope())
             {
-                GUI.enabled = !(EditorApplication.isPlaying || EditorApplication.isPaused);
                 using (var check = new EditorGUI.ChangeCheckScope())
                 {
                     EditorGUILayout.PropertyField(states, new GUIContent("States", "The States this Interactable is based on"));
@@ -93,7 +92,6 @@ namespace Microsoft.MixedReality.Toolkit.UI.Editor
                         theme.ValidateDefinitions();
                     }
                 }
-                GUI.enabled = true;
 
                 if (states.objectReferenceValue == null || themeStates.Length < 1)
                 {
@@ -310,7 +308,7 @@ namespace Microsoft.MixedReality.Toolkit.UI.Editor
                     shader.objectReferenceValue = Shader.Find(shaderName.stringValue);
                     shaderPropertyname.stringValue = shaderOption.stringValue;
 
-                    // Wipe old data from trigering this again
+                    // Wipe old data from triggering this again
                     shaderOptions.ClearArray();
 
                     stateProperty.serializedObject.ApplyModifiedProperties();

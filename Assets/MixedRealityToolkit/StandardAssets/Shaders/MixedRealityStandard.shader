@@ -208,9 +208,6 @@ Shader "Mixed Reality Toolkit/Standard"
 
             CGPROGRAM
 
-#if defined(SHADER_API_D3D11)
-            #pragma target 5.0
-#endif
             #pragma vertex vert
             #pragma fragment frag
 
@@ -664,7 +661,6 @@ Shader "Mixed Reality Toolkit/Standard"
             {
                 v2f o;
                 UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 #if defined(_INSTANCED_COLOR)
                 UNITY_TRANSFER_INSTANCE_ID(v, o);
@@ -847,10 +843,7 @@ Shader "Mixed Reality Toolkit/Standard"
                 return o;
             }
 
-#if defined(SHADER_API_D3D11) && !defined(_ALPHA_CLIP) && !defined(_TRANSPARENT)
-            [earlydepthstencil]
-#endif
-            fixed4 frag(v2f i) : SV_Target
+            fixed4 frag(v2f i, fixed facing : VFACE) : SV_Target
             {
 #if defined(_INSTANCED_COLOR)
                 UNITY_SETUP_INSTANCE_ID(i);
@@ -983,10 +976,10 @@ Shader "Mixed Reality Toolkit/Standard"
                 worldNormal.x = dot(i.tangentX, tangentNormal);
                 worldNormal.y = dot(i.tangentY, tangentNormal);
                 worldNormal.z = dot(i.tangentZ, tangentNormal);
-                worldNormal = normalize(worldNormal);
+                worldNormal = normalize(worldNormal) * facing;
 #endif
 #else
-                worldNormal = normalize(i.worldNormal);
+                worldNormal = normalize(i.worldNormal) * facing;
 #endif
 #endif
 
