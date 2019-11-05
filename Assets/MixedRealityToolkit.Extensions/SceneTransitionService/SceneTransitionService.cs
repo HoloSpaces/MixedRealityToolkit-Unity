@@ -10,7 +10,11 @@ using Microsoft.MixedReality.Toolkit.UI;
 
 namespace Microsoft.MixedReality.Toolkit.Extensions.SceneTransitions
 {
-    [MixedRealityExtensionService(new[] { typeof(WindowsStandalone), typeof(MacStandalone), typeof(LinuxStandalone), typeof(UniversalWindows) })]
+    [MixedRealityExtensionService(
+        new[] { typeof(WindowsStandalone), typeof(MacStandalone), typeof(LinuxStandalone), typeof(UniversalWindows) },
+        "Scene Transition Service",
+        "SceneTransitionService/DefaultSceneTransitionServiceProfile.asset",
+        "MixedRealityToolkit.Extensions")]
     [HelpURL("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Extensions/SceneTransitionService/SceneTransitionServiceOverview.html")]
     public class SceneTransitionService : BaseExtensionService, ISceneTransitionService, IMixedRealityExtensionService
     {
@@ -236,7 +240,7 @@ namespace Microsoft.MixedReality.Toolkit.Extensions.SceneTransitions
             {
                 case ProgressIndicatorState.Open:
                 case ProgressIndicatorState.Opening:
-                    // If it's already open / opening, don't botheer to open again
+                    // If it's already open / opening, don't bother to open again
                     break;
 
                 case ProgressIndicatorState.Closed:
@@ -405,6 +409,7 @@ namespace Microsoft.MixedReality.Toolkit.Extensions.SceneTransitions
             }
 
             cameraFader = (ICameraFader)Activator.CreateInstance(sceneTransitionServiceProfile.CameraFaderType.Type);
+            cameraFader.Initialize(sceneTransitionServiceProfile);
 
             if (cameraFader == null)
             {

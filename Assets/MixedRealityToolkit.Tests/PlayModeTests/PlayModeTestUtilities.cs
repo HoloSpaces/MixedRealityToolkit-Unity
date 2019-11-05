@@ -20,10 +20,8 @@ using Microsoft.MixedReality.Toolkit.Diagnostics;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
-using System;
 
 #if UNITY_EDITOR
-using TMPro;
 using UnityEditor;
 #endif
 
@@ -105,10 +103,8 @@ namespace Microsoft.MixedReality.Toolkit.Tests
 
         public static IMixedRealityInputSystem GetInputSystem()
         {
-            IMixedRealityInputSystem inputSystem;
-            MixedRealityServiceRegistry.TryGetService(out inputSystem);
-            Assert.IsNotNull(inputSystem, "MixedRealityInputSystem is null!");
-            return inputSystem;
+            Assert.IsNotNull(CoreServices.InputSystem, "MixedRealityInputSystem is null!");
+            return CoreServices.InputSystem;
         }
 
         /// <summary>
@@ -173,17 +169,14 @@ namespace Microsoft.MixedReality.Toolkit.Tests
                 yield break;
             }
 
-            IMixedRealityInputSystem inputSystem = null;
-            MixedRealityServiceRegistry.TryGetService(out inputSystem);
-
-            Assert.IsNotNull(inputSystem, "Input system must be initialized");
+            Assert.IsNotNull(CoreServices.InputSystem, "Input system must be initialized");
 
             // Let input system to register all cursors and managers.
             yield return null;
 
             // Switch off / Destroy all input components, which listen to global events
-            UnityEngine.Object.Destroy(inputSystem.GazeProvider.GazeCursor as Behaviour);
-            inputSystem.GazeProvider.Enabled = false;
+            UnityEngine.Object.Destroy(CoreServices.InputSystem.GazeProvider.GazeCursor as Behaviour);
+            CoreServices.InputSystem.GazeProvider.Enabled = false;
 
             var diagnosticsVoiceControls = UnityEngine.Object.FindObjectsOfType<DiagnosticsSystemVoiceControls>();
             foreach (var diagnosticsComponent in diagnosticsVoiceControls)
@@ -195,12 +188,12 @@ namespace Microsoft.MixedReality.Toolkit.Tests
             yield return null;
 
             // Forcibly unregister all other input event listeners.
-            BaseEventSystem baseEventSystem = inputSystem as BaseEventSystem;
+            BaseEventSystem baseEventSystem = CoreServices.InputSystem as BaseEventSystem;
             MethodInfo unregisterHandler = baseEventSystem.GetType().GetMethod("UnregisterHandler");
 
             // Since we are iterating over and removing these values, we need to snapshot them
             // before calling UnregisterHandler on each handler.
-            var eventHandlersByType = new Dictionary<System.Type, List<BaseEventSystem.EventHandlerEntry>>(((BaseEventSystem)inputSystem).EventHandlersByType);
+            var eventHandlersByType = new Dictionary<System.Type, List<BaseEventSystem.EventHandlerEntry>>(((BaseEventSystem)CoreServices.InputSystem).EventHandlersByType);
             foreach (var typeToEventHandlers in eventHandlersByType)
             {
                 var handlerEntries = new List<BaseEventSystem.EventHandlerEntry>(typeToEventHandlers.Value);
@@ -213,8 +206,8 @@ namespace Microsoft.MixedReality.Toolkit.Tests
             }
 
             // Check that input system is clean
-            CollectionAssert.IsEmpty(((BaseEventSystem)inputSystem).EventListeners, "Input event system handler registry is not empty in the beginning of the test.");
-            CollectionAssert.IsEmpty(((BaseEventSystem)inputSystem).EventHandlersByType, "Input event system handler registry is not empty in the beginning of the test.");
+            CollectionAssert.IsEmpty(((BaseEventSystem)CoreServices.InputSystem).EventListeners, "Input event system handler registry is not empty in the beginning of the test.");
+            CollectionAssert.IsEmpty(((BaseEventSystem)CoreServices.InputSystem).EventHandlersByType, "Input event system handler registry is not empty in the beginning of the test.");
 
             yield return null;
         }
@@ -329,17 +322,18 @@ namespace Microsoft.MixedReality.Toolkit.Tests
             yield return null;
         }
 
-        internal static void EnsureTextMeshProEssentials()
+        internal static void InstallTextMeshProEssentials()
         {
 #if UNITY_EDITOR
-            // Special handling for TMP Settings and importing Essential Resources
-            if (TMP_Settings.instance == null)
+            // Import the TMP Essential Resources package
+            string packageFullPath = Path.GetFullPath("Packages/com.unity.textmeshpro");
+            if (Directory.Exists(packageFullPath))
             {
-                string packageFullPath = Path.GetFullPath("Packages/com.unity.textmeshpro");
-                if (Directory.Exists(packageFullPath))
-                {
-                    AssetDatabase.ImportPackage(packageFullPath + "/Package Resources/TMP Essential Resources.unitypackage", false);
-                }
+                AssetDatabase.ImportPackage(packageFullPath + "/Package Resources/TMP Essential Resources.unitypackage", false);
+            }
+            else
+            {
+                Debug.LogError("Unable to locate the Text Mesh Pro package.");
             }
 #endif
         }
@@ -353,6 +347,22 @@ namespace Microsoft.MixedReality.Toolkit.Tests
         {
             Debug.Log(Time.time + "Press Enter...");
             while (!UnityEngine.Input.GetKeyDown(KeyCode.Return))
+            {
+                yield return null;
+            }
+        }
+
+        /// <summary>
+        /// Sometimes it take a few frames for inputs raised via InputSystem.OnInput*
+        /// to actually get sent to input handlers. This method waits for enough frames
+        /// to pass so that any events raised actually have time to send to handlers.
+        /// We set it fairly conservatively to ensure that after waiting
+        /// all input events have been sent.
+        /// </summary>
+        internal static IEnumerator WaitForInputSystemUpdate()
+        {
+            const int inputSystemUpdateFrames = 10;
+            for (int i = 0; i < inputSystemUpdateFrames; i++)
             {
                 yield return null;
             }

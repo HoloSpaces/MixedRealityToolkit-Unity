@@ -32,7 +32,10 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
         public override void OnInspectorGUI()
         {
-            RenderProfileHeader(ProfileTitle, ProfileDescription, target);
+            if (!RenderProfileHeader(ProfileTitle, ProfileDescription, target))
+            {
+                return;
+            }
 
             using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
@@ -133,7 +136,12 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                                 {
                                     // Try to assign default configuration profile when type changes.
                                     serializedObject.ApplyModifiedProperties();
-                                    AssignDefaultConfigurationValues(((MixedRealityRegisteredServiceProvidersProfile)serializedObject.targetObject).Configurations[i].ComponentType, configurationProfile, customizedRuntimePlatform, i);
+                                    AssignDefaultConfigurationValues(
+                                        ((MixedRealityRegisteredServiceProvidersProfile)serializedObject.targetObject).Configurations[i].ComponentType, 
+                                        componentName,
+                                        configurationProfile, 
+                                        customizedRuntimePlatform,
+					i);
                                     changed = true;
                                     break;
                                 }
@@ -144,11 +152,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
                                 changed |= EditorGUI.EndChangeCheck();
 
-                                Type serviceType = null;
-                                if (configurationProfile.objectReferenceValue != null)
-                                {
-                                    serviceType = (target as MixedRealityRegisteredServiceProvidersProfile).Configurations[i].ComponentType;
-                                }
+                                Type serviceType = (target as MixedRealityRegisteredServiceProvidersProfile).Configurations[i].ComponentType;
 
                                 changed |= RenderProfile(configurationProfile, null, true, true, serviceType);
                             }
@@ -166,16 +170,30 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             }
         }
 
-        private void AssignDefaultConfigurationValues(System.Type componentType, SerializedProperty configurationProfile, SerializedProperty runtimePlatform, int index)
+        private void AssignDefaultConfigurationValues(
+            System.Type componentType,
+            SerializedProperty componentName,
+            SerializedProperty configurationProfile, 
+            SerializedProperty runtimePlatform,
+            int index)
         {
             configurationProfile.objectReferenceValue = null;
             runtimePlatform.objectReferenceValue = null;
 
-            if (componentType != null &&
-                MixedRealityExtensionServiceAttribute.Find(componentType) is MixedRealityExtensionServiceAttribute attr)
+            if (componentType != null)
             {
-                configurationProfile.objectReferenceValue = attr.DefaultProfile;
-                ApplyMaskToProperty(runtimePlatform, runtimePlatformMasks[index]);
+                MixedRealityExtensionServiceAttribute attr = MixedRealityExtensionServiceAttribute.Find(componentType) as MixedRealityExtensionServiceAttribute;
+
+                if (attr != null)
+                {
+                    componentName.stringValue = !string.IsNullOrWhiteSpace(attr.Name) ? attr.Name : componentType.Name;
+                    configurationProfile.objectReferenceValue = attr.DefaultProfile;
+                    ApplyMaskToProperty(runtimePlatform, runtimePlatformMasks[index]);
+                }
+                else
+                {
+                    componentName.stringValue = componentType.Name;
+                }
             }
 
             serializedObject.ApplyModifiedProperties();

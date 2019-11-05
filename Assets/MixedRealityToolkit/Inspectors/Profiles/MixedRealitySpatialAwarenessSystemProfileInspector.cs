@@ -41,7 +41,10 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
         public override void OnInspectorGUI()
         {
-            RenderProfileHeader(ProfileTitle, ProfileDescription, target);
+            if (!RenderProfileHeader(ProfileTitle, ProfileDescription, target))
+            {
+                return;
+            }
 
             using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
@@ -145,13 +148,13 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                                 RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
                                 changed |= EditorGUI.EndChangeCheck();
 
-                                if (observerProfile.objectReferenceValue != null)
-                                {
-                                    serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
-                                }
+                            System.Type serviceType = null;
+                            if (observerProfile.objectReferenceValue != null)
+                            {
+                                serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
                             }
 
-                            changed |= RenderProfile(observerProfile, null, true, false, serviceType);
+                            changed |= RenderProfile(observerProfile, typeof(BaseSpatialAwarenessObserverProfile), true, false, serviceType);
 
                             serializedObject.ApplyModifiedProperties();
                         }

@@ -20,6 +20,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
         private SerializedProperty keywordsProperty;
         private SerializedProperty persistentKeywordsProperty;
+        private SerializedProperty speechConfirmationTooltipPrefabProperty;
 
         protected override void OnEnable()
         {
@@ -27,6 +28,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
             keywordsProperty = serializedObject.FindProperty("keywords");
             persistentKeywordsProperty = serializedObject.FindProperty("persistentKeywords");
+            speechConfirmationTooltipPrefabProperty = serializedObject.FindProperty("speechConfirmationTooltipPrefab");
 
             if (MixedRealityInspectorUtility.CheckMixedRealityConfigured(false))
             {
@@ -70,6 +72,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
             serializedObject.Update();
             EditorGUILayout.PropertyField(persistentKeywordsProperty);
+            EditorGUILayout.PropertyField(speechConfirmationTooltipPrefabProperty);
 
             bool wasGUIEnabled = GUI.enabled;
             GUI.enabled = enabled;
@@ -106,7 +109,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
             {
                 // remove the keywords already assigned from the registered list
                 var handler = (SpeechInputHandler)target;
-                var availableKeywords = new string[0];
+                var availableKeywords = System.Array.Empty<string>();
 
                 if (handler.Keywords != null && distinctRegisteredKeywords != null)
                 {
