@@ -260,10 +260,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Solvers
                             faceTarget = CameraCache.Main.transform;
                             break;
 
-                        case TrackedObjectType.MotionController:
-
-                            break;
-
                         case TrackedObjectType.HandJoint:
                             // Set to None, so the underlying ControllerFinder doesn't attach to a controller.
                             // TODO: Make this more generic / configurable for hands vs controllers. Also resolve the duplicate Handedness variables.

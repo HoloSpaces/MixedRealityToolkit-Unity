@@ -81,10 +81,13 @@ namespace HoloSpaces.MixedReality.Input
         {
             base.UpdateControllerData(state);
 
+            IMixedRealityInputSystem inputSystem = CoreServices.InputSystem;
+            if (inputSystem == null) { return; }
+
             // Raise input system events if it is enabled.
             if (lastTrackingState != TrackingState)
             {
-                InputSystem?.RaiseSourceTrackingStateChanged(InputSource, this, TrackingState);
+                inputSystem.RaiseSourceTrackingStateChanged(InputSource, this, TrackingState);
             }
 
             if (TrackingState == TrackingState.Tracked && LastControllerPose != CurrentControllerPose)
@@ -93,16 +96,16 @@ namespace HoloSpaces.MixedReality.Input
                 {
                     if (IsRotationAvailable)
                     {
-                        InputSystem?.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
+                        inputSystem.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
                     }
                     else
                     {
-                        InputSystem?.RaiseSourcePositionChanged(InputSource, this, CurrentControllerPosition);
+                        inputSystem.RaiseSourcePositionChanged(InputSource, this, CurrentControllerPosition);
                     }
                 }
                 else if (IsRotationAvailable)
                 {
-                    InputSystem?.RaiseSourceRotationChanged(InputSource, this, CurrentControllerRotation);
+                    inputSystem.RaiseSourceRotationChanged(InputSource, this, CurrentControllerRotation);
                 }
             }
         }

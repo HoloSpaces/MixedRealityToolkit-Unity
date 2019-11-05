@@ -26,11 +26,10 @@ namespace HoloSpaces.MixedReality.Input
         /// <param name="priority">Service priority. Used to determine order of instantiation.</param>
         /// <param name="profile">The service's configuration profile.</param>
         public OculusAndroidDeviceManager(
-            IMixedRealityServiceRegistrar registrar,
             IMixedRealityInputSystem inputSystem,
             string name,
             uint priority,
-            BaseMixedRealityProfile profile) : base(registrar, inputSystem, name, priority, profile) { }
+            BaseMixedRealityProfile profile) : base(inputSystem, name, priority, profile) { }
 
 #region IMixedRealityCapabilityCheck Implementation
 
