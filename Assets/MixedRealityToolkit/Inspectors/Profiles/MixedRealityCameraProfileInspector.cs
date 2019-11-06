@@ -10,7 +10,7 @@ using Microsoft.MixedReality.Toolkit.CameraSystem;
 namespace Microsoft.MixedReality.Toolkit.Editor
 {
     [CustomEditor(typeof(MixedRealityCameraProfile))]
-    public class MixedRealityCameraProfileInspector : BaseMixedRealityToolkitConfigurationProfileInspector
+    public class MixedRealityCameraProfileInspector : BaseMixedRealityToolkitRuntimePlatformConfigurationProfileInspector
     {
         private bool showProviders = false;
         private const string showProvidersPreferenceKey = "ShowCameraSystem_DataProviders_PreferenceKey";
@@ -146,6 +146,9 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     SerializedProperty runtimePlatform = provider.FindPropertyRelative("runtimePlatform");
                     runtimePlatform.intValue = -1;
 
+                    SerializedProperty customizedRuntimePlatform = provider.FindPropertyRelative("customizedRuntimePlatform");
+                    customizedRuntimePlatform.objectReferenceValue = null;
+
                     SerializedProperty configurationProfile = provider.FindPropertyRelative("settingsProfile");
                     configurationProfile.objectReferenceValue = null;
 
@@ -165,6 +168,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     SerializedProperty providerType = provider.FindPropertyRelative("componentType");
                     SerializedProperty providerProfile = provider.FindPropertyRelative("settingsProfile");
                     SerializedProperty runtimePlatform = provider.FindPropertyRelative("runtimePlatform");
+                    SerializedProperty customizedRuntimePlatform = provider.FindPropertyRelative("customizedRuntimePlatform");
 
                     using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                     {
@@ -189,13 +193,13 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                             {
                                 serializedObject.ApplyModifiedProperties();
                                 System.Type type = ((MixedRealityCameraProfile)serializedObject.targetObject).SettingsConfigurations[i].ComponentType.Type;
-                                ApplyProviderConfiguration(type, providerName, providerProfile, runtimePlatform);
+                                ApplyProviderConfiguration(type, providerName, providerProfile, customizedRuntimePlatform, i);
                                 changed = true;
                                 break;
                             }
 
                             EditorGUI.BeginChangeCheck();
-                            EditorGUILayout.PropertyField(runtimePlatform, supportedPlatformsTitle);
+                            RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, supportedPlatformsTitle);
                             changed |= EditorGUI.EndChangeCheck();
 
                             var serviceType = (target as MixedRealityCameraProfile).SettingsConfigurations[i].ComponentType;
@@ -217,7 +221,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             System.Type type,
             SerializedProperty providerName,
             SerializedProperty configurationProfile,
-            SerializedProperty runtimePlatform)
+            SerializedProperty runtimePlatform,
+            int index)
         {
             if (type != null)
             {
@@ -226,7 +231,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 {
                     providerName.stringValue = !string.IsNullOrWhiteSpace(providerAttribute.Name) ? providerAttribute.Name : type.Name;
                     configurationProfile.objectReferenceValue = providerAttribute.DefaultProfile;
-                    runtimePlatform.intValue = (int)providerAttribute.RuntimePlatforms;
+                    ApplyMaskToProperty(runtimePlatform, runtimePlatformMasks[index]);
                 }
                 else
                 {

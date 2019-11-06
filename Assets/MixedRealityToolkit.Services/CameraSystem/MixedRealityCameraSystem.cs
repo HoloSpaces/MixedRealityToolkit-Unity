@@ -80,6 +80,7 @@ namespace Microsoft.MixedReality.Toolkit.CameraSystem
                     if (RegisterDataProvider<IMixedRealityCameraSettingsProvider>(
                         configuration.ComponentType.Type,
                         configuration.RuntimePlatform,
+                        configuration.CustomizedRuntimePlatform,
                         args))
                     {
                         // Apply the display settings

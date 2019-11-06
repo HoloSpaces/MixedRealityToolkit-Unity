@@ -17,7 +17,7 @@ namespace Microsoft.MixedReality.Toolkit.CameraSystem
     /// </summary>
     [MixedRealityDataProvider(
         typeof(IMixedRealityCameraSystem),
-        SupportedPlatforms.Android | SupportedPlatforms.IOS,
+        new[] { typeof(Android), typeof(UniversalWindows) },
         "Unity AR Foundation Camera Settings",
         "UnityAR/Profiles/DefaultUnityARCameraSettingsProfile.asset",
         "MixedRealityToolkit.Providers")]

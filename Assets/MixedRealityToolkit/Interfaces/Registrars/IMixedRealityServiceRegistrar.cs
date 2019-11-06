@@ -31,7 +31,7 @@ namespace Microsoft.MixedReality.Toolkit
         /// <returns>True if the service was successfully registered, false otherwise.</returns>
         bool RegisterService<T>(
             Type concreteType,
-            SupportedPlatforms supportedPlatforms = (SupportedPlatforms)(-1),
+            SupportedPlatforms supportedPlatforms = ~SupportedPlatforms.Custom,
             IPlatformSupport[] customizedSupportedPlatforms = null,
             params object[] args) where T : IMixedRealityService;
 

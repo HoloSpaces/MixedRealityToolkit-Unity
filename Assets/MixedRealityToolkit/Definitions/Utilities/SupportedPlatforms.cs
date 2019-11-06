@@ -22,6 +22,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
         IOS                 = 1 << 8,
         Web                 = 1 << 9,
         Lumin               = 1 << 10,
-        Custom              = 1 << 32
+        Custom              = 1 << 11
     }
 }

@@ -131,7 +131,6 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
                         if (observerFoldouts[i])
                         {
-                            System.Type serviceType = null;
                             if (observerProfile.objectReferenceValue != null)
                             {
                                 EditorGUI.BeginChangeCheck();
@@ -148,22 +147,23 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                                 RenderSupportedPlatforms(runtimePlatform, customizedRuntimePlatform, i, RuntimePlatformContent);
                                 changed |= EditorGUI.EndChangeCheck();
 
-                            System.Type serviceType = null;
-                            if (observerProfile.objectReferenceValue != null)
-                            {
-                                serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
+                                System.Type serviceType = null;
+                                if (observerProfile.objectReferenceValue != null)
+                                {
+                                    serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
+                                }
+
+                                changed |= RenderProfile(observerProfile, typeof(BaseSpatialAwarenessObserverProfile), true, false, serviceType);
+
+                                serializedObject.ApplyModifiedProperties();
                             }
-
-                            changed |= RenderProfile(observerProfile, typeof(BaseSpatialAwarenessObserverProfile), true, false, serviceType);
-
-                            serializedObject.ApplyModifiedProperties();
                         }
                     }
-                }
 
-                if (changed && MixedRealityToolkit.IsInitialized)
-                {
-                    EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
+                    if (changed && MixedRealityToolkit.IsInitialized)
+                    {
+                        EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
+                    }
                 }
             }
         }

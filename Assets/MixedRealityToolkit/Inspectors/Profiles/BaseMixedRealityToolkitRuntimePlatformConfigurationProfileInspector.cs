@@ -50,7 +50,7 @@ public class BaseMixedRealityToolkitRuntimePlatformConfigurationProfileInspector
     {
         EditorGUILayout.PropertyField(runtimePlatform, runtimePlatformContent);
 
-        if ((runtimePlatform.intValue & (int)(SupportedPlatforms.Custom)) != 0)
+        if ((runtimePlatform.intValue & (int)SupportedPlatforms.Custom) != 0)
         {
             runtimePlatformMasks[index] = EditorGUILayout.MaskField(runtimePlatformContent, runtimePlatformMasks[index], runtimePlatformNames);
             ApplyMaskToProperty(customRuntimePlatform, runtimePlatformMasks[index]);
@@ -65,7 +65,8 @@ public class BaseMixedRealityToolkitRuntimePlatformConfigurationProfileInspector
         {
             if ((runtimePlatformBitMask & 1 << i) != 0)
             {
-                runtimePlatform.GetArrayElementAtIndex(arrayIndex++).FindPropertyRelative("reference").stringValue = SystemType.GetReference(runtimePlatformTypes[i]);
+                runtimePlatform.GetArrayElementAtIndex(arrayIndex).FindPropertyRelative("reference").stringValue = SystemType.GetReference(runtimePlatformTypes[i]);
+                arrayIndex++;
             }
         }
     }

@@ -44,6 +44,27 @@ namespace Microsoft.MixedReality.Toolkit.CameraSystem
         public SupportedPlatforms RuntimePlatform => runtimePlatform;
 
         [SerializeField]
+        [Implements(typeof(IPlatformSupport), TypeGrouping.ByNamespaceFlat)]
+        private SystemType[] customizedRuntimePlatform;
+
+        /// <inheritdoc />
+        private IPlatformSupport[] _customizedRuntimePlatform;
+
+        /// <inheritdoc />
+        public IPlatformSupport[] CustomizedRuntimePlatform
+        {
+            get
+            {
+                if (_customizedRuntimePlatform == null)
+                {
+                    _customizedRuntimePlatform = customizedRuntimePlatform.Convert();
+                }
+
+                return _customizedRuntimePlatform;
+            }
+        }
+
+        [SerializeField]
         private BaseCameraSettingsProfile settingsProfile;
 
         /// <summary>
@@ -64,12 +85,15 @@ namespace Microsoft.MixedReality.Toolkit.CameraSystem
             string componentName,
             uint priority,
             SupportedPlatforms runtimePlatform,
+            IPlatformSupport[] customizedRuntimePlatform,
             BaseCameraSettingsProfile configurationProfile)
         {
             this.componentType = componentType;
             this.componentName = componentName;
             this.priority = priority;
             this.runtimePlatform = runtimePlatform;
+            this.customizedRuntimePlatform = customizedRuntimePlatform.Convert();
+            this._customizedRuntimePlatform = customizedRuntimePlatform;
             this.settingsProfile = configurationProfile;
         }
     }
