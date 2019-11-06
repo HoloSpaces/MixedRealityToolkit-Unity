@@ -109,19 +109,19 @@ namespace Microsoft.MixedReality.Toolkit.CameraSystem
 #endif //!(WINDOWS_UWP && !ENABLE_IL2CPP)
 
         /// <inheritdoc />
+#if !(WINDOWS_UWP && !ENABLE_IL2CPP) && !UNITY_ANDROID
         public override async void Initialize()
         {
             base.Initialize();
 
-#if !(WINDOWS_UWP && !ENABLE_IL2CPP)
             ARSessionState sessionState = (ARSessionState)(await ARSession.CheckAvailability());
             if (ARSessionState.Ready > sessionState)
             {
                 Debug.LogError("Unable to initialize the Unity AR Camera Settings provider. Device support for AR Foundation was not detected.");
                 isInitialized = true;
             }
-#endif //!(WINDOWS_UWP && !ENABLE_IL2CPP)
         }
+#endif //!(WINDOWS_UWP && !ENABLE_IL2CPP) && !UNITY_ANDROID
 
         /// <inheritdoc />
         public override void Enable()
