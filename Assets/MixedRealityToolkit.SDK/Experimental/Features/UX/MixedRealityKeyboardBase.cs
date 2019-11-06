@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 #if WINDOWS_UWP
@@ -26,17 +27,14 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private object exp = null;
 #pragma warning restore 414
 
-#if WINDOWS_UWP
         #region Properties
 
         public bool IsVisible => State == KeyboardState.Shown;
 
-        protected string KeyboardText
+#if WINDOWS_UWP
+        protected virtual string KeyboardText
         {
-            get
-            {
-                return keyboard?.text;
-            }
+            get => keyboard?.text;
             set
             {
                 if (keyboard != null)
@@ -45,21 +43,30 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 }
             }
         }
+#else
+        protected abstract string KeyboardText { get; set; }
+#endif
 
         #endregion properties
 
         #region Private fields
 
+#if WINDOWS_UWP
         private InputPane inputPane = null;
         private TouchScreenKeyboard keyboard = null;
+        private Coroutine stateUpdate;
+#endif
+        [Header("NoneNativeKeyboard")]
+        [SerializeField] private NoneNativeKeyboard keyboard = null;
+        [SerializeField] private Transform spawnTransform = null;
+        [SerializeField] private NoneNativeKeyboard.LayoutType keyboardLayout = NoneNativeKeyboard.LayoutType.Alpha;
 
         private KeyboardState State = KeyboardState.Hidden;
 
-        private Coroutine stateUpdate;
 
-        #endregion private fields
+#endregion private fields
 
-        #region Private enums
+#region Private enums
 
         private enum KeyboardState
         {
@@ -68,10 +75,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             Shown,
         }
 
-        #endregion Private enums
+#endregion Private enums
 
-        #region Unity functions
+#region Unity functions
 
+#if WINDOWS_UWP
         private void Start()
         {
             UnityEngine.WSA.Application.InvokeOnUIThread(() =>
@@ -97,26 +105,13 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
             yield return null;
         }
-
+#endif
         private void OnDisable()
         {
             HideKeyboard();
         }
 
-        #endregion unity functions
-
-        public void HideKeyboard()
-        {
-            ClearText();
-            State = KeyboardState.Hidden;
-            UnityEngine.WSA.Application.InvokeOnUIThread(() => inputPane?.TryHide(), false);
-
-            if (stateUpdate != null)
-            {
-                StopCoroutine(stateUpdate);
-                stateUpdate = null;
-            }
-        }
+#endregion unity functions
 
         public virtual void ShowKeyboard()
         {
@@ -129,10 +124,12 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             //}
 
             State = KeyboardState.Shown;
+            ClearText();
 
+#if WINDOWS_UWP
             if (keyboard != null)
             {
-                keyboard.text = string.Empty;
+                KeyboardText = string.Empty;
                 UnityEngine.WSA.Application.InvokeOnUIThread(() => inputPane?.TryShow(), false);
             }
             else
@@ -144,7 +141,44 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             {
                 stateUpdate = StartCoroutine(UpdateState());
             }
+#else
+            if (spawnTransform != null)
+            {
+                keyboard.RepositionKeyboard(spawnTransform);
+            }
+
+            keyboard.OnClosed += DisableKeyboard;
+            keyboard.OnTextSubmitted += DisableKeyboard;
+            keyboard.OnTextUpdated += UpdateText;
+
+            keyboard.PresentKeyboard(KeyboardText, keyboardLayout);
+#endif
         }
+
+        public void HideKeyboard()
+        {
+            State = KeyboardState.Hidden;
+
+#if WINDOWS_UWP
+            UnityEngine.WSA.Application.InvokeOnUIThread(() => inputPane?.TryHide(), false);
+
+            if (stateUpdate != null)
+            {
+                StopCoroutine(stateUpdate);
+                stateUpdate = null;
+            }
+#else
+            keyboard.OnTextUpdated -= UpdateText;
+            keyboard.OnClosed -= DisableKeyboard;
+            keyboard.OnTextSubmitted -= DisableKeyboard;
+
+            keyboard.Close();
+#endif
+        }
+
+#if !WINDOWS_UWP
+        private void DisableKeyboard(object sender, EventArgs e) => HideKeyboard();
+#endif
 
         #region Input pane event handlers
 
@@ -158,18 +192,17 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         private void OnKeyboardShowing() { }
 
-        #endregion Input pane event handlers
+#endregion Input pane event handlers
 
 
         private void ClearText()
         {
             if (keyboard != null)
             {
-                keyboard.text = string.Empty;
+                KeyboardText = string.Empty;
             }
         }
 
-#endif
         protected abstract void UpdateText(string text);
     }
 }

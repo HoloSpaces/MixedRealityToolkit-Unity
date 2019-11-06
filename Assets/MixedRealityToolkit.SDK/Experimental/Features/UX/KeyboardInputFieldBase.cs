@@ -2,10 +2,10 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using UnityEngine.UI;
+using Microsoft.MixedReality.Toolkit.Input;
 #if WINDOWS_UWP
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Microsoft.MixedReality.Toolkit.Input;
 #endif
 
 namespace Microsoft.MixedReality.Toolkit.Experimental.UI
@@ -15,9 +15,9 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
     /// To be attached to the same GameObject with either of the components
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class KeyboardInputFieldBase<T> : MixedRealityKeyboardBase
+    public abstract class KeyboardInputFieldBase<T> : MixedRealityKeyboardBase, IMixedRealityPointerHandler
 #if WINDOWS_UWP
-    , IDeselectHandler, IMixedRealityPointerHandler
+    , IDeselectHandler
 #endif
     where T : Selectable
     {
@@ -58,16 +58,22 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         #endregion
 
+#endif
+
         #region IMixedRealityPointerHandler implementation
 
-        public void OnPointerDown(MixedRealityPointerEventData eventData) { }
         public void OnPointerDragged(MixedRealityPointerEventData eventData) { }
         public void OnPointerUp(MixedRealityPointerEventData eventData) { }
         public void OnPointerClicked(MixedRealityPointerEventData eventData) => ShowKeyboard();
+        public void OnPointerDown(MixedRealityPointerEventData eventData)
+        {
+#if !WINDOWS_UWP
+            ShowKeyboard();
+#endif
+        }
 
         #endregion
 
-#endif
         protected abstract Graphic Text(T inputField);
         protected abstract Graphic PlaceHolder(T inputField);
     }
