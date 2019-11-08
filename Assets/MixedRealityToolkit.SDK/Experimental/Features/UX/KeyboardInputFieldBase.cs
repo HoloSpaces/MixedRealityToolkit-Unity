@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using UnityEngine;
 using UnityEngine.UI;
 using Microsoft.MixedReality.Toolkit.Input;
 #if WINDOWS_UWP
-using UnityEngine;
 using UnityEngine.EventSystems;
 #endif
 
@@ -40,8 +40,6 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             }
         }
 
-#if WINDOWS_UWP
-
         protected virtual void Awake()
         {
             if ((inputField = GetComponent<T>()) == null)
@@ -51,6 +49,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
             Debug.LogWarning($"There is no {typeof(T).ToString()} on GameObject {name}, removing this component");
         }
+
+#if WINDOWS_UWP
 
         #region IDeselectHandler implementation
 
