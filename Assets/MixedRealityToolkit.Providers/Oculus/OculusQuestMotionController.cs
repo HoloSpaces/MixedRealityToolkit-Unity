@@ -13,7 +13,7 @@ namespace HoloSpaces.MixedReality.Input
         SupportedControllerType.OculusQuestRemote,
         new[] { Handedness.Left, Handedness.Right },
         "StandardAssets/Textures/OculusControllersTouch")]
-    public class OculusQuestTouchController : GenericOculusAndroidController
+    public class OculusQuestMotionController : GenericOculusAndroidController
     {
         /// <summary>
         /// Constructor.
@@ -22,7 +22,7 @@ namespace HoloSpaces.MixedReality.Input
         /// <param name="controllerHandedness"></param>
         /// <param name="inputSource"></param>
         /// <param name="interactions"></param>
-        public OculusQuestTouchController(TrackingState trackingState, Handedness controllerHandedness,
+        public OculusQuestMotionController(TrackingState trackingState, Handedness controllerHandedness,
             IMixedRealityInputSource inputSource = null, MixedRealityInteractionMapping[] interactions = null)
             : base(trackingState, controllerHandedness, inputSource, interactions)
         {
@@ -37,7 +37,7 @@ namespace HoloSpaces.MixedReality.Input
             new MixedRealityInteractionMapping(3, "Axis1D.PrimaryIndexTrigger Near Touch", AxisType.SingleAxis, DeviceInputType.TriggerNearTouch, ControllerMappingLibrary.AXIS_13),
             new MixedRealityInteractionMapping(4, "Axis1D.PrimaryIndexTrigger Press", AxisType.Digital, DeviceInputType.TriggerPress, new MixedRealityInputAction(1, "Select", AxisType.Digital), KeyCode.None, axisCodeX: ControllerMappingLibrary.AXIS_9),
             new MixedRealityInteractionMapping(5, "Axis1D.PrimaryHandTrigger Press", AxisType.SingleAxis, DeviceInputType.Trigger, new MixedRealityInputAction(7, "Grip Press", AxisType.SingleAxis), axisCodeX: ControllerMappingLibrary.AXIS_11),
-            new MixedRealityInteractionMapping(6, "Axis2D.PrimaryThumbstick", AxisType.DualAxis, DeviceInputType.ThumbStick, new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis), axisCodeX: ControllerMappingLibrary.AXIS_1, axisCodeY: ControllerMappingLibrary.AXIS_2),
+            new MixedRealityInteractionMapping(6, "Axis2D.PrimaryThumbstick", AxisType.DualAxis, DeviceInputType.ThumbStick, new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis), axisCodeX: ControllerMappingLibrary.AXIS_1, axisCodeY: ControllerMappingLibrary.AXIS_2, invertYAxis: true),
             new MixedRealityInteractionMapping(7, "Button.PrimaryThumbstick Touch", AxisType.Digital, DeviceInputType.ThumbStickTouch, KeyCode.JoystickButton16),
             new MixedRealityInteractionMapping(8, "Button.PrimaryThumbstick Near Touch", AxisType.Digital, DeviceInputType.ThumbNearTouch, ControllerMappingLibrary.AXIS_15),
             new MixedRealityInteractionMapping(9, "Button.PrimaryThumbstick Press", AxisType.Digital, DeviceInputType.ThumbStickPress, KeyCode.JoystickButton8),
@@ -57,7 +57,7 @@ namespace HoloSpaces.MixedReality.Input
             new MixedRealityInteractionMapping(3, "Axis1D.SecondaryIndexTrigger Near Touch", AxisType.SingleAxis, DeviceInputType.TriggerNearTouch, ControllerMappingLibrary.AXIS_14),
             new MixedRealityInteractionMapping(4, "Axis1D.SecondaryIndexTrigger Press", AxisType.Digital, DeviceInputType.TriggerPress, new MixedRealityInputAction(1, "Select", AxisType.Digital), KeyCode.None, axisCodeX: ControllerMappingLibrary.AXIS_10),
             new MixedRealityInteractionMapping(5, "Axis1D.SecondaryHandTrigger Press", AxisType.SingleAxis, DeviceInputType.Trigger, new MixedRealityInputAction(7, "Grip Press", AxisType.SingleAxis), axisCodeX: ControllerMappingLibrary.AXIS_12),
-            new MixedRealityInteractionMapping(6, "Axis2D.SecondaryThumbstick", AxisType.DualAxis, DeviceInputType.ThumbStick, new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis), axisCodeX: ControllerMappingLibrary.AXIS_4, axisCodeY: ControllerMappingLibrary.AXIS_5),
+            new MixedRealityInteractionMapping(6, "Axis2D.SecondaryThumbstick", AxisType.DualAxis, DeviceInputType.ThumbStick, new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis), axisCodeX: ControllerMappingLibrary.AXIS_4, axisCodeY: ControllerMappingLibrary.AXIS_5, invertYAxis: true),
             new MixedRealityInteractionMapping(7, "Button.SecondaryThumbstick Touch", AxisType.Digital, DeviceInputType.ThumbStickTouch, KeyCode.JoystickButton17),
             new MixedRealityInteractionMapping(8, "Button.SecondaryThumbstick Near Touch", AxisType.Digital, DeviceInputType.ThumbNearTouch, ControllerMappingLibrary.AXIS_16),
             new MixedRealityInteractionMapping(9, "Button.SecondaryThumbstick Press", AxisType.Digital, DeviceInputType.ThumbStickPress, KeyCode.JoystickButton9),
