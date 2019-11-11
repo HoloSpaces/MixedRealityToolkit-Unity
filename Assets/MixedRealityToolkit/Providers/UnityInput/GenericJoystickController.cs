@@ -81,7 +81,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         /// Raises an Input System "Input Down" event when the key is down, and raises an "Input Up" when it is released (e.g. a Button)
         /// Also raises a "Pressed" event while pressed
         /// </remarks>
-        protected void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
+        protected virtual void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
         {
             Debug.Assert(interactionMapping.AxisType == AxisType.Digital);
 
@@ -166,7 +166,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         /// <summary>
         /// Update the Touchpad / Thumbstick input from the device (in OpenVR, touchpad and thumbstick are the same input control)
         /// </summary>
-        protected void UpdateDualAxisData(MixedRealityInteractionMapping interactionMapping)
+        protected virtual void UpdateDualAxisData(MixedRealityInteractionMapping interactionMapping)
         {
             Debug.Assert(interactionMapping.AxisType == AxisType.DualAxis);
 

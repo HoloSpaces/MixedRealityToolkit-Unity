@@ -97,7 +97,7 @@ namespace HoloSpaces.MixedReality.Input
                 case SupportedControllerType.OculusGoRemote:
                     return typeof(OculusGoRemoteController);
                 case SupportedControllerType.OculusQuestRemote:
-                    return typeof(OculusQuestTouchController);
+                    return typeof(OculusQuestMotionController);
                 default:
                     return null;
             }
