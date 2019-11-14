@@ -56,10 +56,14 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private TouchScreenKeyboard keyboard = null;
         private Coroutine stateUpdate;
 #endif
+
+        // Fields that are only used on non WINDOWS_UWP
+#pragma warning disable 414
         [Header("NonNativeKeyboard")]
         [SerializeField] private NonNativeKeyboard nonNativeKeyboard = null;
         [SerializeField] private Transform spawnTransform = null;
         [SerializeField] private NonNativeKeyboard.LayoutType keyboardLayout = NonNativeKeyboard.LayoutType.Alpha;
+#pragma warning restore 414
 
         private KeyboardState State = KeyboardState.Hidden;
 
@@ -124,12 +128,12 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             //}
 
             State = KeyboardState.Shown;
+
             ClearText();
 
 #if WINDOWS_UWP
             if (keyboard != null)
             {
-                KeyboardText = string.Empty;
                 UnityEngine.WSA.Application.InvokeOnUIThread(() => inputPane?.TryShow(), false);
             }
             else
@@ -142,6 +146,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 stateUpdate = StartCoroutine(UpdateState());
             }
 #else
+
             if (spawnTransform != null)
             {
                 nonNativeKeyboard.RepositionKeyboard(spawnTransform);
@@ -197,7 +202,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         private void ClearText()
         {
+#if WINDOWS_UWP
+            if (keyboard != null)
+#else
             if (nonNativeKeyboard != null)
+#endif
             {
                 KeyboardText = string.Empty;
             }
