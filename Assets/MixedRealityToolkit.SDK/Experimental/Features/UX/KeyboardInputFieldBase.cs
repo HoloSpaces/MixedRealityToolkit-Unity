@@ -45,9 +45,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             if ((inputField = GetComponent<T>()) == null)
             {
                 Destroy(this);
+                Debug.LogWarning($"There is no {typeof(T).ToString()} on GameObject {name}, removing this component");
             }
-
-            Debug.LogWarning($"There is no {typeof(T).ToString()} on GameObject {name}, removing this component");
         }
 
 #if WINDOWS_UWP

@@ -56,10 +56,10 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private TouchScreenKeyboard keyboard = null;
         private Coroutine stateUpdate;
 #endif
-        [Header("NoneNativeKeyboard")]
-        [SerializeField] private NoneNativeKeyboard keyboard = null;
+        [Header("NonNativeKeyboard")]
+        [SerializeField] private NonNativeKeyboard nonNativeKeyboard = null;
         [SerializeField] private Transform spawnTransform = null;
-        [SerializeField] private NoneNativeKeyboard.LayoutType keyboardLayout = NoneNativeKeyboard.LayoutType.Alpha;
+        [SerializeField] private NonNativeKeyboard.LayoutType keyboardLayout = NonNativeKeyboard.LayoutType.Alpha;
 
         private KeyboardState State = KeyboardState.Hidden;
 
@@ -144,14 +144,14 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 #else
             if (spawnTransform != null)
             {
-                keyboard.RepositionKeyboard(spawnTransform);
+                nonNativeKeyboard.RepositionKeyboard(spawnTransform);
             }
 
-            keyboard.OnClosed += DisableKeyboard;
-            keyboard.OnTextSubmitted += DisableKeyboard;
-            keyboard.OnTextUpdated += UpdateText;
+            nonNativeKeyboard.OnClosed += DisableKeyboard;
+            nonNativeKeyboard.OnTextSubmitted += DisableKeyboard;
+            nonNativeKeyboard.OnTextUpdated += UpdateText;
 
-            keyboard.PresentKeyboard(KeyboardText, keyboardLayout);
+            nonNativeKeyboard.PresentKeyboard(KeyboardText, keyboardLayout);
 #endif
         }
 
@@ -168,11 +168,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 stateUpdate = null;
             }
 #else
-            keyboard.OnTextUpdated -= UpdateText;
-            keyboard.OnClosed -= DisableKeyboard;
-            keyboard.OnTextSubmitted -= DisableKeyboard;
+            nonNativeKeyboard.OnTextUpdated -= UpdateText;
+            nonNativeKeyboard.OnClosed -= DisableKeyboard;
+            nonNativeKeyboard.OnTextSubmitted -= DisableKeyboard;
 
-            keyboard.Close();
+            nonNativeKeyboard.Close();
 #endif
         }
 
@@ -197,7 +197,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         private void ClearText()
         {
-            if (keyboard != null)
+            if (nonNativeKeyboard != null)
             {
                 KeyboardText = string.Empty;
             }
