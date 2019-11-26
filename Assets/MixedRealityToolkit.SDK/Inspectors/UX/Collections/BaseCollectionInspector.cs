@@ -11,6 +11,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
     {
         private SerializedProperty ignoreInactiveTransforms;
         private SerializedProperty sortType;
+        protected bool useAutoUpdate;
 
         protected virtual void OnEnable()
         {
@@ -32,6 +33,11 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             serializedObject.ApplyModifiedProperties();
 
             // Place the button at the bottom
+            if (useAutoUpdate)
+            {
+                return;
+            }
+
             BaseObjectCollection collection = (BaseObjectCollection)target;
             if (GUILayout.Button("Update Collection"))
             {

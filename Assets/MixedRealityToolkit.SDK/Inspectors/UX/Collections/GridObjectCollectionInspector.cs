@@ -20,11 +20,13 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         private SerializedProperty cellWidth;
         private SerializedProperty cellHeight;
         private SerializedProperty anchor;
-
+        GridObjectCollection collection;
 
         protected override void OnEnable()
         {
             base.OnEnable();
+            useAutoUpdate = true;
+            collection = (GridObjectCollection)target;
             surfaceType = serializedObject.FindProperty("surfaceType");
             orientType = serializedObject.FindProperty("orientType");
             layout = serializedObject.FindProperty("layout");
@@ -43,8 +45,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             EditorGUILayout.PropertyField(surfaceType);
             EditorGUILayout.PropertyField(orientType);
             EditorGUILayout.PropertyField(layout);
-
-
 
             LayoutOrder layoutTypeIndex = (LayoutOrder) layout.enumValueIndex;
             if (layoutTypeIndex == LayoutOrder.ColumnThenRow)
@@ -85,7 +85,9 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                 // layout anchor has no effect on radial layout, it is always at center.
                 EditorGUILayout.PropertyField(anchor);
             }
-            
+
+            if (serializedObject.ApplyModifiedProperties())
+                collection.UpdateCollection();
         }
     }
 }
