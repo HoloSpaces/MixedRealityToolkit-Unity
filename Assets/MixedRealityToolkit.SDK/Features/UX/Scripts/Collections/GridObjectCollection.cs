@@ -357,23 +357,23 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
             switch (OrientType)
             {
                 case OrientationType.FaceOrigin:
-                    node.Transform.rotation = Quaternion.LookRotation(node.Transform.position - transform.position, transform.up);
+                    node.Transform.rotation = Quaternion.LookRotation(node.Transform.position == transform.position ? transform.rotation * Vector3.forward : node.Transform.position - transform.position, transform.up);
                     break;
 
                 case OrientationType.FaceOriginReversed:
-                    node.Transform.rotation = Quaternion.LookRotation(transform.position - node.Transform.position, transform.up);
+                    node.Transform.rotation = Quaternion.LookRotation(node.Transform.position == transform.position ? transform.rotation * Vector3.back : transform.position - node.Transform.position, transform.up);
                     break;
 
                 case OrientationType.FaceCenterAxis:
                     centerAxis = Vector3.Project(node.Transform.position - transform.position, transform.up);
                     pointOnAxisNearestNode = transform.position + centerAxis;
-                    node.Transform.rotation = Quaternion.LookRotation(node.Transform.position - pointOnAxisNearestNode, transform.up);
+                    node.Transform.rotation = Quaternion.LookRotation(node.Transform.position == pointOnAxisNearestNode ? transform.rotation * Vector3.forward : node.Transform.position - pointOnAxisNearestNode, transform.up);
                     break;
 
                 case OrientationType.FaceCenterAxisReversed:
                     centerAxis = Vector3.Project(node.Transform.position - transform.position, transform.up);
                     pointOnAxisNearestNode = transform.position + centerAxis;
-                    node.Transform.rotation = Quaternion.LookRotation(pointOnAxisNearestNode - node.Transform.position, transform.up);
+                    node.Transform.rotation = Quaternion.LookRotation(pointOnAxisNearestNode == node.Transform.position ? transform.rotation * Vector3.back : pointOnAxisNearestNode - node.Transform.position, transform.up);
                     break;
 
                 case OrientationType.FaceParentFoward:
