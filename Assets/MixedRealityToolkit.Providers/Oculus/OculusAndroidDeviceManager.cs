@@ -68,7 +68,7 @@ namespace HoloSpaces.MixedReality.Input
             Type controllerType = GetControllerType(currentControllerType);
 
             IMixedRealityPointer[] pointers = RequestPointers(currentControllerType, controllingHand);
-            IMixedRealityInputSource inputSource = CoreServices.InputSystem?.RequestNewGenericInputSource($"{currentControllerType} Controller {controllingHand}", pointers);
+            IMixedRealityInputSource inputSource = CoreServices.InputSystem?.RequestNewGenericInputSource($"{currentControllerType} Controller {controllingHand}", pointers, InputSourceType.Controller);
             GenericJoystickController detectedController = Activator.CreateInstance(controllerType, TrackingState.NotTracked, controllingHand, inputSource, null) as GenericJoystickController;
 
             if (detectedController == null)
