@@ -375,13 +375,18 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
 
         private void CreateController(InteractionSourceState interactionSourceState)
         {
+            // If this is a new detected controller, raise source detected event with input system
+            // check needs to be here because GetController adds it to the activeControllers Dictionary
+            // this could be cleaned up because that's not clear
+            bool raiseSourceDetected = !activeControllers.ContainsKey(interactionSourceState.source.id);
+
             var controller = GetController(interactionSourceState.source);
 
             if (controller != null)
             {
                 controller.UpdateController(interactionSourceState);
 
-                if (!activeControllers.ContainsKey(interactionSourceState.source.id))
+                if (raiseSourceDetected)
                 {
                     Service?.RaiseSourceDetected(controller.InputSource, controller);
                 }
