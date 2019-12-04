@@ -45,6 +45,7 @@ namespace HoloSpaces.Extensions
             {
                 controllerVisuals.Add(proxyObject);
                 var sphereCollider = proxyObject.AddComponent<SphereCollider>();
+                proxyObject.layer = LayerMask.NameToLayer("Ignore Raycast");
                 sphereCollider.radius = .06f;
                 sphereCollider.isTrigger = true;
             }
@@ -58,7 +59,7 @@ namespace HoloSpaces.Extensions
 
         public void OnSourceLost(SourceStateEventData eventData)
         {
-            if (eventData.InputSource.SourceType == InputSourceType.Controller)
+            if (eventData.InputSource.SourceType == InputSourceType.Controller && eventData.Controller != null && !eventData.Controller.Equals(null) && eventData.Controller.Visualizer != null && eventData.Controller.Visualizer.Equals(null))
                 controllerVisuals.Remove(eventData.Controller.Visualizer.GameObjectProxy);
         }
     }
