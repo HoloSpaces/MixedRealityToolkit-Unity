@@ -29,7 +29,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private Text m_Text;
 
         /// <summary>
-        /// Reference to the GameObject's Button component.
+        /// Reference to the GameObject's button component.
         /// </summary>
         private Button m_Button;
 
@@ -66,7 +66,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Called by the Keyboard when the shift key is pressed. Updates the text for this key using the Value and ShiftValue fields.
         /// </summary>
-        /// <param name="isShifted"></param>
+        /// <param name="isShifted">Indicates the state of shift, the key needs to be changed to.</param>
         public void Shift(bool isShifted)
         {
             // Shift value should only be applied if a shift value is present.

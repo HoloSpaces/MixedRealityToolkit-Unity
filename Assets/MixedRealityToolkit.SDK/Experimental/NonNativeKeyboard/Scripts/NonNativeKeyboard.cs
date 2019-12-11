@@ -51,7 +51,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         public event Action<string> OnTextUpdated = delegate { };
 
         /// <summary>
-        /// Fired every time the Close button is pressed.
+        /// Fired every time the close button is pressed.
         /// (Cleared when keyboard is closed.)
         /// </summary>
         public event EventHandler OnClosed = delegate { };
@@ -409,7 +409,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Presents the default keyboard to the camera, with start text.
         /// </summary>
-        /// <param name="startText">The initial text to show in the Keyboard's InputField.</param>
+        /// <param name="startText">The initial text to show in the keyboard's input field.</param>
         public void PresentKeyboard(string startText)
         {
             PresentKeyboard();
@@ -430,7 +430,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Presents a specific keyboard to the camera, with start text.
         /// </summary>
-        /// <param name="startText">The initial text to show in the Keyboard's InputField.</param>
+        /// <param name="startText">The initial text to show in the keyboard's input field.</param>
         /// <param name="keyboardType">Specify the keyboard type.</param>
         public void PresentKeyboard(string startText, LayoutType keyboardType)
         {
@@ -452,7 +452,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         }
 
         /// <summary>
-        /// Function to reposition the Keyboard based on target transform and collider information 
+        /// Function to reposition the keyboard based on target transform and collider information 
         /// </summary>
         /// <param name="objectTransform">Transform of target object to remain relative to</param>
         /// <param name="aCollider">Optional collider information for offset placement</param>
@@ -503,7 +503,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Activates a specific keyboard layout, and any sub keys.
         /// </summary>
-        /// <param name="keyboardType"></param>
+        /// <param name="keyboardType">The keyboard layout type that should be activated</param>
         private void ActivateSpecificKeyboard(LayoutType keyboardType)
         {
             DisableAllKeyboards();
@@ -804,9 +804,9 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         }
 
         /// <summary>
-        /// Set the keyboard to a single action sift state.
+        /// Set the keyboard to a single action shift state.
         /// </summary>
-        /// <param name="newShiftState"></param>
+        /// <param name="newShiftState">value the shift key should have after calling the method</param>
         public void Shift(bool newShiftState)
         {
             m_IsShifted = newShiftState;
@@ -821,7 +821,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Set the keyboard to a permanent shift state.
         /// </summary>
-        /// <param name="newCapsLockState"></param>
+        /// <param name="newCapsLockState">Caps lock state the method is switching to</param>
         public void CapsLock(bool newCapsLockState)
         {
             m_IsCapslocked = newCapsLockState;
@@ -944,7 +944,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Show the default subkeys only on the Alphanumeric keyboard.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns true if default subkeys were activated, false if alphanumeric keyboard isn't active</returns>
         private bool TryToShowAlphaSubkeys()
         {
             if (AlphaKeyboard.IsActive())
@@ -961,7 +961,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Show the email subkeys only on the Alphanumeric keyboard.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns true if the email subkey was activated, false if alphanumeric keyboard is not active and key can't be activated</returns>
         private bool TryToShowEmailSubkeys()
         {
             if (AlphaKeyboard.IsActive())
@@ -979,7 +979,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <summary>
         /// Show the URL subkeys only on the Alphanumeric keyboard.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns true if the URL subkey was activated, false if alphanumeric keyboard is not active and key can't be activated</returns>
         private bool TryToShowURLSubkeys()
         {
             if (AlphaKeyboard.IsActive())
