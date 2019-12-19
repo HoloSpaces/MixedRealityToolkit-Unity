@@ -139,7 +139,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
             set
             {
                 constraintOnRotation = value;
-                rotateConstraint.ConstraintOnRotation = RotationConstraintHelper.ConvertToAxisFlags(constraintOnRotation);
+                if (rotateConstraint == null)
+                    rotateConstraint = this.EnsureComponent<RotationAxisConstraint>();
+                if (rotateConstraint != null)
+                    rotateConstraint.ConstraintOnRotation = RotationConstraintHelper.ConvertToAxisFlags(constraintOnRotation);
             }
         }
 
