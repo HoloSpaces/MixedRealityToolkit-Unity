@@ -1,18 +1,13 @@
 {
-    "name": "Microsoft.MixedReality.Toolkit.Providers.UnityAR",
+    "name": "Microsoft.MixedReality.Toolkit.Extensions.ColliderAttacherService",
     "references": [
         "Microsoft.MixedReality.Toolkit",
-        "Microsoft.MixedReality.Toolkit.Async"
+        "Microsoft.MixedReality.Toolkit.SDK",
+        "Microsoft.MixedReality.Toolkit.Editor.ServiceInspectors"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
-    "excludePlatforms": [
-        "Android",
-        "Editor",
-        "WSA",
-        "WindowsStandalone32",
-        "WindowsStandalone64"
-    ],
+    "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],

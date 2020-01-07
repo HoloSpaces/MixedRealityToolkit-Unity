@@ -207,23 +207,24 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         {
             Debug.Assert(interactionMapping.AxisType == AxisType.SixDof);
 
-            if (interactionMapping.InputType == DeviceInputType.SpatialPointer)
+            switch (interactionMapping.InputType)
             {
-                pointerOffsetPose.Position = CurrentControllerPose.Position;
-                pointerOffsetPose.Rotation = CurrentControllerPose.Rotation * Quaternion.AngleAxis(PointerOffsetAngle, Vector3.left);
+                case DeviceInputType.SpatialPointer:
+                    pointerOffsetPose.Position = CurrentControllerPose.Position;
+                    pointerOffsetPose.Rotation = CurrentControllerPose.Rotation * Quaternion.AngleAxis(PointerOffsetAngle, Vector3.left);
 
-                // Update the interaction data source
-                interactionMapping.PoseData = pointerOffsetPose;
-            }
-            else if (interactionMapping.InputType == DeviceInputType.SpatialGrip)
-            {
-                // Update the interaction data source
-                interactionMapping.PoseData = CurrentControllerPose;
-            }
-            else
-            {
-                Debug.LogWarning("Unhandled Interaction");
-                return;
+                    // Update the interaction data source
+                    interactionMapping.PoseData = pointerOffsetPose;
+                    break;
+
+                case DeviceInputType.SpatialGrip:
+                    // Update the interaction data source
+                    interactionMapping.PoseData = CurrentControllerPose;
+                    break;
+
+                default:
+                    Debug.LogWarning("Unhandled Interaction");
+                    break;
             }
 
             // If our value changed raise it.

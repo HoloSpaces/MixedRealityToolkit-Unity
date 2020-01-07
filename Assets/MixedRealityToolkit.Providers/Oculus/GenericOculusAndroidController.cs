@@ -82,10 +82,33 @@ namespace HoloSpaces.MixedReality.Input
                     // Devices are considered tracked if we receive position OR rotation data from the sensors.
                     TrackingState = (IsPositionAvailable || IsRotationAvailable) ? TrackingState.Tracked : TrackingState.NotTracked;
 
-                    CurrentControllerPosition = MixedRealityPlayspace.TransformPoint(CurrentControllerPosition);
+                    if (IsPositionAvailable)
+                    {
+                        CurrentControllerPosition = MixedRealityPlayspace.TransformPoint(CurrentControllerPosition);
+                        CurrentControllerPose.Position = CurrentControllerPosition;
+                    }
 
                     if (IsRotationAvailable)
+                    {
                         CurrentControllerRotation = MixedRealityPlayspace.Rotation * rotation;
+                        CurrentControllerPose.Rotation = CurrentControllerRotation;
+                    }
+
+                    if (TrackingState == TrackingState.Tracked && LastControllerPose != CurrentControllerPose)
+                    {
+                        if (IsPositionAvailable && IsRotationAvailable)
+                        {
+                            CoreServices.InputSystem?.RaiseSourcePoseChanged(InputSource, this, CurrentControllerPose);
+                        }
+                        else if (IsPositionAvailable && !IsRotationAvailable)
+                        {
+                            CoreServices.InputSystem?.RaiseSourcePositionChanged(InputSource, this, CurrentControllerPosition);
+                        }
+                        else if (!IsPositionAvailable && IsRotationAvailable)
+                        {
+                            CoreServices.InputSystem?.RaiseSourceRotationChanged(InputSource, this, CurrentControllerRotation);
+                        }
+                    }
 
                     break;
                 default:
@@ -93,9 +116,6 @@ namespace HoloSpaces.MixedReality.Input
                     TrackingState = TrackingState.NotApplicable;
                     break;
             }
-
-            CurrentControllerPose.Position = CurrentControllerPosition;
-            CurrentControllerPose.Rotation = CurrentControllerRotation;
         }
     }
 }
