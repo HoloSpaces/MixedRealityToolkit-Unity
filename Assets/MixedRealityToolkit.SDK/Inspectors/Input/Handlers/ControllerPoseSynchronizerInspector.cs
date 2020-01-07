@@ -16,6 +16,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
         private SerializedProperty handedness;
         private SerializedProperty useSourcePoseData;
         private SerializedProperty poseAction;
+        private SerializedProperty destroyOnSourceLost;
 
         protected bool DrawHandednessProperty = true;
 
@@ -25,6 +26,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
             handedness = serializedObject.FindProperty("handedness");
             useSourcePoseData = serializedObject.FindProperty("useSourcePoseData");
             poseAction = serializedObject.FindProperty("poseAction");
+            destroyOnSourceLost = serializedObject.FindProperty("destroyOnSourceLost");
         }
 
         public override void OnInspectorGUI()
@@ -36,16 +38,19 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
 
             serializedObject.Update();
 
-            EditorGUILayout.Space();
-            EditorGUI.BeginChangeCheck();
-            synchronizationSettingsFoldout = EditorGUILayout.Foldout(synchronizationSettingsFoldout, "Synchronization Settings", true);
-
-            if (EditorGUI.EndChangeCheck())
+            using (var c = new EditorGUI.ChangeCheckScope())
             {
-                SessionState.SetBool(SynchronizationSettingsKey, synchronizationSettingsFoldout);
+                synchronizationSettingsFoldout = EditorGUILayout.Foldout(synchronizationSettingsFoldout, "Synchronization Settings", true);
+                if (c.changed)
+                {
+                    SessionState.SetBool(SynchronizationSettingsKey, synchronizationSettingsFoldout);
+                }
             }
 
-            if (!synchronizationSettingsFoldout) { return; }
+            if (!synchronizationSettingsFoldout) 
+            { 
+                return; 
+            }
 
             EditorGUI.indentLevel++;
 
@@ -54,14 +59,15 @@ namespace Microsoft.MixedReality.Toolkit.Input.Editor
                 HandednessInspectorGUI.DrawControllerHandednessDropdown(handedness);
             }
 
-            EditorGUILayout.PropertyField(useSourcePoseData);
+                EditorGUILayout.PropertyField(destroyOnSourceLost);
+                EditorGUILayout.PropertyField(useSourcePoseData);
 
-            if (!useSourcePoseData.boolValue)
-            {
-                EditorGUILayout.PropertyField(poseAction);
+                if (!useSourcePoseData.boolValue)
+                {
+                    EditorGUILayout.PropertyField(poseAction);
+                }
             }
 
-            EditorGUI.indentLevel--;
             serializedObject.ApplyModifiedProperties();
         }
     }
