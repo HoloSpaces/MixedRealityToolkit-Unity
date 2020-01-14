@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Assets/MixedRealityToolkit.Providers/Oculus/Visualizer.meta
 guid: 588c5d5229f10194a956c2ade18586a8
+=======
+guid: e59efff6263f6de41940081cb78d9d25
+>>>>>>> 8ea9681cfce479c60196805e73f678e351637a28:Assets/MixedRealityToolkit.SDK/Experimental/FollowSolver.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
