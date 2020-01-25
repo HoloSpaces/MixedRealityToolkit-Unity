@@ -5,8 +5,11 @@
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
+        "Android",
         "Editor",
-        "WSA"
+        "iOS",
+        "WSA",
+        "WindowsStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
