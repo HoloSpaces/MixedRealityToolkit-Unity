@@ -292,7 +292,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         {
             base.Start();
 
-            dictationSystem = (CoreServices.InputSystem as IMixedRealityDataProviderAccess)?.GetDataProvider<IMixedRealityDictationSystem>();
+            dictationSystem = CoreServices.GetInputSystemDataProvider<IMixedRealityDictationSystem>();
+
             // Delegate Subscription
             if (InputField != null)
                 InputField.onValueChanged.AddListener(DoTextUpdated);
