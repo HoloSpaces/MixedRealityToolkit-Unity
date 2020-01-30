@@ -7,9 +7,7 @@
         "Oculus.VR"
     ],
     "optionalUnityReferences": [],
-    "includePlatforms": [
-        "Android"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
