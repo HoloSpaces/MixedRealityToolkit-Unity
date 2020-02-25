@@ -6,7 +6,7 @@ using Microsoft.MixedReality.Toolkit.Input;
 
 namespace HoloSpaces.MixedReality.Input
 {
-#if UNITY_ANDROID
+#if !UNITY_EDITOR && UNITY_ANDROID
     [RequireComponent(typeof(OVRControllerHelper))]
 #endif
     public abstract class OculusAndroidControllerVisualizer : ControllerPoseSynchronizer, IMixedRealityControllerVisualizer
@@ -19,7 +19,7 @@ namespace HoloSpaces.MixedReality.Input
             set
             {
                 base.Controller = value;
-#if UNITY_ANDROID
+#if !UNITY_EDITOR && UNITY_ANDROID
                 OVRInput.Update();
 #endif
             }

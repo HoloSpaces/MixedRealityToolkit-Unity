@@ -17,7 +17,7 @@ namespace HoloSpaces.MixedReality.Input
             set
             {
                 base.Controller = value;
-#if UNITY_ANDROID
+#if !UNITY_EDITOR && UNITY_ANDROID
                 GetComponent<OVRControllerHelper>().m_controller = (value.ControllerHandedness & Microsoft.MixedReality.Toolkit.Utilities.Handedness.Left) != 0 ? OVRInput.Controller.LTrackedRemote : OVRInput.Controller.RTrackedRemote;
 #endif
             }
