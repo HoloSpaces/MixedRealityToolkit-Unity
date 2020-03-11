@@ -36,7 +36,9 @@ namespace Microsoft.MixedReality.Toolkit.Boundary
 
             base.Initialize();
 
+#if !UNITY_ANDROID
             UnityBoundary.visible = true;
+#endif
         }
 
         #endregion IMixedRealityService Implementation
