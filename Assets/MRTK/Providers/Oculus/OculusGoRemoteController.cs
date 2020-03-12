@@ -37,14 +37,20 @@ namespace HoloSpaces.MixedReality.Input
         public override MixedRealityInteractionMapping[] DefaultInteractions => new[]
         {
             new MixedRealityInteractionMapping(0, "Spatial Pointer", AxisType.SixDof, DeviceInputType.SpatialPointer, new MixedRealityInputAction(4, "Pointer Pose", AxisType.SixDof)),
-            new MixedRealityInteractionMapping(1, "Trigger", AxisType.Digital, DeviceInputType.ButtonPress, new MixedRealityInputAction(1, "Select", AxisType.Digital), KeyCode.JoystickButton14),
-            new MixedRealityInteractionMapping(2, "Back", AxisType.Digital, DeviceInputType.ButtonPress, KeyCode.JoystickButton6),
-            new MixedRealityInteractionMapping(3, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton16),
-            new MixedRealityInteractionMapping(4, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton8),
-            new MixedRealityInteractionMapping(5, "PrimaryTouchpad Axis", AxisType.DualAxis, DeviceInputType.DirectionalPad, ControllerMappingLibrary.AXIS_1, ControllerMappingLibrary.AXIS_2, invertYAxis: true)
+            new MixedRealityInteractionMapping(1, "Trigger", AxisType.SingleAxis, DeviceInputType.TriggerPress, new MixedRealityInputAction(1, "Select", AxisType.Digital), axisCodeX: ControllerMappingLibrary.AXIS_3),
+            new MixedRealityInteractionMapping(2, "Back", AxisType.Digital, DeviceInputType.ButtonPress, new MixedRealityInputAction(2, "Menu", AxisType.Digital), KeyCode.JoystickButton7),
+            new MixedRealityInteractionMapping(3, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton17),
+            new MixedRealityInteractionMapping(4, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton9),
+            new MixedRealityInteractionMapping(5, "PrimaryTouchpad Axis", AxisType.DualAxis, DeviceInputType.DirectionalPad, axisCodeX: ControllerMappingLibrary.AXIS_4, axisCodeY: ControllerMappingLibrary.AXIS_5, invertYAxis: true)
         };
 
         private readonly MixedRealityInputAction teleportInputAction = new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis);
+
+        /// <inheritdoc />
+        public override void SetupDefaultInteractions()
+        {
+            AssignControllerMappings(DefaultInteractions);
+        }
 
         protected override void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
         {
