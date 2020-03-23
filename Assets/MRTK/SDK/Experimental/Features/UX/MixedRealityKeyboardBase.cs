@@ -147,6 +147,9 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             }
 #else
 
+            if (nonNativeKeyboard.isActiveAndEnabled)
+                HideKeyboard();
+
             if (spawnTransform != null)
             {
                 nonNativeKeyboard.RepositionKeyboard(spawnTransform);
