@@ -81,6 +81,12 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             }
         }
 
+        /// <summary>
+        /// rwr TODO: this is a workaround and could be obsolete in near future
+        /// Workaround for the multiple fired event in onpointerdown
+        /// Problem: eventData contains selectedObject (inputField i.e.) and is recognized as two events instead of one
+        /// </summary>
+        /// <param name="eventData">data provied</param>
         public void OnPointerDown(MixedRealityPointerEventData eventData)
         {
             if (!eventData.used && eventData.selectedObject == null) FireAppendValue();
