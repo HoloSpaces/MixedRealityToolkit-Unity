@@ -3,6 +3,7 @@
 
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 #if WINDOWS_UWP
 using Windows.UI.ViewManagement;
@@ -158,6 +159,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             nonNativeKeyboard.OnClosed += DisableKeyboard;
             nonNativeKeyboard.OnTextSubmitted += DisableKeyboard;
             nonNativeKeyboard.OnTextUpdated += UpdateText;
+
+            EventSystem.current.SetSelectedGameObject(null);
 
             nonNativeKeyboard.PresentKeyboard(KeyboardText, keyboardLayout);
 #endif
