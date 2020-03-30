@@ -63,7 +63,12 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         public void OnPointerDragged(MixedRealityPointerEventData eventData) { }
         public void OnPointerUp(MixedRealityPointerEventData eventData) { }
-        public void OnPointerClicked(MixedRealityPointerEventData eventData) => ShowKeyboard();
+        public void OnPointerClicked(MixedRealityPointerEventData eventData)
+        {
+#if WINDOWS_UWP
+            ShowKeyboard();
+#endif
+        }
         public void OnPointerDown(MixedRealityPointerEventData eventData)
         {
 #if !WINDOWS_UWP
@@ -71,7 +76,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 #endif
         }
 
-        #endregion
+#endregion
 
         protected abstract Graphic Text(T inputField);
         protected abstract Graphic PlaceHolder(T inputField);
