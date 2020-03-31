@@ -17,6 +17,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport.Editor
         private SerializedProperty rotationAmount;
         private SerializedProperty backStrafeActivationAngle;
         private SerializedProperty strafeAmount;
+        private SerializedProperty requireBackstepHeight;
+        private SerializedProperty strafeHeight;
         private SerializedProperty upDirectionThreshold;
         private SerializedProperty lineColorHotSpot;
         private SerializedProperty validLayers;
@@ -37,6 +39,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport.Editor
             rotationAmount = serializedObject.FindProperty("rotationAmount");
             backStrafeActivationAngle = serializedObject.FindProperty("backStrafeActivationAngle");
             strafeAmount = serializedObject.FindProperty("strafeAmount");
+            requireBackstepHeight = serializedObject.FindProperty("requireBackstepHeight");
+            strafeHeight = serializedObject.FindProperty("strafeHeight");
             upDirectionThreshold = serializedObject.FindProperty("upDirectionThreshold");
             lineColorHotSpot = serializedObject.FindProperty("LineColorHotSpot");
             validLayers = serializedObject.FindProperty("ValidLayers");
@@ -61,6 +65,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport.Editor
                 EditorGUILayout.PropertyField(rotationAmount);
                 EditorGUILayout.PropertyField(backStrafeActivationAngle);
                 EditorGUILayout.PropertyField(strafeAmount);
+                EditorGUILayout.PropertyField(requireBackstepHeight);
+                EditorGUILayout.PropertyField(strafeHeight);
                 EditorGUILayout.PropertyField(upDirectionThreshold);
                 EditorGUILayout.PropertyField(lineColorHotSpot);
                 EditorGUILayout.PropertyField(validLayers);
