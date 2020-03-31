@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.MixedReality.Toolkit.Input;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Microsoft.MixedReality.Toolkit.Experimental.UI
@@ -12,7 +10,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
     /// Represents a key on the keyboard that has a string value for input.
     /// </summary>
     [RequireComponent(typeof(Button))]
-    public class KeyboardValueKey : MonoBehaviour, IMixedRealityPointerHandler
+    public class KeyboardValueKey : MonoBehaviour
     {
         /// <summary>
         /// The default string value for this key.
@@ -52,6 +50,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             m_Text.text = Value;
 
             m_Button.onClick.RemoveAllListeners();
+            m_Button.onClick.AddListener(FireAppendValue);
 
             NonNativeKeyboard.Instance.OnKeyboardShifted += Shift;
         }
@@ -79,30 +78,6 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             {
                 m_Text.text = Value;
             }
-        }
-
-        /// <summary>
-        /// rwr TODO: this is a workaround and could be obsolete in near future
-        /// Workaround for the multiple fired event in onpointerdown
-        /// Problem: eventData contains selectedObject (inputField i.e.) and is recognized as two events instead of one
-        /// </summary>
-        /// <param name="eventData">data provied</param>
-        public void OnPointerDown(MixedRealityPointerEventData eventData)
-        {
-            if (!eventData.used && eventData.selectedObject == null) FireAppendValue();
-            eventData.Use();
-        }
-
-        public void OnPointerDragged(MixedRealityPointerEventData eventData)
-        {
-        }
-
-        public void OnPointerUp(MixedRealityPointerEventData eventData)
-        {
-        }
-
-        public void OnPointerClicked(MixedRealityPointerEventData eventData)
-        {
         }
     }
 }
