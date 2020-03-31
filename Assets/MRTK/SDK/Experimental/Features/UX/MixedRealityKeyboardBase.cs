@@ -179,11 +179,14 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 stateUpdate = null;
             }
 #else
-            nonNativeKeyboard.OnTextUpdated -= UpdateText;
-            nonNativeKeyboard.OnClosed -= DisableKeyboard;
-            nonNativeKeyboard.OnTextSubmitted -= DisableKeyboard;
+            if (nonNativeKeyboard != null)
+            {
+                nonNativeKeyboard.OnTextUpdated -= UpdateText;
+                nonNativeKeyboard.OnClosed -= DisableKeyboard;
+                nonNativeKeyboard.OnTextSubmitted -= DisableKeyboard;
 
-            nonNativeKeyboard.Close();
+                nonNativeKeyboard.Close();
+            }
 #endif
         }
 
