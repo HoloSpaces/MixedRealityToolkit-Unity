@@ -19,9 +19,17 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// <inheritdoc />
         protected override string ControllerName => "ScreenSpace Mouse Pointer";
 
+        public override Vector3 Position => transform.position;
+
+        public override void OnPreCurrentPointerTargetChange()
+        {
+            transform.position = CameraCache.Main.transform.position;
+        }
+
         /// <inheritdoc />
         public override void OnPreSceneQuery()
         {
+
             if (UInput.mousePosition.x < 0 ||
                 UInput.mousePosition.y < 0 ||
                 UInput.mousePosition.x > Screen.width ||
@@ -43,8 +51,13 @@ namespace Microsoft.MixedReality.Toolkit.Input
             Ray ray = mainCamera.ScreenPointToRay(currentMousePosition);
             Rays[0].CopyRay(ray, float.MaxValue);
 
-            transform.position = mainCamera.transform.position;
-            transform.rotation = Quaternion.LookRotation(ray.direction);
+            Vector2 wheelDelta = UInput.mouseScrollDelta;
+
+            Quaternion rot = Quaternion.LookRotation(ray.direction);
+            Vector3 forwardVector = rot * Vector3.forward;
+            float scrollMultiplier = .1f; // hard coded value
+            transform.position = transform.position + (forwardVector * wheelDelta.y * scrollMultiplier);
+            transform.rotation = rot;
         }
 
         /// <inheritdoc />
