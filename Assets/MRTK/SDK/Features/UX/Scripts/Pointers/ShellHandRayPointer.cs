@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using UnityEngine;
@@ -154,16 +155,19 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         private Vector2 lastInputChange = Vector2.zero;
         private readonly float inputChangeThreshold = 0.05f;
+        private bool isGrabbinExptected = false;
 
         public override void OnInputDown(InputEventData eventData)
         {
             base.OnInputDown(eventData);
+            toggleGrabbingExptected(eventData);
             zAxisOffset = 0.0f;
         }
 
         public override void OnInputUp(InputEventData eventData)
         {
             base.OnInputUp(eventData);
+            toggleGrabbingExptected(eventData);
             zAxisOffset = 0.0f;
         }
 
@@ -172,7 +176,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
             base.OnInputChanged(eventData);
             if (eventData.SourceId == Controller?.InputSource.SourceId)
             {
-                if (!UseSourcePoseData && touchpadDepthTransformationAction == eventData.MixedRealityInputAction)
+                if (!UseSourcePoseData && isGrabbinExptected && touchpadDepthTransformationAction == eventData.MixedRealityInputAction)
                 {
                     if (Vector2.Distance(eventData.InputData, lastInputChange) >= inputChangeThreshold)
                     {
@@ -182,6 +186,12 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
                 }
             }
+        }
+
+        private void toggleGrabbingExptected(InputEventData eventData)
+        {
+            if (eventData.MixedRealityInputAction == new MixedRealityInputAction(1, "Select", AxisType.Digital) && this.Result.CurrentPointerTarget.GetComponent<BoundingBox>())
+                isGrabbinExptected = !isGrabbinExptected;
         }
         #endregion  IMixedRealityInputHandler Implementation
 
