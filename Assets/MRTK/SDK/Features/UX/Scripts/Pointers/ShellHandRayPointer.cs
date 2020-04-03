@@ -50,8 +50,14 @@ namespace Microsoft.MixedReality.Toolkit.Input
         private BaseMixedRealityLineRenderer lineRendererNoTarget = null;
 
         // Extra added code to support 3DOF controllers like Oculus GO controller
+
+        [SerializeField]
+        [Tooltip("Input Action that is need to recognize Z-Axis transformation.")]
+        private MixedRealityInputAction touchpadDepthTransformationAction = MixedRealityInputAction.None;
+
         private float zAxisOffset = 0;
         public override Vector3 Position => transform.position + (transform.rotation * Vector3.forward * zAxisOffset);
+
 
         /// <inheritdoc />
         protected override void Start()
@@ -145,6 +151,10 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// Extra added code to support 3DOF controllers like Oculus GO controller
         /// 
         /// </summary>
+
+        private Vector2 lastInputChange = Vector2.zero;
+        private readonly float inputChangeThreshold = 0.05f;
+
         public override void OnInputDown(InputEventData eventData)
         {
             base.OnInputDown(eventData);
@@ -162,7 +172,15 @@ namespace Microsoft.MixedReality.Toolkit.Input
             base.OnInputChanged(eventData);
             if (eventData.SourceId == Controller?.InputSource.SourceId)
             {
-                if (!UseSourcePoseData && PoseAction == eventData.MixedRealityInputAction) zAxisOffset += eventData.InputData.y;
+                if (!UseSourcePoseData && touchpadDepthTransformationAction == eventData.MixedRealityInputAction)
+                {
+                    if (Vector2.Distance(eventData.InputData, lastInputChange) >= inputChangeThreshold)
+                    {
+                        zAxisOffset += (eventData.InputData.y - lastInputChange.y);
+                        lastInputChange = eventData.InputData;
+                    }
+
+                }
             }
         }
         #endregion  IMixedRealityInputHandler Implementation

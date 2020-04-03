@@ -159,7 +159,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         /// <remarks>
         /// Raises a Float Input Changed event when the float data changes
         /// </remarks>
-        protected void UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
+        protected virtual void UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
         {
             Debug.Assert(interactionMapping.AxisType == AxisType.SingleAxis);
 
