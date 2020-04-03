@@ -17,7 +17,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport.Editor
         private SerializedProperty rotationAmount;
         private SerializedProperty backStrafeActivationAngle;
         private SerializedProperty strafeAmount;
-        private SerializedProperty requireBackstepHeight;
+        private SerializedProperty requiresStrafeHeight;
         private SerializedProperty strafeHeight;
         private SerializedProperty upDirectionThreshold;
         private SerializedProperty lineColorHotSpot;
@@ -39,7 +39,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport.Editor
             rotationAmount = serializedObject.FindProperty("rotationAmount");
             backStrafeActivationAngle = serializedObject.FindProperty("backStrafeActivationAngle");
             strafeAmount = serializedObject.FindProperty("strafeAmount");
-            requireBackstepHeight = serializedObject.FindProperty("requireBackstepHeight");
+            requiresStrafeHeight = serializedObject.FindProperty("requiresStrafeHeight");
             strafeHeight = serializedObject.FindProperty("strafeHeight");
             upDirectionThreshold = serializedObject.FindProperty("upDirectionThreshold");
             lineColorHotSpot = serializedObject.FindProperty("LineColorHotSpot");
@@ -65,7 +65,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport.Editor
                 EditorGUILayout.PropertyField(rotationAmount);
                 EditorGUILayout.PropertyField(backStrafeActivationAngle);
                 EditorGUILayout.PropertyField(strafeAmount);
-                EditorGUILayout.PropertyField(requireBackstepHeight);
+                EditorGUILayout.PropertyField(requiresStrafeHeight);
                 EditorGUILayout.PropertyField(strafeHeight);
                 EditorGUILayout.PropertyField(upDirectionThreshold);
                 EditorGUILayout.PropertyField(lineColorHotSpot);

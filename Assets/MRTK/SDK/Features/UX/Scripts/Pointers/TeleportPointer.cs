@@ -75,7 +75,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
         [SerializeField]
         [Tooltip("The condition if a Strafe Height is needed")]
-        private bool requireBackstepHeight = false;
+        private bool requiresStrafeHeight = false;
 
         [SerializeField]
         [Tooltip("The height of required strafe")]
@@ -398,11 +398,12 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                     canMove = false;
                                     var height = MixedRealityPlayspace.Position.y;
                                     var cameraPosition = CameraCache.Main.transform;
-                                    var newPosition = -cameraPosition.forward * strafeAmount + cameraPosition.position;
+                                    var forwardCameraView = -new Vector3(cameraPosition.forward.x, 0f, cameraPosition.forward.z);
+                                    var newPosition = forwardCameraView.normalized * strafeAmount + cameraPosition.position;
                                     
                                     Vector3 strafeHitPosition;
                                     bool isValidStrafe = true;
-                                    if (requireBackstepHeight)
+                                    if (requiresStrafeHeight)
                                     {
                                         isValidStrafe = checkPossibleBackStep(newPosition, out strafeHitPosition);
                                         newPosition = strafeHitPosition;
@@ -456,6 +457,12 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             }
         }
 
+        /// <summary>
+        /// check if a backstrafe is possible on a valid platform regarding the possible strafe height given
+        /// </summary>
+        /// <param name="newPosition">the new position relative to backstrafe position</param>
+        /// <param name="hitStrafePosition">actual position the strafe raycast hits</param>
+        /// <returns>if there is a valid layer one can backstrafe on</returns>
         private bool checkPossibleBackStep(Vector3 newPosition, out Vector3 hitStrafePosition)
         {
             var raycastProvider = CoreServices.InputSystem.RaycastProvider;
