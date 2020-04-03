@@ -408,12 +408,13 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                         isValidStrafe = checkPossibleBackStep(newPosition, out strafeHitPosition);
                                         newPosition = strafeHitPosition;
                                     }
-
-                                    if (isValidStrafe)
+                                    else
                                     {
                                         newPosition.y = height;
-                                        MixedRealityPlayspace.Position = newPosition;
                                     }
+
+                                    if (isValidStrafe)
+                                        MixedRealityPlayspace.Position = newPosition;
                                 }
                             }
                         }
