@@ -154,28 +154,27 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// </summary>
 
         private Vector2 lastInputChange = Vector2.zero;
-        private readonly float inputChangeThreshold = 0.05f;
         private bool isGrabbinExptected = false;
 
         public override void OnInputDown(InputEventData eventData)
         {
             base.OnInputDown(eventData);
-            toggleGrabbingExptected(eventData);
+            /*toggleGrabbingExptected(eventData);
 
-            zAxisOffset = 0.0f;
+            zAxisOffset = 0.0f;*/
         }
 
         public override void OnInputUp(InputEventData eventData)
         {
             base.OnInputUp(eventData);
-            toggleGrabbingExptected(eventData);
-            zAxisOffset = 0.0f;
+            /*toggleGrabbingExptected(eventData);
+            zAxisOffset = 0.0f;*/
         }
 
         public override void OnInputChanged(InputEventData<Vector2> eventData)
         {
             base.OnInputChanged(eventData);
-            if (eventData.SourceId == Controller?.InputSource.SourceId)
+            /*if (eventData.SourceId == Controller?.InputSource.SourceId)
             {
                 if (!UseSourcePoseData && isGrabbinExptected)
                 {
@@ -184,7 +183,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
                     manipulator.ManipulationOffset = (transform.rotation * Vector3.forward * zAxisOffset);
                     lastInputChange = eventData.InputData;
                 }
-            }
+            }*/
         }
 
         private void toggleGrabbingExptected(InputEventData eventData)
