@@ -301,6 +301,13 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private bool wasKinematic = false;
 
         private ConstraintManager constraints;
+        private Vector3 manipulationOffset = Vector3.zero;
+
+        public Vector3 ManipulationOffset
+        {
+            get => manipulationOffset;
+            set => manipulationOffset = value;
+        }
 
         private bool IsOneHandedManipulationEnabled => manipulationType.HasFlag(ManipulationHandFlags.OneHanded) && pointerIdToPointerMap.Count == 1;
         private bool IsTwoHandedManipulationEnabled => manipulationType.HasFlag(ManipulationHandFlags.TwoHanded) && pointerIdToPointerMap.Count > 1;
@@ -318,6 +325,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private void Start()
         {
             rigidBody = HostTransform.GetComponent<Rigidbody>();
+            OnManipulationStarted.AddListener(new TouchpadTransformator().Start());
             constraints = new ConstraintManager(gameObject);
         }
         #endregion MonoBehaviour Functions
@@ -608,7 +616,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             constraints.ApplyRotationConstraints(ref targetTransform, true, IsNearManipulation());
 
             RotateInOneHandType rotateInOneHandType = isNearManipulation ? oneHandRotationModeNear : oneHandRotationModeFar;
-            MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position, pointer.Rotation);
+            MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position + manipulationOffset, pointer.Rotation);
             targetTransform.Position = moveLogic.Update(pointerPose, targetTransform.Rotation, targetTransform.Scale, rotateInOneHandType != RotateInOneHandType.RotateAboutObjectCenter);
 
             constraints.ApplyTranslationConstraints(ref targetTransform, true, IsNearManipulation());

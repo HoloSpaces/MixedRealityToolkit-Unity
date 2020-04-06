@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Microsoft.MixedReality.Toolkit.Experimental.UI;
 using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
@@ -56,8 +57,8 @@ namespace Microsoft.MixedReality.Toolkit.Input
         [Tooltip("Input Action that is need to recognize Z-Axis transformation.")]
         private MixedRealityInputAction touchpadDepthTransformationAction = MixedRealityInputAction.None;
 
-        private float zAxisOffset = 0;
-        private GameObject selectedObject;
+        private float zAxisOffset = 0f;
+        //public override Vector3 Position => transform.position + (transform.rotation * Vector3.forward * zAxisOffset);
 
         /// <inheritdoc />
         protected override void Start()
@@ -160,6 +161,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         {
             base.OnInputDown(eventData);
             toggleGrabbingExptected(eventData);
+
             zAxisOffset = 0.0f;
         }
 
@@ -177,12 +179,10 @@ namespace Microsoft.MixedReality.Toolkit.Input
             {
                 if (!UseSourcePoseData && isGrabbinExptected)
                 {
-                    if (Vector2.Distance(eventData.InputData, lastInputChange) >= inputChangeThreshold)
-                    {
-                        Result.CurrentPointerTarget.transform.position += (transform.rotation * Vector3.forward * eventData.InputData.y);
-                        lastInputChange = eventData.InputData;
-                    }
-
+                    zAxisOffset += (eventData.InputData.y - lastInputChange.y);
+                    var manipulator = Result.CurrentPointerTarget.GetComponent<ObjectManipulator>();
+                    manipulator.ManipulationOffset = (transform.rotation * Vector3.forward * zAxisOffset);
+                    lastInputChange = eventData.InputData;
                 }
             }
         }
