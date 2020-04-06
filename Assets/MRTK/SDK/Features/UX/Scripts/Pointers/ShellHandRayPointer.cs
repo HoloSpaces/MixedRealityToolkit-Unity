@@ -51,15 +51,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
         [Obsolete("Use lineMaterialNoTarget instead.")]
         private BaseMixedRealityLineRenderer lineRendererNoTarget = null;
 
-        // Extra added code to support 3DOF controllers like Oculus GO controller
-
-        [SerializeField]
-        [Tooltip("Input Action that is need to recognize Z-Axis transformation.")]
-        private MixedRealityInputAction touchpadDepthTransformationAction = MixedRealityInputAction.None;
-
-        private float zAxisOffset = 0f;
-        //public override Vector3 Position => transform.position + (transform.rotation * Vector3.forward * zAxisOffset);
-
         /// <inheritdoc />
         protected override void Start()
         {
@@ -146,53 +137,5 @@ namespace Microsoft.MixedReality.Toolkit.Input
                 LineBase.SetPoint(2, Vector3.Lerp(startPoint, expectedPoint, endPointLerp));
             }
         }
-
-        #region IMixedRealityInputHandler Implementation
-        /// <summary>
-        /// Extra added code to support 3DOF controllers like Oculus GO controller
-        /// 
-        /// </summary>
-
-        private Vector2 lastInputChange = Vector2.zero;
-        private bool isGrabbinExptected = false;
-
-        public override void OnInputDown(InputEventData eventData)
-        {
-            base.OnInputDown(eventData);
-            /*toggleGrabbingExptected(eventData);
-
-            zAxisOffset = 0.0f;*/
-        }
-
-        public override void OnInputUp(InputEventData eventData)
-        {
-            base.OnInputUp(eventData);
-            /*toggleGrabbingExptected(eventData);
-            zAxisOffset = 0.0f;*/
-        }
-
-        public override void OnInputChanged(InputEventData<Vector2> eventData)
-        {
-            base.OnInputChanged(eventData);
-            /*if (eventData.SourceId == Controller?.InputSource.SourceId)
-            {
-                if (!UseSourcePoseData && isGrabbinExptected)
-                {
-                    zAxisOffset += (eventData.InputData.y - lastInputChange.y);
-                    var manipulator = Result.CurrentPointerTarget.GetComponent<ObjectManipulator>();
-                    manipulator.ManipulationOffset = (transform.rotation * Vector3.forward * zAxisOffset);
-                    lastInputChange = eventData.InputData;
-                }
-            }*/
-        }
-
-        private void toggleGrabbingExptected(InputEventData eventData)
-        {
-            if (eventData.MixedRealityInputAction == touchpadDepthTransformationAction 
-                && Result.CurrentPointerTarget.GetComponent<BoundingBox>())
-                isGrabbinExptected = !isGrabbinExptected;
-        }
-        #endregion  IMixedRealityInputHandler Implementation
-
     }
 }

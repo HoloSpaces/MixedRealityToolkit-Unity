@@ -325,7 +325,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private void Start()
         {
             rigidBody = HostTransform.GetComponent<Rigidbody>();
-            OnManipulationStarted.AddListener(call => new TouchpadTransformator(call).Init((offset) => ManipulationOffset = offset));
+            OnManipulationStarted.AddListener(call => new TouchpadPositionListener(call).Init((offset) => ManipulationOffset = offset));
             constraints = new ConstraintManager(gameObject);
         }
         #endregion MonoBehaviour Functions
