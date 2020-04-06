@@ -28,9 +28,7 @@ namespace HoloSpaces.MixedReality.Input
         }
 
         private bool isTouchPadPressed;
-        private bool isTriggerPressed;
         private bool isTeleportEnabled;
-        private bool isGrabbingExpected;
 
         private IMixedRealityTeleportPointer teleportPointer;
         private IMixedRealityTeleportPointer TeleportPointer => teleportPointer != null ? teleportPointer : teleportPointer = PointerUtils.GetPointer<IMixedRealityTeleportPointer>(Handedness.Any);
@@ -47,7 +45,6 @@ namespace HoloSpaces.MixedReality.Input
         };
 
         private readonly MixedRealityInputAction teleportInputAction = new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis);
-        private readonly MixedRealityInputAction poseTransformationInputAction = new MixedRealityInputAction(3, "Grip Pose", AxisType.SixDof);
 
         /// <inheritdoc />
         public override void SetupDefaultInteractions()
@@ -65,15 +62,6 @@ namespace HoloSpaces.MixedReality.Input
                 {
                     isTeleportEnabled = true;
                 }
-            }
-        }
-
-        protected override void UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
-        {
-            base.UpdateSingleAxisData(interactionMapping);
-            if (interactionMapping.InputType == DeviceInputType.TriggerPress)
-            {
-                isTriggerPressed = interactionMapping.BoolData;
             }
         }
 
@@ -113,22 +101,6 @@ namespace HoloSpaces.MixedReality.Input
             }
             else
             {
-                if (isTriggerPressed && !isTeleportEnabled)
-                {
-                    interactionMapping = new MixedRealityInteractionMapping(
-                        interactionMapping.Id,
-                        interactionMapping.Description,
-                        interactionMapping.AxisType,
-                        interactionMapping.InputType,
-                        poseTransformationInputAction,
-                        keyCode: interactionMapping.KeyCode,
-                        axisCodeX: interactionMapping.AxisCodeX,
-                        axisCodeY: interactionMapping.AxisCodeY,
-                        invertXAxis: interactionMapping.InvertXAxis,
-                        invertYAxis: interactionMapping.InvertYAxis
-                    );
-                }
-
                 base.UpdateDualAxisData(interactionMapping);
             }
         }

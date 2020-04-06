@@ -57,8 +57,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         private MixedRealityInputAction touchpadDepthTransformationAction = MixedRealityInputAction.None;
 
         private float zAxisOffset = 0;
-        public override Vector3 Position => transform.position + (transform.rotation * Vector3.forward * zAxisOffset);
-
+        private GameObject selectedObject;
 
         /// <inheritdoc />
         protected override void Start()
@@ -176,11 +175,11 @@ namespace Microsoft.MixedReality.Toolkit.Input
             base.OnInputChanged(eventData);
             if (eventData.SourceId == Controller?.InputSource.SourceId)
             {
-                if (!UseSourcePoseData && isGrabbinExptected && touchpadDepthTransformationAction == eventData.MixedRealityInputAction)
+                if (!UseSourcePoseData && isGrabbinExptected)
                 {
                     if (Vector2.Distance(eventData.InputData, lastInputChange) >= inputChangeThreshold)
                     {
-                        zAxisOffset += (eventData.InputData.y - lastInputChange.y);
+                        Result.CurrentPointerTarget.transform.position += (transform.rotation * Vector3.forward * eventData.InputData.y);
                         lastInputChange = eventData.InputData;
                     }
 
@@ -190,7 +189,8 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         private void toggleGrabbingExptected(InputEventData eventData)
         {
-            if (eventData.MixedRealityInputAction == new MixedRealityInputAction(1, "Select", AxisType.Digital) && this.Result.CurrentPointerTarget.GetComponent<BoundingBox>())
+            if (eventData.MixedRealityInputAction == touchpadDepthTransformationAction 
+                && Result.CurrentPointerTarget.GetComponent<BoundingBox>())
                 isGrabbinExptected = !isGrabbinExptected;
         }
         #endregion  IMixedRealityInputHandler Implementation
