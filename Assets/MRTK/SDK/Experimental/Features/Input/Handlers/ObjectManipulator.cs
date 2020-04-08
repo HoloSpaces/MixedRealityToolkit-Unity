@@ -199,6 +199,14 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         [Tooltip("Enter amount representing amount of smoothing to apply to the scale. Smoothing of 0 means no smoothing. Max value means no change to value.")]
         private float scaleLerpTime = 0.001f;
 
+        [SerializeField]
+        [Tooltip("Condition if Z Axis Offset Transformation should be allowed.")]
+        private bool enableZAxisOffset = false;
+
+        [SerializeField]
+        [Tooltip("Factor for the velocity for a Z Axis Transformation.")]
+        private float zAxisOffsetVelocity = 0.5f;
+
         /// <summary>
         /// Enter amount representing amount of smoothing to apply to the scale. Smoothing of 0 means no smoothing. Max value means no change to value.
         /// </summary>
@@ -325,7 +333,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private void Start()
         {
             rigidBody = HostTransform.GetComponent<Rigidbody>();
-            OnManipulationStarted.AddListener(call => new TouchpadPositionListener(call).Init((offset) => ManipulationOffset = offset));
+            if (enableZAxisOffset)
+                OnManipulationStarted.AddListener(call => new TouchpadPositionListener(call, zAxisOffsetVelocity).Init((offset) => ManipulationOffset = offset));
             constraints = new ConstraintManager(gameObject);
         }
         #endregion MonoBehaviour Functions

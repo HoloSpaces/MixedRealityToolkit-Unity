@@ -4,22 +4,29 @@ using Microsoft.MixedReality.Toolkit.UI;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class TouchpadPositionListener : MonoBehaviour, IMixedRealityInputHandler<Vector2>
+public class TouchpadPositionListener : MonoBehaviour, IMixedRealityInputHandler, IMixedRealityInputHandler<Vector2>
 {
     private System.Action<Vector3> changeManipulationOffset;
     private float zAxisOffset = 0f;
-    private Vector2 lastInputDifference = Vector2.zero;
+    private float lastInputDifference = 0f;
     private ManipulationEventData manipulationData;
     private Vector2 originalTouchPosition;
+    private float velocityFactor;
+    private bool isOrigin = true;
 
-    public TouchpadPositionListener(ManipulationEventData call)
+    private static readonly float offsetThreshold = 0.05f;
+
+    public TouchpadPositionListener(ManipulationEventData call, float velocityFactor)
     {
         this.manipulationData = call;
+        this.velocityFactor = velocityFactor;
+        CoreServices.InputSystem?.RegisterHandler<IMixedRealityInputHandler>(this);
         CoreServices.InputSystem?.RegisterHandler<IMixedRealityInputHandler<Vector2>>(this);
     }
 
     private void OnDisable()
     {
+        CoreServices.InputSystem?.UnregisterHandler<IMixedRealityInputHandler>(this);
         CoreServices.InputSystem?.UnregisterHandler<IMixedRealityInputHandler<Vector2>>(this);
     }
 
@@ -33,19 +40,35 @@ public class TouchpadPositionListener : MonoBehaviour, IMixedRealityInputHandler
         if (eventData.SourceId != manipulationData.Pointer.Controller?.InputSource.SourceId)
             return;
 
+        if (isOrigin)
+        {
+            isOrigin = false;
+            originalTouchPosition = eventData.InputData;
+            return;
+        }
+
         Vector2 differenceVector = eventData.InputData - originalTouchPosition;
-        zAxisOffset += differenceVector.y - lastInputDifference.y;
+        float additionalChange = differenceVector.y - lastInputDifference;
+
+        if (Mathf.Abs(additionalChange) <= offsetThreshold) return;
+
+        float calculatedChange = Mathf.Pow(Mathf.Epsilon, Mathf.Abs(additionalChange)) * velocityFactor;
+        zAxisOffset += (additionalChange < 0f) ? -calculatedChange : calculatedChange;
+        lastInputDifference = differenceVector.y;
         changeManipulationOffset(manipulationData.Pointer.Rotation * Vector3.forward * zAxisOffset);
-        lastInputDifference = differenceVector;
     }
 
-    public void OnInputDown(InputEventData<Vector2> eventData)
+    public void OnInputDown(InputEventData eventData)
     {
-        originalTouchPosition = eventData.InputData;
+        isOrigin = true;
+        lastInputDifference = 0f;
+        originalTouchPosition = Vector2.zero;
     }
 
-    public void OnInputUp(InputEventData<Vector2> eventData)
+    public void OnInputUp(InputEventData eventData)
     {
-        zAxisOffset = 0f;
+        isOrigin = true;
+        lastInputDifference = 0f;
+        originalTouchPosition = Vector2.zero;
     }
 }
