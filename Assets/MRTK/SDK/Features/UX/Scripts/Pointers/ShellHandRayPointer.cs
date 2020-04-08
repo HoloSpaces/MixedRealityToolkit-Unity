@@ -49,6 +49,10 @@ namespace Microsoft.MixedReality.Toolkit.Input
         [Obsolete("Use lineMaterialNoTarget instead.")]
         private BaseMixedRealityLineRenderer lineRendererNoTarget = null;
 
+        // Extra added code to support 3DOF controllers like Oculus GO controller
+        private float zAxisOffset = 0;
+        public override Vector3 Position => transform.position + (transform.rotation * Vector3.forward * zAxisOffset);
+
         /// <inheritdoc />
         protected override void Start()
         {
@@ -135,6 +139,33 @@ namespace Microsoft.MixedReality.Toolkit.Input
                 LineBase.SetPoint(2, Vector3.Lerp(startPoint, expectedPoint, endPointLerp));
             }
         }
+
+        #region IMixedRealityInputHandler Implementation
+        /// <summary>
+        /// Extra added code to support 3DOF controllers like Oculus GO controller
+        /// 
+        /// </summary>
+        public override void OnInputDown(InputEventData eventData)
+        {
+            base.OnInputDown(eventData);
+            zAxisOffset = 0.0f;
+        }
+
+        public override void OnInputUp(InputEventData eventData)
+        {
+            base.OnInputUp(eventData);
+            zAxisOffset = 0.0f;
+        }
+
+        public override void OnInputChanged(InputEventData<Vector2> eventData)
+        {
+            base.OnInputChanged(eventData);
+            if (eventData.SourceId == Controller?.InputSource.SourceId)
+            {
+                if (!UseSourcePoseData && PoseAction == eventData.MixedRealityInputAction) zAxisOffset += eventData.InputData.y;
+            }
+        }
+        #endregion  IMixedRealityInputHandler Implementation
 
     }
 }
