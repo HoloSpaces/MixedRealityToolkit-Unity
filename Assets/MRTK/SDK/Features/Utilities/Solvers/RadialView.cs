@@ -263,7 +263,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Solvers
             Vector3 elementPoint = transform.position;
             Vector3 elementDelta = elementPoint - referencePoint;
             float elementDist = elementDelta.magnitude;
-            Vector3 elementDir = elementDist > 0 ? elementDelta / elementDist : Vector3.one;
+            Vector3 elementDir = elementDist > 0 ? elementDelta / elementDist : Vector3.forward;
 
             // Generate basis: First get axis perpendicular to reference direction pointing toward element
             Vector3 perpendicularDirection = (elementDir - direction);
