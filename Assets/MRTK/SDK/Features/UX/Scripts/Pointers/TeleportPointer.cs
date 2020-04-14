@@ -75,7 +75,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
         [SerializeField]
         [Tooltip("The condition if a Strafe Height is needed")]
-        private bool requiresStrafeHeight = default;
+        private bool requiresStrafeLimitations = default;
 
         [SerializeField]
         [Tooltip("The height of required strafe")]
@@ -403,7 +403,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                     
                                     Vector3 strafeHitPosition;
                                     bool isValidStrafe = true;
-                                    if (requiresStrafeHeight)
+                                    if (requiresStrafeLimitations)
                                     {
                                         isValidStrafe = checkPossibleBackStep(newPosition, out strafeHitPosition);
                                         newPosition = strafeHitPosition;
