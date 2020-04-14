@@ -75,7 +75,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
         [SerializeField]
         [Tooltip("The condition if a Strafe Height is needed")]
-        private bool requiresStrafeHeight = false;
+        private bool requiresStrafeHeight = default;
 
         [SerializeField]
         [Tooltip("The height of required strafe")]

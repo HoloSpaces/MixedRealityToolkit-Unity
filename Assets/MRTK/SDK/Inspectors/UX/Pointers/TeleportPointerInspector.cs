@@ -66,7 +66,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport.Editor
                 EditorGUILayout.PropertyField(backStrafeActivationAngle);
                 EditorGUILayout.PropertyField(strafeAmount);
                 EditorGUILayout.PropertyField(requiresStrafeHeight);
-                EditorGUILayout.PropertyField(strafeHeight);
+                if (requiresStrafeHeight.boolValue)
+                    EditorGUILayout.PropertyField(strafeHeight);
                 EditorGUILayout.PropertyField(upDirectionThreshold);
                 EditorGUILayout.PropertyField(lineColorHotSpot);
                 EditorGUILayout.PropertyField(validLayers);
