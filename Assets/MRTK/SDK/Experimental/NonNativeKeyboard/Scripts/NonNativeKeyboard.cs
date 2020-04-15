@@ -425,7 +425,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             ResetClosingTime();
             gameObject.SetActive(true);
             ActivateSpecificKeyboard(LayoutType.Alpha);
-
+            ShowPreviewBar(true); //  text bar will be enabled on launch, if needed hide after presenting
             OnPlacement(this, EventArgs.Empty);
 
             // todo: if the app is built for xaml, our prefab and the system keyboard may be displayed.
@@ -509,6 +509,18 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
             ScaleToSize();
             LookAtTargetOrigin();
+        }
+
+
+        /// <summary>
+        /// Function to enable PreviewBar/ search bar
+        /// </summary>
+        public void ShowPreviewBar(bool show)
+        {
+            // work arounf to hide previewbar, since setting inactive throws error
+            if (InputFieldSlide == null) return;
+            CanvasGroup canvasGrp = InputFieldSlide.GetComponent<CanvasGroup>();
+            canvasGrp.alpha = show == true ? 1 : 0;
         }
 
         /// <summary>

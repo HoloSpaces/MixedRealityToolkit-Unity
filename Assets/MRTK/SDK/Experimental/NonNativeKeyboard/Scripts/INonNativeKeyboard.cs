@@ -10,9 +10,9 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
     public interface INonNativeKeyboard
     {
         bool IsActiveAndEnabled { get;}
-
         event Action<string> OnTextUpdated;
         event EventHandler OnTextSubmitted;
+        event Action<string> OnInsertCharacter;
         event Action OnBackSpace;
         event EventHandler OnClosed;
         event EventHandler OnPrevious;
@@ -25,6 +25,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         void PresentKeyboard(string startText, NonNativeKeyboard.LayoutType keyboardType);
         void RepositionKeyboard(Vector3 kbPos, float verticalOffset = 0.0f);
         void RepositionKeyboard(Transform objectTransform, BoxCollider aCollider = null, float verticalOffset = 0.0f);
+        void ShowPreviewBar(bool show);
         void Close();
         void Clear();
 
