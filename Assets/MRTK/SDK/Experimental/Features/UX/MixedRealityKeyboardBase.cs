@@ -61,7 +61,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         // Fields that are only used on non WINDOWS_UWP
 #pragma warning disable 414
         [Header("NonNativeKeyboard")]
-        [SerializeField] private NonNativeKeyboard nonNativeKeyboard = null;
+        private INonNativeKeyboard nonNativeKeyboard = null; // will feltched from non keyboard services
         [SerializeField] private Transform spawnTransform = null;
         [SerializeField] private NonNativeKeyboard.LayoutType keyboardLayout = NonNativeKeyboard.LayoutType.Alpha;
 #pragma warning restore 414
@@ -129,8 +129,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             //}
 
             State = KeyboardState.Shown;
-
-            ClearText();
+            //ClearText();
 
 #if WINDOWS_UWP
             if (keyboard != null)
@@ -147,8 +146,16 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 stateUpdate = StartCoroutine(UpdateState());
             }
 #else
+            if (nonNativeKeyboard == null || nonNativeKeyboard.Equals(null))
+            {
+                IKeyboardService service = null;
+                if (MixedRealityServiceRegistry.TryGetService<IKeyboardService>(out service))
+                {
+                    nonNativeKeyboard = service.GetKeyboardInstance();
+                }
+            }
 
-            if (nonNativeKeyboard.isActiveAndEnabled)
+            if (nonNativeKeyboard.IsActiveAndEnabled)
                 HideKeyboard();
 
             if (spawnTransform != null)
@@ -161,7 +168,6 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             nonNativeKeyboard.OnTextUpdated += UpdateText;
 
             EventSystem.current.SetSelectedGameObject(null);
-
             nonNativeKeyboard.PresentKeyboard(KeyboardText, keyboardLayout);
 #endif
         }

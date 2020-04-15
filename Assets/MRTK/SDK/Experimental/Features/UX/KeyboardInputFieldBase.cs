@@ -71,6 +71,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         }
         public void OnPointerDown(MixedRealityPointerEventData eventData)
         {
+
 #if !WINDOWS_UWP
             ShowKeyboard();
 #endif

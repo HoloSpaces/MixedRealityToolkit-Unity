@@ -19,7 +19,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
     ///       To retrieve the input from the Keyboard, subscribe to the textEntered event. Note that
     ///       tapping 'Close' on the Keyboard will not fire the textEntered event. You must tap 'Enter' to
     ///       get the textEntered event.
-    public class NonNativeKeyboard : InputSystemGlobalHandlerListener, IMixedRealityDictationHandler
+    public class NonNativeKeyboard : InputSystemGlobalHandlerListener, IMixedRealityDictationHandler, INonNativeKeyboard
     {
         public static NonNativeKeyboard Instance { get; private set; }
 
@@ -186,6 +186,14 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// Event fired when shift key on keyboard is pressed.
         /// </summary>
         public event Action<bool> OnKeyboardShifted = delegate { };
+
+        /// <summary>
+        /// Current active state of the keyboard gameObject.
+        /// </summary>
+        public bool IsActiveAndEnabled
+        {
+            get { return isActiveAndEnabled; }
+        }
 
         /// <summary>
         /// Current shift state of keyboard.
@@ -437,7 +445,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             PresentKeyboard();
             Clear();
             if (InputField != null)
+            {
                 InputField.text = startText;
+                m_CaretPosition = startText.Length;
+                UpdateCaretPosition(m_CaretPosition);
+            }     
         }
 
         /// <summary>

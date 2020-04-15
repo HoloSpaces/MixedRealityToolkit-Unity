@@ -8,7 +8,8 @@
         "Microsoft.MixedReality.Toolkit.Services.InputAnimation",
         "Microsoft.MixedReality.Toolkit.Services.InputSimulation",
         "Microsoft.MixedReality.Toolkit.Services.InputSystem",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Microsoft.MixedReality.Toolkit.Editor.ServiceInspectors"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
