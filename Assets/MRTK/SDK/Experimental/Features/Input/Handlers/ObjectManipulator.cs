@@ -309,12 +309,12 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private bool wasKinematic = false;
 
         private ConstraintManager constraints;
-        private Vector3 manipulationOffset = Vector3.zero;
 
-        public Vector3 ManipulationOffset
+        private float manipulationZOffset = 0.0f; // This is is to support, object moveforwad/backward on touch interactions
+        public float ManipulationOffset
         {
-            get => manipulationOffset;
-            set => manipulationOffset = value;
+            get => manipulationZOffset;
+            set => manipulationZOffset = value;
         }
 
         private bool IsOneHandedManipulationEnabled => manipulationType.HasFlag(ManipulationHandFlags.OneHanded) && pointerIdToPointerMap.Count == 1;
@@ -330,16 +330,34 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             rotateLogic = new TwoHandRotateLogic();
             scaleLogic = new TwoHandScaleLogic();
         }
+
+        private TouchpadPositionListener listner;
         private void Start()
         {
             rigidBody = HostTransform.GetComponent<Rigidbody>();
+
             if (enableZAxisOffset)
-                OnManipulationStarted.AddListener(call => new TouchpadPositionListener(call, zAxisOffsetVelocity).Init((offset) => ManipulationOffset = offset));
+            {
+                OnManipulationStarted.AddListener(AddTouchpadEventListner);
+                OnManipulationEnded.AddListener(RemoveTouchpadEventListner);
+            }
+              
             constraints = new ConstraintManager(gameObject);
         }
         #endregion MonoBehaviour Functions
 
         #region Private Methods
+
+        private void AddTouchpadEventListner(ManipulationEventData data)
+        {
+            manipulationZOffset = 0;
+            TouchpadPositionListener.Instance.RegisterScrollCallback(zAxisOffsetVelocity, data, (scrollDelta) => { manipulationZOffset += scrollDelta; });
+        }
+
+        private void RemoveTouchpadEventListner(ManipulationEventData data)
+        {
+            TouchpadPositionListener.Instance.UnRegisterScrollCallback();
+        }
 
         private Vector3 GetPointersGrabPoint()
         {
@@ -626,9 +644,9 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             constraints.ApplyRotationConstraints(ref targetTransform, true, IsNearManipulation());
 
             RotateInOneHandType rotateInOneHandType = isNearManipulation ? oneHandRotationModeNear : oneHandRotationModeFar;
-            MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position + manipulationOffset, pointer.Rotation);
+            Vector3 offsetVector = pointer.Rotation * Vector3.forward * manipulationZOffset; // offsetvector from touch scroll 
+            MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position+offsetVector, pointer.Rotation);
             targetTransform.Position = moveLogic.Update(pointerPose, targetTransform.Rotation, targetTransform.Scale, rotateInOneHandType != RotateInOneHandType.RotateAboutObjectCenter);
-
             constraints.ApplyTranslationConstraints(ref targetTransform, true, IsNearManipulation());
 
             ApplyTargetTransform(targetTransform);
