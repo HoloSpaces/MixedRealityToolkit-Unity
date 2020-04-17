@@ -32,7 +32,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         /// </summary>
         public void Initialize(IMixedRealityPointer pointer, IMixedRealityTeleportHotSpot target)
         {
-            BaseInitialize(pointer.InputSourceParent);
+            BaseInitialize(pointer == null ? null : pointer.InputSourceParent);
             Pointer = pointer;
             HotSpot = target;
         }

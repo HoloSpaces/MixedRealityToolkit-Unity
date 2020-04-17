@@ -251,12 +251,16 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             isProcessingTeleportRequest = true;
 
             targetRotation = Vector3.zero;
-            var teleportPointer = eventData.Pointer as IMixedRealityTeleportPointer;
-            if (teleportPointer != null)
+            if (eventData.Pointer != null)
             {
-                targetRotation.y = teleportPointer.PointerOrientation;
+                var teleportPointer = eventData.Pointer as IMixedRealityTeleportPointer;
+                if (teleportPointer != null)
+                {
+                    targetRotation.y = teleportPointer.PointerOrientation;
+                }
+                
+                targetPosition = eventData.Pointer.Result.Details.Point;
             }
-            targetPosition = eventData.Pointer.Result.Details.Point;
 
             if (eventData.HotSpot != null)
             {

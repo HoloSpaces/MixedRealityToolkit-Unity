@@ -3,6 +3,7 @@
 
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Physics;
+using Microsoft.MixedReality.Toolkit.Teleport;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using UnityEngine;
@@ -414,7 +415,9 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                     }
 
                                     if (isValidStrafe)
-                                        MixedRealityPlayspace.Position = newPosition;
+                                    {
+                                        CoreServices.TeleportSystem?.RaiseTeleportStarted(null, new BackStepHotSpot(newPosition, cameraPosition.eulerAngles.y));
+                                    }
                                 }
                             }
                         }
@@ -528,4 +531,31 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
         #endregion IMixedRealityTeleportHandler Implementation
     }
+}
+
+public class BackStepHotSpot : IMixedRealityTeleportHotSpot
+{
+
+    public BackStepHotSpot(Vector3 position)
+    {
+        Position = position;
+    }
+
+    public BackStepHotSpot(Vector3 position, float rotation) : this(position)
+    {
+        OverrideTargetOrientation = true;
+        TargetOrientation = rotation;
+    }
+
+    public Vector3 Position { get; set; }
+
+    public Vector3 Normal { get; set; }
+
+    public bool IsActive => throw new NotImplementedException();
+
+    public bool OverrideTargetOrientation { get; set; }
+
+    public float TargetOrientation { get; set; }
+
+    public GameObject GameObjectReference => default;
 }
