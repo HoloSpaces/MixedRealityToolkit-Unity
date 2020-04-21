@@ -2,6 +2,7 @@
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 namespace Microsoft.MixedReality.Toolkit.Experimental.UI
@@ -63,6 +64,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <param name="eventData"></param>
         public void OnInputChanged(InputEventData<Vector2> eventData)
         {
+#if !UNITY_EDITOR
             if (manipulationData == null || (eventData.SourceId != manipulationData.Pointer.Controller?.InputSource.SourceId))
                 return;
 
@@ -83,7 +85,10 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
             lastTouchPosition = eventData.InputData;
             lastTouchTime = eventData.EventTime;
-            onScrollCallBack(finalDelta); // Dont forget to multiply with Time.delta and the velocity vector(ScrollSensitivity) at callback side
+            onScrollCallBack?.Invoke(finalDelta); // Dont forget to multiply with Time.delta and the velocity vector(ScrollSensitivity) at callback side
+#else
+            onScrollCallBack?.Invoke(UnityEngine.Input.mouseScrollDelta.y);
+#endif
         }
 
         public void OnInputDown(InputEventData eventData)
