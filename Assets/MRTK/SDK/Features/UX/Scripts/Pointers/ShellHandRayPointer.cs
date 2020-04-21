@@ -87,6 +87,13 @@ namespace Microsoft.MixedReality.Toolkit.Input
             inertia = gameObject.EnsureComponent<BezierInertia>();
         }
 
+        public override void OnPreSceneQuery()
+        {
+            base.OnPreSceneQuery();
+            Ray ray = new Ray(Position, Rotation * Vector3.forward);
+            Rays[0].CopyRay(ray, PointerExtent);
+        }
+          
         /// <inheritdoc />
         public override void OnPostSceneQuery()
         {
@@ -121,6 +128,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
             if (isFocusedLock)
             {
+               
                 float distance = Result != null ? Result.Details.RayDistance : DefaultPointerExtent;
                 Vector3 startPoint = LineBase.FirstPoint;
 
