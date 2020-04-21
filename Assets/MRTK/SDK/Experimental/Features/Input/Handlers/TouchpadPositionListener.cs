@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 {
     /// <summary>
-    /// singlton class that listnes to the touch events 
+    /// Singlton class that listnes to the touch events 
     /// Meant to work with single callback listner at a time
     /// TODO: update to static method instead of callback, eg Input.mouseScrolldelta
     /// </summary>
@@ -64,7 +64,6 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <param name="eventData"></param>
         public void OnInputChanged(InputEventData<Vector2> eventData)
         {
-#if !UNITY_EDITOR
             if (manipulationData == null || (eventData.SourceId != manipulationData.Pointer.Controller?.InputSource.SourceId))
                 return;
 
@@ -85,6 +84,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
             lastTouchPosition = eventData.InputData;
             lastTouchTime = eventData.EventTime;
+
+#if !UNITY_EDITOR
             onScrollCallBack?.Invoke(finalDelta); // Dont forget to multiply with Time.delta and the velocity vector(ScrollSensitivity) at callback side
 #else
             onScrollCallBack?.Invoke(UnityEngine.Input.mouseScrollDelta.y);
