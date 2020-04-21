@@ -351,7 +351,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private void AddTouchpadEventListner(ManipulationEventData data)
         {
             manipulationZOffset = 0;
-            TouchpadPositionListener.Instance.RegisterScrollCallback(zAxisOffsetVelocity, data, (scrollDelta) => { manipulationZOffset += scrollDelta; });
+            TouchpadPositionListener.Instance.RegisterScrollCallback(data, (scrollDelta) => { manipulationZOffset += scrollDelta*Time.deltaTime*zAxisOffsetVelocity; });
         }
 
         private void RemoveTouchpadEventListner(ManipulationEventData data)
@@ -626,7 +626,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             MixedRealityPose hostPose = new MixedRealityPose(HostTransform.position, HostTransform.rotation);
             moveLogic.Setup(pointerPose, pointerData.GrabPoint, hostPose, HostTransform.localScale);            
         }
-
+       
         private void HandleOneHandMoveUpdated()
         {
             Debug.Assert(pointerIdToPointerMap.Count == 1);
@@ -644,9 +644,15 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             constraints.ApplyRotationConstraints(ref targetTransform, true, IsNearManipulation());
 
             RotateInOneHandType rotateInOneHandType = isNearManipulation ? oneHandRotationModeNear : oneHandRotationModeFar;
-            Vector3 offsetVector = pointer.Rotation * Vector3.forward * manipulationZOffset; // offsetvector from touch scroll 
-            MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position+offsetVector, pointer.Rotation);
+            MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position, pointer.Rotation);
             targetTransform.Position = moveLogic.Update(pointerPose, targetTransform.Rotation, targetTransform.Scale, rotateInOneHandType != RotateInOneHandType.RotateAboutObjectCenter);
+
+            if (enableZAxisOffset) // if z axis move enabled, 
+            {
+                Vector3 offsetVector = pointer.Rotation * Vector3.forward * manipulationZOffset; 
+                targetTransform.Position = targetTransform.Position + offsetVector;
+            } 
+
             constraints.ApplyTranslationConstraints(ref targetTransform, true, IsNearManipulation());
 
             ApplyTargetTransform(targetTransform);

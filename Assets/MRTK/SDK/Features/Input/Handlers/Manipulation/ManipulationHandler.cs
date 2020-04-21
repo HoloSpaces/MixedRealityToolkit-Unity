@@ -10,6 +10,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
+using Microsoft.MixedReality.Toolkit.Experimental.UI;
 
 namespace Microsoft.MixedReality.Toolkit.UI
 {
@@ -196,6 +197,14 @@ namespace Microsoft.MixedReality.Toolkit.UI
             set => smoothingAmountOneHandManip = value;
         }
 
+        [SerializeField]
+        [Tooltip("Condition if Z Axis Offset Transformation should be allowed.")]
+        private bool enableZAxisOffset = false;
+
+        [SerializeField]
+        [Tooltip("Factor for the velocity for a Z Axis Transformation.")]
+        private float zAxisOffsetVelocity = 0.5f;
+
         #endregion Serialized Fields
 
         #region Event handlers
@@ -300,6 +309,13 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private RotationAxisConstraint rotateConstraint;
         private MinMaxScaleConstraint scaleHandler;
 
+        private float manipulationZOffset = 0.0f; // This is is to support, object moveforwad/backward on touch interactions
+        public float ManipulationOffset
+        {
+            get => manipulationZOffset;
+            set => manipulationZOffset = value;
+        }
+
         #endregion
 
         #region MonoBehaviour Functions
@@ -327,10 +343,26 @@ namespace Microsoft.MixedReality.Toolkit.UI
             rotateConstraint.UseLocalSpaceForConstraint = useLocalSpaceForConstraint;
 
             scaleHandler = this.GetComponent<MinMaxScaleConstraint>();
+
+            if (enableZAxisOffset)
+            {
+                OnManipulationStarted.AddListener(AddTouchpadEventListner);
+                OnManipulationEnded.AddListener(RemoveTouchpadEventListner);
+            }
         }
         #endregion MonoBehaviour Functions
 
-        #region Private Methods
+        #region Private Method
+        private void AddTouchpadEventListner(ManipulationEventData data)
+        {
+            manipulationZOffset = 0;
+            TouchpadPositionListener.Instance.RegisterScrollCallback(data, (scrollDelta) => { manipulationZOffset += scrollDelta * Time.deltaTime * zAxisOffsetVelocity; });
+        }
+
+        private void RemoveTouchpadEventListner(ManipulationEventData data)
+        {
+            TouchpadPositionListener.Instance.UnRegisterScrollCallback();
+        }
         private Vector3 GetPointersCentroid()
         {
             Vector3 sum = Vector3.zero;
@@ -729,9 +761,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
             MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position, pointer.Rotation);
             targetTransform.Position = moveLogic.Update(pointerPose, targetTransform.Rotation, targetTransform.Scale, rotateInOneHandType != RotateInOneHandType.RotateAboutObjectCenter);
-            if (constraintOnMovement == MovementConstraintType.FixDistanceFromHead && moveConstraint != null)
+            if (enableZAxisOffset) // if z axis move enabled, 
             {
-                moveConstraint.ApplyConstraint(ref targetTransform);
+                Vector3 offsetVector = pointer.Rotation * Vector3.forward * manipulationZOffset;
+                targetTransform.Position = targetTransform.Position + offsetVector;
             }
 
             float lerpAmount = GetLerpAmount();
