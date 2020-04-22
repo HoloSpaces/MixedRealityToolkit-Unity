@@ -810,6 +810,15 @@ namespace Microsoft.MixedReality.Toolkit.UI
             }
         }
 
+        [Header("Relative Handle Scale")]
+        [SerializeField]
+        [Tooltip("enables relative scaling of handles")]
+        private bool relativeHandleScaleActive = false;
+        [SerializeField]
+        private float minHandleScale = 1.0f;
+        [SerializeField]
+        private float maxHandleScale = 2.0f;
+
         [Header("Proximity")]
         [SerializeField]
         [Tooltip("Determines whether proximity feature (scaling and material toggling) for bounding box handles is activated")]
@@ -2184,9 +2193,15 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 rigRoot.position = Vector3.zero;
                 rigRoot.localScale = Vector3.one;
 
+                Vector3 boxScale = boxDisplay != null? boxDisplay.transform.localScale: Vector3.one;
+                float relativeScale = (boxScale.x + boxScale.y + boxScale.z) / 3.0f;
+                relativeScale = Mathf.Clamp(relativeScale, minHandleScale, maxHandleScale);
+
                 for (int i = 0; i < corners.Count; ++i)
                 {
                     corners[i].position = boundsCorners[i];
+                    if (relativeHandleScaleActive) corners[i].transform.localScale = new Vector3(relativeScale, relativeScale, relativeScale);
+
                 }
 
                 Vector3 rootScale = rigRoot.lossyScale;
@@ -2216,12 +2231,15 @@ namespace Microsoft.MixedReality.Toolkit.UI
                             links[i].localScale = new Vector3(wireframeEdgeRadius, linkDimensions.z, wireframeEdgeRadius);
                         }
                     }
+
+                    if (relativeHandleScaleActive) balls[i].transform.localScale = new Vector3(relativeScale, relativeScale, relativeScale);       
                 }
 
                 if (boxDisplay != null)
                 {
                     // Compute the local scale that produces the desired world space size
                     boxDisplay.transform.localScale = Vector3.Scale(GetBoxDisplayScale(), invRootScale);
+                 
                 }
 
                 // move rig into position and rotation
