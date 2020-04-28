@@ -176,7 +176,8 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
                 {
                     // rwr TODO: this only occurs on the selected InputField of the Keyboard
                     // the selectedObject gets deselected and is recognized as a button up by the UnityInput System - gets set to 1 on true release on joystick
-                    if (EventSystem.current.currentSelectedGameObject != null) EventSystem.current.SetSelectedGameObject(null);
+                    EventSystem currentEventSystem = EventSystem.current;
+                    if (currentEventSystem.currentSelectedGameObject != null) currentEventSystem.SetSelectedGameObject(null);
 
                     // Raise input system event if it's enabled
                     if (interactionMapping.BoolData)
