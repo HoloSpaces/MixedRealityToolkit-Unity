@@ -2,7 +2,9 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Microsoft.MixedReality.Toolkit.Utilities;
+using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UInput = UnityEngine.Input;
 
 namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
@@ -172,6 +174,10 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
                 // If our value changed raise it.
                 if (interactionMapping.Changed)
                 {
+                    // rwr TODO: this only occurs on the selected InputField of the Keyboard
+                    // the selectedObject gets deselected and is recognized as a button up by the UnityInput System - gets set to 1 on true release on joystick
+                    if (EventSystem.current.currentSelectedGameObject != null) EventSystem.current.SetSelectedGameObject(null);
+
                     // Raise input system event if it's enabled
                     if (interactionMapping.BoolData)
                     {
