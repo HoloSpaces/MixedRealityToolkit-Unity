@@ -146,7 +146,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 stateUpdate = StartCoroutine(UpdateState());
             }
 #else
-            if (nonNativeKeyboard == null || nonNativeKeyboard.Equals(null))
+            if (nonNativeKeyboard.IsNull())
             {
                 IKeyboardService service = null;
                 if (MixedRealityServiceRegistry.TryGetService<IKeyboardService>(out service))

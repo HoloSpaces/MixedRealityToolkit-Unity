@@ -60,8 +60,7 @@ namespace HoloSpaces.Extensions
         public void OnSourceLost(SourceStateEventData eventData)
         {
             if (eventData.InputSource.SourceType == InputSourceType.Controller &&
-                eventData.Controller != null && !eventData.Controller.Equals(null) &&
-                eventData.Controller.Visualizer != null && !eventData.Controller.Visualizer.Equals(null))
+                !eventData.Controller.IsNull() && !eventData.Controller.Visualizer.IsNull())
                 controllerVisuals.Remove(eventData.Controller.Visualizer.GameObjectProxy);
         }
     }

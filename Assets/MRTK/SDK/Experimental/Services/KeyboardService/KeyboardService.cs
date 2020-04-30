@@ -32,7 +32,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
 		public INonNativeKeyboard GetKeyboardInstance()
 		{
-			if (keyboardInstance == null || keyboardInstance.Equals(null))
+			if (keyboardInstance.IsNull())
 			{
 				GameObject keyboarObject = Object.Instantiate(keyboardServiceProfile.nonNativeKeyboardPrefab, Vector3.zero, Quaternion.identity);
 				Object.DontDestroyOnLoad(keyboarObject); // persistant across the app
