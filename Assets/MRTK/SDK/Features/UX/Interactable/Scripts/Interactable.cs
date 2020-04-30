@@ -284,11 +284,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// </summary>
         public UnityEvent OnClick = new UnityEvent();
 
-        /// <summary>
-        /// OnClick Including the pointer that clickec
-        /// </summary>
-        public PointerInterfaceUnityEvent OnPointerClick = new PointerInterfaceUnityEvent();
-
         [SerializeField]
         private List<InteractableEvent> Events = new List<InteractableEvent>();
         /// <summary>
@@ -1234,7 +1229,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// <summary>
         /// A public way to trigger or route an onClick event from an external source, like PressableButton
         /// </summary>
-        public void TriggerOnClick(IMixedRealityPointer pointer = null)
+        public void TriggerOnClick()
         {
             if (!IsEnabled)
             {
@@ -1243,7 +1238,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
             IncreaseDimension();
 
-            SendOnClick(pointer);
+            SendOnClick(null);
 
             IsVisited = true;
         }
@@ -1254,7 +1249,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
         protected void SendOnClick(IMixedRealityPointer pointer)
         {
             OnClick.Invoke();
-            OnPointerClick.Invoke(pointer);
             ClickCount++;
 
             for (int i = 0; i < InteractableEvents.Count; i++)
