@@ -2239,7 +2239,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             if (shouldSwallowEvents)
             {
                 //Prevents the handled event from PointerUp to continue propagating
-                eventData.Use();
+                if (isDragging) eventData.Use();
                 shouldSwallowEvents = false;
             }
         }
