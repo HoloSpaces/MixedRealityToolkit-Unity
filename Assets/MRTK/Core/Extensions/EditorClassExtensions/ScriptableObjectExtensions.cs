@@ -62,6 +62,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             for (int i = 0; i < guids.Length; i++)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                if (Application.isBatchMode)
+                    Debug.Log($"Trying to load {typeof(T).Name} at {path}");
                 instances[i] = AssetDatabase.LoadAssetAtPath<T>(path);
             }
 
