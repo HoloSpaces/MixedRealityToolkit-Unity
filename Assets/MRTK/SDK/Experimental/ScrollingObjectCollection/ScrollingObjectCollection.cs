@@ -679,6 +679,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 scrollContainer.transform.localPosition = Vector3.zero;
                 scrollContainer.transform.localRotation = Quaternion.identity;
             }
+            else scrollContainer.transform.localPosition = Vector3.zero;
         }
 
         private void SetUpClippingPrimitive()
