@@ -143,7 +143,6 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
             // If our value changed raise it.
             if (interactionMapping.Changed)
             {
-                Debug.Log($"Interaction changed in GenericJoystickController {interactionMapping.InputType} {interactionMapping.BoolData}");
                 // Raise input system event if it's enabled
                 if (interactionMapping.BoolData)
                 {
