@@ -306,7 +306,13 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private bool isManipulationStarted;
 
         private Rigidbody rigidBody;
+        private bool useRigidBody = true;
         private bool wasKinematic = false;
+
+        public bool UseRigidBody
+        {
+            set => useRigidBody = value;
+        }
 
         private ConstraintManager constraints;
 
@@ -335,7 +341,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private void Start()
         {
             rigidBody = HostTransform.GetComponent<Rigidbody>();
-
+            if(rigidBody == null) useRigidBody = false;
+            
             if (enableZAxisOffset)
             {
                 OnManipulationStarted.AddListener(AddTouchpadEventListner);
@@ -677,7 +684,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 });
             }
 
-            if (rigidBody != null)
+            if (rigidBody != null && useRigidBody)
             {
                 wasKinematic = rigidBody.isKinematic;
                 rigidBody.isKinematic = false;
@@ -719,7 +726,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         private void ApplyTargetTransform(MixedRealityTransform targetTransform)
         {
-            if (rigidBody == null)
+            if (rigidBody != null && !useRigidBody)
             {
                 HostTransform.position = SmoothTo(HostTransform.position, targetTransform.Position, moveLerpTime);
                 HostTransform.rotation = SmoothTo(HostTransform.rotation, targetTransform.Rotation, rotateLerpTime);
@@ -801,7 +808,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         private void ReleaseRigidBody(Vector3 velocity, Vector3 angularVelocity)
         {
-            if (rigidBody != null)
+            if (rigidBody != null && useRigidBody)
             {
                 rigidBody.isKinematic = wasKinematic;
 
