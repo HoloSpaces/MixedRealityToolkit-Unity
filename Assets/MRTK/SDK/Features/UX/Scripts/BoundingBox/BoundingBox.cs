@@ -2246,6 +2246,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 rigRoot.position = TargetBounds.bounds.center;
                 rigRoot.rotation = Target.transform.rotation;
                 rigRoot.parent = Target.transform;
+                rigRoot.localPosition = Vector3.zero;
             }
         }
 
