@@ -101,6 +101,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         public bool SubmitOnEnter = true;
 
         /// <summary>
+        /// Bool for toggling if we close on submit or not
+        /// </summary>
+        public bool CloseOnSubmit = true;
+
+        /// <summary>
         /// The panel that contains the alpha keys.
         /// </summary>
         public Image AlphaKeyboard = null;
@@ -788,7 +793,8 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                     OnTextSubmitted(this, EventArgs.Empty);
                 }
 
-                Close();
+                if (CloseOnSubmit)
+                    Close();
             }
             else
             {
