@@ -13,7 +13,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 	public class KeyboardService : BaseExtensionService, IKeyboardService, IMixedRealityExtensionService
 	{
 		private KeyboardServiceProfile keyboardServiceProfile;
-		private INonNativeKeyboard keyboardInstance;
+		private NonNativeKeyboard keyboardInstance;
 
 		public KeyboardService(string name,  uint priority,  BaseMixedRealityProfile profile) : base(name, priority, profile) 
 		{
@@ -30,13 +30,17 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 			base.Update();
 		}
 
-		public INonNativeKeyboard GetKeyboardInstance()
+		public NonNativeKeyboard GetKeyboardInstance()
 		{
 			if (keyboardInstance.IsNull())
 			{
-				GameObject keyboarObject = Object.Instantiate(keyboardServiceProfile.nonNativeKeyboardPrefab, Vector3.zero, Quaternion.identity);
-				Object.DontDestroyOnLoad(keyboarObject); // persistant across the app
-				keyboardInstance = keyboarObject.GetComponent<INonNativeKeyboard>();
+				GameObject keyboardObject = Object.Instantiate(keyboardServiceProfile.nonNativeKeyboardPrefab, Vector3.zero, Quaternion.identity);
+				Object.DontDestroyOnLoad(keyboardObject); // persistant across the app
+
+				keyboardInstance = keyboardObject.GetComponent<NonNativeKeyboard>();
+				keyboardInstance.SliderEnabled = false;
+				keyboardInstance.CloseOnSubmit = false;
+				keyboardInstance.CloseOnInactivity = false;
 
 				Debug.Log("creating new keyboad");
 			}
