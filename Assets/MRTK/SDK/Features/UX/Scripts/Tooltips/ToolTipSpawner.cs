@@ -115,7 +115,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                         pivotMode = connector.PivotMode;
                         manualPivotDirection = connector.ManualPivotDirection;
                         manualPivotLocalPosition = connector.ManualPivotLocalPosition;
-                        pivotDistance = connector.PivotDistance; 
+                        pivotDistance = connector.PivotDistance;
                         break;
                 }
 

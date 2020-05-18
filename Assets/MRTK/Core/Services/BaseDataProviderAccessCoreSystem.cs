@@ -1,14 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System.Collections.Generic;
-using UnityEngine;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
+using System.Collections.Generic;
+using Unity.Profiling;
+using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit
 {
@@ -23,7 +20,7 @@ namespace Microsoft.MixedReality.Toolkit
         {
             base.Reset();
 
-            foreach(var provider in dataProviders)
+            foreach (var provider in dataProviders)
             {
                 provider.Reset();
             }
@@ -40,25 +37,35 @@ namespace Microsoft.MixedReality.Toolkit
             }
         }
 
+        private static readonly ProfilerMarker UpdatePerfMarker = new ProfilerMarker("[MRTK] BaseDataProviderAccessCoreSystem.Update");
+
         /// <inheritdoc />
         public override void Update()
         {
-            base.Update();
-
-            foreach (var provider in dataProviders)
+            using (UpdatePerfMarker.Auto())
             {
-                provider.Update();
+                base.Update();
+
+                foreach (var provider in dataProviders)
+                {
+                    provider.Update();
+                }
             }
         }
+
+        private static readonly ProfilerMarker LateUpdatePerfMarker = new ProfilerMarker("[MRTK] BaseDataProviderAccessCoreSystem.LateUpdate");
 
         /// <inheritdoc />
         public override void LateUpdate()
         {
-            base.LateUpdate();
-
-            foreach (var provider in dataProviders)
+            using (LateUpdatePerfMarker.Auto())
             {
-                provider.LateUpdate();
+                base.LateUpdate();
+
+                foreach (var provider in dataProviders)
+                {
+                    provider.LateUpdate();
+                }
             }
         }
 

@@ -253,22 +253,22 @@ namespace Microsoft.MixedReality.Toolkit.UI
         }
 
         [SerializeField]
-        [Obsolete("Use a TransformScaleHandler script rather than setting minimum on BoundingBox directly", false)]
+        [Obsolete("Use a MinMaxScaleConstraint script rather than setting minimum on BoundingBox directly", false)]
         [Tooltip("Minimum scaling allowed relative to the initial size")]
         private float scaleMinimum = 0.2f;
 
         [SerializeField]
-        [Obsolete("Use a TransformScaleHandler script rather than setting maximum on BoundingBox directly")]
+        [Obsolete("Use a MinMaxScaleConstraint script rather than setting maximum on BoundingBox directly")]
         [Tooltip("Maximum scaling allowed relative to the initial size")]
         private float scaleMaximum = 2.0f;
 
 
         /// <summary>
-        /// Deprecated: Use TransformScaleHandler component instead.
+        /// Deprecated: Use <see cref="Microsoft.MixedReality.Toolkit.UI.MinMaxScaleConstraint"/> component instead.
         /// Public property for the scale minimum, in the target's local scale.
         /// Set this value with SetScaleLimits.
         /// </summary>
-        [Obsolete("Use a TransformScaleHandler.ScaleMinimum as it is the authoritative value for min scale")]
+        [Obsolete("Use a MinMaxScaleConstraint. ScaleMinimum as it is the authoritative value for min scale")]
         public float ScaleMinimum
         {
             get
@@ -282,11 +282,11 @@ namespace Microsoft.MixedReality.Toolkit.UI
         }
 
         /// <summary>
-        /// Deprecated: Use TransformScaleHandler component instead.
+        /// Deprecated: Use <see cref="Microsoft.MixedReality.Toolkit.UI.MinMaxScaleConstraint"/> component instead.
         /// Public property for the scale maximum, in the target's local scale.
         /// Set this value with SetScaleLimits.
         /// </summary>
-        [Obsolete("Use a TransformScaleHandler.ScaleMinimum as it is the authoritative value for max scale")]
+        [Obsolete("Use a MinMaxScaleConstraint component instead. ScaleMinimum as it is the authoritative value for max scale")]
         public float ScaleMaximum
         {
             get
@@ -1148,7 +1148,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private List<Handle> handles;
 
         private List<Transform> corners;
-
         /// <summary>
         /// Returns list of transforms pointing to the scale handles of the bounding box.
         /// </summary>
@@ -1175,7 +1174,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// <summary>
         /// Allows to manually enable wire (edge) highlighting (edges) of the bounding box.
         /// This is useful if connected to the Manipulation events of a
-        /// <see cref="Microsoft.MixedReality.Toolkit.UI.ManipulationHandler"/> 
+        /// <see cref="Microsoft.MixedReality.Toolkit.UI.ObjectManipulator"/> 
         /// when used in conjunction with this MonoBehavior.
         /// </summary>
         public void HighlightWires()
@@ -1194,7 +1193,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// <param name="min">Minimum scale</param>
         /// <param name="max">Maximum scale</param>
         /// <param name="relativeToInitialState">If true the values will be multiplied by scale of target at startup. If false they will be in absolute local scale.</param>
-        [Obsolete("Use a TransformScaleHandler script rather than setting min/max scale on BoundingBox directly")]
+        [Obsolete("Use a MinMaxScaleConstraint script rather than setting min/max scale on BoundingBox directly")]
         public void SetScaleLimits(float min, float max, bool relativeToInitialState = true)
         {
             scaleMinimum = min;
@@ -1246,7 +1245,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             }
             else if (activation == BoundingBoxActivationType.ActivateManually)
             {
-                //activate to create handles etc. then deactivate. 
+                // Activate to create handles etc. then deactivate. 
                 Active = true;
                 Active = false;
             }
@@ -1643,7 +1642,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
 
                 AddComponentsToAffordance(midpoint, bounds, rotationHandlePrefabColliderType, CursorContextInfo.CursorAction.Rotate, rotateHandleColliderPadding);
-
                 balls.Add(midpoint.transform);
 
                 handles.Add(new Handle()
@@ -1688,7 +1686,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                         link.transform.localScale = new Vector3(wireframeEdgeRadius, linkDimensions.z, wireframeEdgeRadius);
                         link.transform.Rotate(new Vector3(90.0f, 0.0f, 0.0f));
                     }
-                    else//X
+                    else // edgeAxes[i] == CardinalAxisType.X
                     {
                         link.transform.localScale = new Vector3(wireframeEdgeRadius, linkDimensions.x, wireframeEdgeRadius);
                         link.transform.Rotate(new Vector3(0.0f, 0.0f, 90.0f));
@@ -1930,7 +1928,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void SetMaterials()
         {
-            //ensure materials
+            // Ensure materials
             if (wireframeMaterial == null)
             {
                 float[] color = { 1.0f, 1.0f, 1.0f, 0.75f };
@@ -2058,7 +2056,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
             bool isVisible;
 
-            //set balls visibility
+            // Set balls visibility
             if (balls != null)
             {
                 isVisible = (active == true && wireframeOnly == false);
@@ -2069,7 +2067,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
             }
 
-            //set link visibility
+            // Set link visibility
             if (links != null)
             {
                 isVisible = active == true;
@@ -2082,14 +2080,14 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
             }
 
-            //set box display visibility
+            // Set box display visibility
             if (boxDisplay != null)
             {
                 boxDisplay.SetActive(active);
                 ApplyMaterialToAllRenderers(boxDisplay, boxMaterial);
             }
 
-            //set corner visibility
+            // Set corner visibility
             if (corners != null)
             {
                 isVisible = (active == true && wireframeOnly == false && showScaleHandles == true);
@@ -2106,7 +2104,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void SetHighlighted(Transform activeHandle)
         {
-            //turn off all balls
+            // Turn off all balls
             if (balls != null)
             {
                 for (int i = 0; i < balls.Count; ++i)
@@ -2122,7 +2120,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
             }
 
-            //turn off all corners
+            // Turn off all corners
             if (corners != null)
             {
                 for (int i = 0; i < corners.Count; ++i)
@@ -2138,7 +2136,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
             }
 
-            //update the box material to the grabbed material
+            // Update the box material to the grabbed material
             if (boxDisplay != null)
             {
                 ApplyMaterialToAllRenderers(boxDisplay, boxGrabbedMaterial);
@@ -2226,7 +2224,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                         {
                             links[i].localScale = new Vector3(wireframeEdgeRadius, linkDimensions.y, wireframeEdgeRadius);
                         }
-                        else//Z
+                        else // edgeAxes[i] == CardinalAxisType.Z
                         {
                             links[i].localScale = new Vector3(wireframeEdgeRadius, linkDimensions.z, wireframeEdgeRadius);
                         }
@@ -2252,7 +2250,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void HandleProximityScaling()
         {
-            //only use proximity effect if nothing is being dragged or grabbed
+            // Only use proximity effect if nothing is being dragged or grabbed
             if (currentPointer == null)
             {
                 proximityPointers.Clear();
@@ -2269,11 +2267,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
                         }
                     }
                 }
-
-                // Get the max radius possible of our current bounds plus the proximity
-                float maxRadius = Mathf.Max(Mathf.Max(currentBoundsExtents.x, currentBoundsExtents.y), currentBoundsExtents.z);
-                maxRadius *= maxRadius;
-                maxRadius += handleCloseProximity + handleMediumProximity;
+                
+                // Get the max radius possible of our current bounds and extent the range to include proximity scaled objects. This is done by adjusting the original bounds to include the ObjectMediumProximity range in x, y and z axis
+                float maxRadius = currentBoundsExtents.sqrMagnitude + (3 * handleMediumProximity * handleMediumProximity);
 
                 // Grab points within sphere of influence from valid pointers
                 foreach (var pointer in proximityPointers)
@@ -2284,7 +2280,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
                     }
 
                     Vector3? point = pointer.Result?.Details.Point;
-
                     if (point.HasValue && IsPointWithinBounds(point.Value, maxRadius))
                     {
                         proximityPoints.Add(pointer.Result.Details.Point);
@@ -2392,7 +2387,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsPointWithinBounds(Vector3 point, float radiusSqr)
         {
-            return (transform.position - point).sqrMagnitude < radiusSqr;
+            return (Vector3.Scale(TargetBounds.center, TargetBounds.gameObject.transform.lossyScale) + transform.position - point).sqrMagnitude < radiusSqr;
         }
 
         /// <summary>

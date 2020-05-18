@@ -33,7 +33,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         public static readonly GUIStyle TitleFoldoutStyle =
           new GUIStyle(EditorStyles.foldout)
           {
-              //fontStyle = FontStyle.,
               fontSize = InspectorUIUtility.TitleFontSize,
           };
 
@@ -43,17 +42,17 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         public static readonly GUIStyle ControllerButtonStyle = new GUIStyle("LargeButton")
         {
             imagePosition = ImagePosition.ImageAbove,
-                    fontStyle = FontStyle.Bold,
-                    stretchHeight = true,
-                    stretchWidth = true,
-                    wordWrap = true,
-                    fontSize = 10,
+            fontStyle = FontStyle.Bold,
+            stretchHeight = true,
+            stretchWidth = true,
+            wordWrap = true,
+            fontSize = 10,
         };
 
         /// <summary>
         /// Default style for bold large font size title
         /// </summary>
-        public static readonly GUIStyle BoldLargeTitleStyle = new GUIStyle()
+        public static readonly GUIStyle BoldLargeTitleStyle = new GUIStyle(EditorStyles.largeLabel)
         {
             fontSize = InspectorUIUtility.TitleFontSize,
             fontStyle = FontStyle.Bold,

@@ -20,13 +20,15 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         private SerializedProperty cellWidth;
         private SerializedProperty cellHeight;
         private SerializedProperty anchor;
-        GridObjectCollection collection;
+        private SerializedProperty anchorAlongAxis;
+        private SerializedProperty rowAlignment;
+        private SerializedProperty columnAlignment;
+
 
         protected override void OnEnable()
         {
             base.OnEnable();
             useAutoUpdate = true;
-            collection = (GridObjectCollection)target;
             surfaceType = serializedObject.FindProperty("surfaceType");
             orientType = serializedObject.FindProperty("orientType");
             layout = serializedObject.FindProperty("layout");
@@ -38,6 +40,9 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             cellWidth = serializedObject.FindProperty("cellWidth");
             cellHeight = serializedObject.FindProperty("cellHeight");
             anchor = serializedObject.FindProperty("anchor");
+            anchorAlongAxis = serializedObject.FindProperty("anchorAlongAxis");
+            rowAlignment = serializedObject.FindProperty("rowAlignment");
+            columnAlignment = serializedObject.FindProperty("columnAlignment");
         }
 
         protected override void OnInspectorGUIInsertion()
@@ -51,11 +56,13 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             {
                 EditorGUILayout.HelpBox("ColumnThenRow will lay out content first horizontally (by column), then vertically (by row). NumColumns specifies number of columns per row.", MessageType.Info);
                 EditorGUILayout.PropertyField(cols, new GUIContent("Num Columns", "Number of columns per row."));
+                EditorGUILayout.PropertyField(columnAlignment);
             }
             else if (layoutTypeIndex == LayoutOrder.RowThenColumn)
             {
                 EditorGUILayout.HelpBox("RowThenColumns will lay out content first vertically (by row), then horizontally (by column). NumRows specifies number of rows per column.", MessageType.Info);
                 EditorGUILayout.PropertyField(rows, new GUIContent("Num Rows", "Number of rows per column."));
+                EditorGUILayout.PropertyField(rowAlignment);
             }
             else
             {
@@ -88,8 +95,11 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                 EditorGUILayout.PropertyField(anchor);
             }
 
-            if (serializedObject.ApplyModifiedProperties())
-                collection.UpdateCollection();
+            LayoutAnchor layoutAnchor = (LayoutAnchor)anchor.enumValueIndex;
+            if (layoutAnchor != LayoutAnchor.MiddleCenter)
+            {
+                EditorGUILayout.PropertyField(anchorAlongAxis);
+            }
         }
     }
 }

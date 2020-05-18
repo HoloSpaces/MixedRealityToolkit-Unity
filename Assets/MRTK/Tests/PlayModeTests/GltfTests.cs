@@ -14,9 +14,10 @@ using Microsoft.MixedReality.Toolkit.Utilities.Gltf.Schema;
 using Microsoft.MixedReality.Toolkit.Utilities.Gltf.Serialization;
 using NUnit.Framework;
 using System.Collections;
-using System.IO;
 using System.Threading.Tasks;
+using Microsoft.MixedReality.Toolkit.Utilities;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace Microsoft.MixedReality.Toolkit.Tests
@@ -24,7 +25,23 @@ namespace Microsoft.MixedReality.Toolkit.Tests
     public class GltfTests
     {
         private const string AvocadoCustomAttrGuid = "fea29429b97dbb14b97820f56c74060a";
+        private const string CubeCustomAttrGuid = "f0bb9fb635c69be4e8526b0fb6b48f39";
+        
+        private AsyncCoroutineRunner asyncCoroutineRunner;
+        [SetUp]
+        public void Setup()
+        {
+            PlayModeTestUtilities.Setup();
+            asyncCoroutineRunner = new GameObject("AsyncCoroutineRunner").AddComponent<AsyncCoroutineRunner>();
+        }
 
+        [TearDown]
+        public void TearDown()
+        {
+            PlayModeTestUtilities.TearDown();
+            GameObject.Destroy(asyncCoroutineRunner.gameObject);
+        }
+        
         private IEnumerator WaitForTask(Task task)
         {
             while (!task.IsCompleted) { yield return null; }
@@ -32,6 +49,7 @@ namespace Microsoft.MixedReality.Toolkit.Tests
             yield return null;
         }
 
+        #region Tests
         /// <summary>
         /// Performs basic check that a glTF loads and contains data
         /// </summary>
@@ -82,7 +100,33 @@ namespace Microsoft.MixedReality.Toolkit.Tests
             int temperature = gltfObject.accessors[temperatureIdx].count;
             Assert.AreEqual(100, temperature);
         }
+        
+        [UnityTest]
+        public IEnumerator TestGltfCustomAttributesData()
+        {
+            // Load glTF
+            string path = AssetDatabase.GUIDToAssetPath(CubeCustomAttrGuid);
+            var task = GltfUtility.ImportGltfObjectFromPathAsync(path);
 
+            yield return WaitForTask(task);
+
+            GltfObject gltfObject = task.Result;
+
+            yield return null;
+
+            // Check for custom vertex data is a list of 10s
+            gltfObject.meshes[0].primitives[0].Attributes.TryGetValue("_CUSTOM_ATTR", out var customAttrIdx);
+
+            GltfAccessor accessor = gltfObject.GetAccessor(customAttrIdx);
+            var intArray = accessor.GetIntArray(false);
+
+            foreach (var item in intArray)
+            {
+                Assert.AreEqual(10, item);
+            }
+        }
+        #endregion
+        
     }
 }
 #endif

@@ -97,6 +97,41 @@ function CheckEmptyDoccomment {
 
 <#
 .SYNOPSIS
+    Checks if the given file (at the given line number) contains a comment of the type:
+    //This comment doesn't have a space between // and This.
+    There should be a space between // and the comment.
+#>
+function CheckSpacelessComments {
+    [CmdletBinding()]
+    param(
+        [string]$FileName,
+        [string[]]$FileContent,
+        [int]$LineNumber
+    )
+    process {
+        $hasIssue = $false
+
+        # This regex looks for any non doccomment (i.e. //, not ///) where there isn't
+        # a space after the //.
+        # Explanation of the stuff inside the regex:
+        # \s      - matches a space, to ensure that we don't capture cases like https://
+        # //      - matches '//'
+        # [^\s//] - matches a single character that is not a whitespace character and also
+        #           not the '/' character (because doccomments like /// <summary> would
+        #           otherwise get matched).
+        $matcher = "\s//[^\s//]"
+        if ($FileContent[$LineNumber] -match $matcher) {
+            Write-Host "Comment in $FileName at line $LineNumber is missing a space after '//'"
+            Write-Host $FileContent[$LineNumber]
+            $hasIssue = $true
+        }
+        
+        $hasIssue
+    }
+}
+
+<#
+.SYNOPSIS
     Checks if the given file (at the given line number) contains a reference to Camera.main
     Returns true if such a reference exists.
 #>
@@ -293,6 +328,24 @@ function CheckForAssemblyInfo {
     }
 }
 
+<#
+.SYNOPSIS
+    Returns true if the given line is a namespace declaration
+#>
+function IsNamespace {
+    [CmdletBinding()]
+    param(
+        [string]$Line
+    )
+    process {
+        if (($Line -match "^namespace\sMicrosoft\.MixedReality\.Toolkit") -or
+            ($Line -match "^namespace\sMicrosoft\.Windows\.MixedReality")) {
+            $true;
+        }
+        $false;
+    }
+}
+
 function CheckScript {
     [CmdletBinding()]
     param(
@@ -304,6 +357,7 @@ function CheckScript {
         # repeatedly running this script, discovering a single issue, fixing it, and then
         # re-running the script
         $containsIssue = $false
+        $containsNamespaceDeclaration = $false;
         $fileContent = Get-Content $FileName
         for ($i = 0; $i -lt $fileContent.Length; $i++) {
             if (CheckBooLang $FileName $fileContent $i) {
@@ -315,6 +369,18 @@ function CheckScript {
             if (CheckMainCamera $FileName $fileContent $i) {
                 $containsIssue = $true
             }
+            if (CheckSpacelessComments $FileName $fileContent $i) {
+                $containsIssue = $true
+            }
+            $containsNamespaceDeclaration = $containsNamespaceDeclaration -or (IsNamespace $fileContent[$i])
+        }
+
+        # Only validate that there is a namespace declaration if it's not an AssemblyInfo.cs file.
+        # These do not contain namespace declarations.
+        if ((-not $containsNamespaceDeclaration) -and ($FileName -notmatch "AssemblyInfo.cs$"))
+        {
+            Write-Warning "$FileName is missing a namespace declaration (i.e. missing namespace Microsoft.MixedReality.Toolkit.*)"
+            $containsIssue = $true;
         }
 
         if (CheckHardcodedPath $FileName) {
