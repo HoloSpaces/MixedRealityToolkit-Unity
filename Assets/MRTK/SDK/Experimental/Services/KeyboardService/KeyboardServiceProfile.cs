@@ -1,7 +1,4 @@
-using System;
 using UnityEngine;
-using Microsoft.MixedReality.Toolkit;
-using Microsoft.MixedReality.Toolkit.Experimental.UI;
 
 namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 {
@@ -9,7 +6,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 	[CreateAssetMenu(fileName = "KeyboardServiceProfile", menuName = "MixedRealityToolkit/KeyboardService Configuration Profile")]
 	public class KeyboardServiceProfile : BaseMixedRealityProfile
 	{
-		public GameObject nonNativeKeyboardPrefab = default;
+		public HoloNonNativeKeyboard nonNativeKeyboardPrefab = default;
 		// Store config data in serialized fields
 	}
 }
