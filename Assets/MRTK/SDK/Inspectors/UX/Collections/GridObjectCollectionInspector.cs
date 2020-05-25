@@ -51,6 +51,8 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             EditorGUILayout.PropertyField(orientType);
             EditorGUILayout.PropertyField(layout);
 
+
+
             LayoutOrder layoutTypeIndex = (LayoutOrder) layout.enumValueIndex;
             if (layoutTypeIndex == LayoutOrder.ColumnThenRow)
             {
@@ -78,7 +80,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                 EditorGUILayout.PropertyField(cellHeight);
             }
 
-            ObjectOrientationSurfaceType surfaceTypeIndex = (ObjectOrientationSurfaceType) surfaceType.enumValueIndex;
+            ObjectOrientationSurfaceType surfaceTypeIndex = (ObjectOrientationSurfaceType)surfaceType.enumValueIndex;
             if (surfaceTypeIndex == ObjectOrientationSurfaceType.Plane)
             {
                 EditorGUILayout.PropertyField(distance, new GUIContent("Distance from parent", "Distance from parent object's origin"));

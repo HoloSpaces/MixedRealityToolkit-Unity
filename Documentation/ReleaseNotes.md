@@ -3,6 +3,7 @@
 - [What's new](#whats-new-in-240)
 - [Breaking changes](#breaking-changes-in-240)
 - [Updating guidance](Updating.md#upgrading-to-a-new-version-of-mrtk)
+- [Known issues](#known-issues-in-240)
 
 This release of the Microsoft Mixed Reality Toolkit supports the following devices and platforms.
 
@@ -14,6 +15,7 @@ This release of the Microsoft Mixed Reality Toolkit supports the following devic
 - Mobile AR via Unity AR Foundation
   - Android
   - iOS
+- Ultraleap Hand Tracking
 
 The following software is required.
 
@@ -29,7 +31,7 @@ If importing the [Mixed Reality Toolkit NuGet packages](MRTKNuGetPackage.md), th
 
 ### What's new in 2.4.0
 
-**Leap Motion Hand Tracking Support**
+**Ultraleap Hand Tracking Support**
 
 The [Leap Motion Data Provider](CrossPlatform/LeapMotionMRTK.md) enables articulated hand tracking for VR applications and is also useful for rapid prototyping in the editor.  The data provider can be configured to use the Leap Motion Controller mounted on a headset or placed on a desk face up.
 
@@ -212,3 +214,19 @@ For more information on these changes and complete instructions for eye tracking
 An issue exists where enabling MSBuild for Unity in 2019.3 may result in an infinite loop restoring packages ([#7239](https://github.com/microsoft/MixedRealityToolkit-Unity/issues/7239)). 
 
 As a workaround, the Microsoft.Windows.DotNetWinRT package can be imported using [NuGet for Unity](https://github.com/GlitchEnzo/NuGetForUnity/releases/latest).
+
+**Duplicate Assembly Version and Multiple Precompiled Assemblies Unity 2018.4** 
+
+If the platform is switched from Standalone to UWP and then back to Standalone in Unity 2018.4, the following errors might be in the console:
+
+```
+PrecompiledAssemblyException: Multiple precompiled assemblies with the same name Microsoft.Windows.MixedReality.DotNetWinRT.dll included for the current platform. Only one assembly with the same name is allowed per platform. Assembly paths
+```
+
+```
+Assets\MRTK\Examples\Demos\HandTracking\Scenes\Utilities\InspectorFields\AssemblyInfo.cs(6,12): error CS0579: Duplicate 'AssemblyVersion' attribute
+```
+
+These errors are due to issues in the deletion process with MSBuildForUnity.  To resolve the issue, while in Standalone, delete the Dependencies folder at the root of Assets and restart unity.
+
+For a more details see [Issue 7948](https://github.com/microsoft/MixedRealityToolkit-Unity/issues/7948).

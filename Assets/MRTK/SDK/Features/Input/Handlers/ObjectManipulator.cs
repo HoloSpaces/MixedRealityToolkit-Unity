@@ -71,7 +71,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             }
             set => hostTransform = value;
         }
-        
+
         [SerializeField]
         [EnumFlags]
         [Tooltip("Can manipulation be done only with one hand, only with two hands, or with both?")]
@@ -152,7 +152,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             get => releaseBehavior;
             set => releaseBehavior = value;
         }
-        
+
         [SerializeField]
         [Tooltip("Check to enable frame-rate independent smoothing.")]
         private bool smoothingActive = true;
@@ -274,7 +274,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         #endregion
 
         #region Private Properties
-        
+
         private ManipulationMoveLogic moveLogic;
         private TwoHandScaleLogic scaleLogic;
         private TwoHandRotateLogic rotateLogic;
@@ -475,7 +475,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// <inheritdoc />
         public void OnPointerDown(MixedRealityPointerEventData eventData)
         {
-            if (eventData.used || 
+            if (eventData.used ||
                 (!allowFarManipulation && eventData.Pointer as IMixedRealityNearPointer == null))
             {
                 return;
@@ -521,7 +521,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         }
 
         public void OnPointerDragged(MixedRealityPointerEventData eventData)
-        {                    
+        {
             // Call manipulation updated handlers
             if (IsOneHandedManipulationEnabled)
             {
@@ -631,7 +631,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
             MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position, pointer.Rotation);
             MixedRealityPose hostPose = new MixedRealityPose(HostTransform.position, HostTransform.rotation);
-            moveLogic.Setup(pointerPose, pointerData.GrabPoint, hostPose, HostTransform.localScale);            
+            moveLogic.Setup(pointerPose, pointerData.GrabPoint, hostPose, HostTransform.localScale);
         }
        
         private void HandleOneHandMoveUpdated()
@@ -689,7 +689,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 wasKinematic = rigidBody.isKinematic;
                 rigidBody.isKinematic = false;
             }
-            
+
             constraints.Initialize(new MixedRealityPose(HostTransform.position, HostTransform.rotation));
         }
 
@@ -707,9 +707,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
                     PointerCentroid = pointerGrabPoint,
                     PointerVelocity = pointerVelocity,
                     PointerAngularVelocity = pointerAnglularVelocity
-                }); 
+                });
             }
-            
+
             ReleaseRigidBody(pointerVelocity, pointerAnglularVelocity);
         }
 

@@ -22,7 +22,7 @@ namespace Microsoft.MixedReality.Toolkit.Boundary
         /// <param name="scale">The application's configured <see cref="Utilities.ExperienceScale"/>.</param>
         public MixedRealityBoundarySystem(
             MixedRealityBoundaryVisualizationProfile profile,
-            ExperienceScale scale) : base(profile, scale) { }        
+            ExperienceScale scale) : base(profile, scale) { }
 
         #region IMixedRealityService Implementation
 
@@ -35,10 +35,6 @@ namespace Microsoft.MixedReality.Toolkit.Boundary
             if (!Application.isPlaying || !XRDevice.isPresent) { return; }
 
             base.Initialize();
-
-#if !UNITY_ANDROID
-            UnityBoundary.visible = true;
-#endif
         }
 
         #endregion IMixedRealityService Implementation

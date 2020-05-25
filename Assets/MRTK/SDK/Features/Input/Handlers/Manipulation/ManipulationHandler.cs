@@ -68,7 +68,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             get => hostTransform;
             set => hostTransform = value;
         }
-        
+
         [SerializeField]
         [Tooltip("Can manipulation be done only with one hand, only with two hands, or with both?")]
         private HandMovementType manipulationType = HandMovementType.OneAndTwoHanded;
@@ -129,7 +129,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             get => releaseBehavior;
             set => releaseBehavior = value;
         }
-        
+
         [SerializeField]
         [Tooltip("Constrain rotation along an axis")]
         private RotationConstraintType constraintOnRotation = RotationConstraintType.None;
@@ -175,7 +175,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             get => constraintOnMovement;
             set => constraintOnMovement = value;
         }
-        
+
         [SerializeField]
         [Tooltip("Check to enable frame-rate independent smoothing. ")]
         private bool smoothingActive = true;
@@ -596,7 +596,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         }
 
         #endregion Public Methods
-            
+
         #region Hand Event Handlers
 
         /// <inheritdoc />
