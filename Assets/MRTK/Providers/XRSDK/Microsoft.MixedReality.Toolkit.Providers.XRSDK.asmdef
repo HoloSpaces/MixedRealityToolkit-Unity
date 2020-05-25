@@ -3,7 +3,6 @@
     "references": [
         "Microsoft.MixedReality.Toolkit",
         "Unity.XR.Management",
-        "Unity.XR.ARSubsystems",
         "UnityEngine.SpatialTracking"
     ],
     "includePlatforms": [],
@@ -20,11 +19,6 @@
             "name": "com.unity.xr.management",
             "expression": "",
             "define": "XR_MANAGEMENT_ENABLED"
-        },
-        {
-            "name": "com.unity.xr.arsubsystems",
-            "expression": "",
-            "define": "ARSUBSYSTEMS_ENABLED"
         },
         {
             "name": "com.unity.xr.legacyinputhelpers",
