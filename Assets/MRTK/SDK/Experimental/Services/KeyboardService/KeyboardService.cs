@@ -1,6 +1,5 @@
 using UnityEngine;
 using Microsoft.MixedReality.Toolkit.Utilities;
-using Microsoft.MixedReality.Toolkit;
 
 namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 {
@@ -20,28 +19,12 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 			keyboardServiceProfile = (KeyboardServiceProfile)profile;
 		}
 
-		public override void Initialize()
-		{
-			base.Initialize();
-		}
-
-		public override void Update()
-		{
-			base.Update();
-		}
-
 		public NonNativeKeyboard GetKeyboardInstance()
 		{
 			if (keyboardInstance.IsNull())
 			{
-				GameObject keyboardObject = Object.Instantiate(keyboardServiceProfile.nonNativeKeyboardPrefab, Vector3.zero, Quaternion.identity);
-				Object.DontDestroyOnLoad(keyboardObject); // persistant across the app
-
-				keyboardInstance = keyboardObject.GetComponent<NonNativeKeyboard>();
-				keyboardInstance.SliderEnabled = false;
-				keyboardInstance.CloseOnSubmit = false;
-				keyboardInstance.CloseOnInactivity = false;
-
+				keyboardInstance = Object.Instantiate(keyboardServiceProfile.nonNativeKeyboardPrefab, Vector3.zero, Quaternion.identity);
+				Object.DontDestroyOnLoad(keyboardInstance.gameObject); // persistant across the app
 				Debug.Log("creating new keyboad");
 			}
 
