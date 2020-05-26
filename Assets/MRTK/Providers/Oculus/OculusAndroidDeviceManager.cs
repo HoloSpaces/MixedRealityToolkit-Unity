@@ -110,9 +110,14 @@ namespace HoloSpaces.MixedReality.Input
             {
                 return SupportedControllerType.OculusGoRemote;
             }
-            else if(joystickName.StartsWith("Oculus Quest Controller"))
+            else if(joystickName.StartsWith("Oculus Touch Controller"))
             {
-                return SupportedControllerType.OculusQuestRemote;
+#if UNITY_ANDROID
+                if (OVRPlugin.GetSystemHeadsetType() == OVRPlugin.SystemHeadset.Oculus_Quest)
+                    return SupportedControllerType.OculusQuestRemote;
+                else
+#endif
+                    return SupportedControllerType.GenericAndroid;
             }
 
             Debug.Log($"{joystickName} does not have a defined controller type, falling back to generic controller type");
