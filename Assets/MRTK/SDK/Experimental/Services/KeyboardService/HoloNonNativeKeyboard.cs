@@ -24,7 +24,7 @@ public class HoloNonNativeKeyboard : NonNativeKeyboard
     IEnumerator AttachButtonEvents()
     {
         yield return null;
-        backspaceButton.onClick.AddListener(() => OnBackspace?.Invoke());
+        if(backspaceButton != null) backspaceButton.onClick.AddListener(() => OnBackspace?.Invoke());
     }
 
     string currentKeyboardText;
@@ -38,7 +38,7 @@ public class HoloNonNativeKeyboard : NonNativeKeyboard
             {
                 int changeAmount = currentKeyboardText == null ? text.Length : text.Length - currentKeyboardText.Length;
                 if (changeAmount == 1)
-                    OnCharacterEntered(text[text.Length - 1].ToString());
+                    OnCharacterEntered?.Invoke(text[text.Length - 1].ToString());
             }
         }
 
