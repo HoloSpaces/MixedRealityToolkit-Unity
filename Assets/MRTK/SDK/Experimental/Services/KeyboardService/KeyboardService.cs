@@ -30,6 +30,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 				Debug.Log("creating new keyboad");
 			}
 
+			keyboardInstance.Close(); // close it before returning the instance, so all prevous event references will be removed
 			return keyboardInstance;
 		}	
 	}
