@@ -12,14 +12,16 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 	public class KeyboardService : BaseExtensionService, IKeyboardService, IMixedRealityExtensionService
 	{
 		private KeyboardServiceProfile keyboardServiceProfile;
-		private NonNativeKeyboard keyboardInstance;
+		private HoloNonNativeKeyboard keyboardInstance;
 
 		public KeyboardService(string name,  uint priority,  BaseMixedRealityProfile profile) : base(name, priority, profile) 
 		{
 			keyboardServiceProfile = (KeyboardServiceProfile)profile;
 		}
 
-		public NonNativeKeyboard GetKeyboardInstance()
+		public static KeyboardService GetKeyboardServiceInstance() => MixedRealityServiceRegistry.TryGetService(out KeyboardService service) ? service : null;
+
+		public HoloNonNativeKeyboard GetKeyboardInstance()
 		{
 			if (keyboardInstance.IsNull())
 			{
