@@ -117,7 +117,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         {
             using (RefreshDevicesPerfMarker.Auto())
             {
-                var joystickNames = UInput.GetJoystickNames();
+                var joystickNames = GetConnectedJoystickNames();
 
                 if (joystickNames.Length <= 0)
                 {
@@ -167,6 +167,16 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         }
 
         private static readonly ProfilerMarker GetOrAddControllerPerfMarker = new ProfilerMarker("[MRTK] UnityJoystickManager.GetOrAddController");
+
+        /// <summary>
+        /// Gets all connected joysticks names.
+        /// </summary>
+        /// <returns>All connected joysticks names.</returns>
+        protected virtual String[] GetConnectedJoystickNames()
+        {
+            var joystickNames = UInput.GetJoystickNames();
+            return joystickNames;
+        }
 
         /// <summary>
         /// Gets or adds a controller using the joystick name provided.

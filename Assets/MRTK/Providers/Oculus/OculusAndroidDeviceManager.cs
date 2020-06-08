@@ -3,6 +3,7 @@
 
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Input.UnityInput;
@@ -34,10 +35,26 @@ namespace HoloSpaces.MixedReality.Input
 #region IMixedRealityCapabilityCheck Implementation
 
         public bool CheckCapability(MixedRealityCapability capability) => capability == MixedRealityCapability.MotionController;
-        
-#endregion IMixedRealityCapabilityCheck Implementation
+
+        #endregion IMixedRealityCapabilityCheck Implementation
 
         #region Controller Utilities
+
+        protected override String[] GetConnectedJoystickNames()
+        {
+            var  controllers = new List<UnityEngine.XR.InputDevice>();
+            var  desiredCharacteristics = UnityEngine.XR.InputDeviceCharacteristics.Controller;
+            UnityEngine.XR.InputDevices.GetDevicesWithCharacteristics(desiredCharacteristics, controllers);
+
+            string[] controllersNames = new string[controllers.Count];
+            for(int i = 0; i < controllers.Count; i++)
+            {
+                controllersNames[i] = controllers[i].name;
+                //Debug.Log(string.Format("Device name '{0}' has characteristics '{1}'", controllers[i].name, controllers[i].characteristics.ToString()));
+            }
+
+            return controllersNames;
+        }
 
         /// <inheritdoc />
         protected override GenericJoystickController GetOrAddController(string joystickName)
