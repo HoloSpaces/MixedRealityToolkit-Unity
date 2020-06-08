@@ -124,18 +124,9 @@ namespace HoloSpaces.MixedReality.Input
         protected override SupportedControllerType GetCurrentControllerType(string joystickName)
         {
             if (joystickName.StartsWith("Oculus Tracked Remote"))
-            {
                 return SupportedControllerType.OculusGoRemote;
-            }
             else if(joystickName.StartsWith("Oculus Touch Controller"))
-            {
-#if UNITY_ANDROID
-                if (OVRPlugin.GetSystemHeadsetType() == OVRPlugin.SystemHeadset.Oculus_Quest)
-                    return SupportedControllerType.OculusQuestRemote;
-                else
-#endif
-                    return SupportedControllerType.GenericAndroid;
-            }
+                return SupportedControllerType.OculusQuestRemote;
 
             Debug.Log($"{joystickName} does not have a defined controller type, falling back to generic controller type");
 
