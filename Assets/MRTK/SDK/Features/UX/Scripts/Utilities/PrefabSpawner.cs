@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Microsoft.MixedReality.Toolkit.Utilities;
+using Microsoft.MixedReality.Toolkit;
 
 namespace Microsoft.MixedReality.Toolkit.UI
 {
@@ -17,18 +18,20 @@ namespace Microsoft.MixedReality.Toolkit.UI
     BaseFocusHandler,
     IMixedRealityInputHandler,
     IMixedRealityInputHandler<float>
+{
+    private enum VanishType
     {
-        private enum VanishType
-        {
-            VanishOnFocusExit = 0,
-            VanishOnTap,
-        }
+        VanishOnFocusExit = 0,
+        VanishOnTap,
+        VanishOnGazeExit
+    }
 
-        private enum AppearType
-        {
-            AppearOnFocusEnter = 0,
-            AppearOnTap,
-        }
+    private enum AppearType
+    {
+        AppearOnFocusEnter = 0,
+        AppearOnTap,
+        AppearOnGazeEnter
+    }
 
         public enum RemainType
         {
@@ -71,34 +74,49 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private GameObject spawnable;
 
-        private async void ShowSpawnable()
+    private void Update()
+    {
+        if (appearType != AppearType.AppearOnGazeEnter) { return; }
+
+        if (HasGaze)
         {
-            await UpdateSpawnable(focusEnterTime, tappedTime);
+            HandleFocusEnter();
         }
-
-        private async Task UpdateSpawnable(float focusEnterTimeOnStart, float tappedTimeOnStart)
+        else
         {
-            if (appearType == AppearType.AppearOnFocusEnter)
-            {
-                if (spawnable == null)
-                {
-                    spawnable = Instantiate(prefab, transform, false);
-                    spawnable.transform.localPosition = Vector3.zero;
-                    if (!keepWorldRotation)
-                    {
-                        spawnable.transform.localRotation = Quaternion.identity;
-                    }
-                    spawnable.gameObject.SetActive(false);
-                }
-                // Wait for the appear delay
-                await new WaitForSeconds(appearDelay);
-                // If we don't have focus any more, get out of here
+            HandleFocusExit();
+        }
+    }
 
-                if (!HasFocus)
+    private async void ShowSpawnable()
+    {
+        await UpdateSpawnable(focusEnterTime, tappedTime);
+    }
+
+    private async Task UpdateSpawnable(float focusEnterTimeOnStart, float tappedTimeOnStart)
+    {
+        if (appearType != AppearType.AppearOnTap)
+        {
+            if (spawnable == null)
+            {
+                spawnable = Instantiate(prefab, transform, false);
+                spawnable.transform.localPosition = Vector3.zero;
+                if (!keepWorldRotation)
                 {
-                    return;
+                    spawnable.transform.localRotation = Quaternion.identity;
                 }
+                spawnable.gameObject.SetActive(false);
             }
+            // Wait for the appear delay
+            await new WaitForSeconds(appearDelay);
+            // If we don't have focus any more, get out of here
+
+            if (appearType == AppearType.AppearOnFocusEnter && !HasFocus ||
+                appearType == AppearType.AppearOnGazeEnter && !HasGaze)
+            {
+                return;
+            }
+        }
 
             spawnable.gameObject.SetActive(true);
 
@@ -117,13 +135,14 @@ namespace Microsoft.MixedReality.Toolkit.UI
                                 return;
                             }
 
-                            break;
-                        case AppearType.AppearOnFocusEnter:
-                            if (Time.unscaledTime - focusEnterTime >= lifetime)
-                            {
-                                spawnable.gameObject.SetActive(false);
-                                return;
-                            }
+                        break;
+                    case AppearType.AppearOnFocusEnter:
+                    case AppearType.AppearOnGazeEnter:
+                        if (Time.unscaledTime - focusEnterTime >= lifetime)
+                        {
+                            spawnable.gameObject.SetActive(false);
+                            return;
+                        }
 
                             break;
                     }
@@ -146,7 +165,14 @@ namespace Microsoft.MixedReality.Toolkit.UI
                             spawnable.gameObject.SetActive(false);
                         }
 
-                        break;
+                    break;
+                case VanishType.VanishOnGazeExit:
+                    if (!HasGaze)
+                    {
+                        spawnable.gameObject.SetActive(false);
+                    }
+
+                    break;
 
                     default:
                         if (!HasFocus)
@@ -165,10 +191,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         protected virtual void SpawnableActivated(GameObject spawnable) { }
 
-        /// <inheritdoc />
-        public override void OnFocusEnter(FocusEventData eventData)
-        {
-            base.OnFocusEnter(eventData);
+    /// <inheritdoc />
+    public override void OnFocusEnter(FocusEventData eventData)
+    {
+        base.OnFocusEnter(eventData);
 
             HandleFocusEnter();
         }
@@ -230,16 +256,14 @@ namespace Microsoft.MixedReality.Toolkit.UI
         {
             focusEnterTime = Time.unscaledTime;
 
-            if (spawnable == null || !spawnable.gameObject.activeSelf)
+        if (spawnable == null || !spawnable.gameObject.activeSelf)
+        {
+            if (appearType != AppearType.AppearOnTap)
             {
-                switch (appearType)
-                {
-                    case AppearType.AppearOnFocusEnter:
-                        ShowSpawnable();
-                        break;
-                }
+                ShowSpawnable();
             }
         }
+    }
 
         private void HandleFocusExit()
         {
