@@ -44,7 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a523125dd255364449a3702eeaa3b2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  focusEnabled: 1
+  focusEnabled: 0
+  gazeEnabled: 1
   prefab: {fileID: 7749750894739299091, guid: f39c40d98b06d6b4aafa2a03f5187f87, type: 3}
   tooltipToggleAction:
     id: 0
