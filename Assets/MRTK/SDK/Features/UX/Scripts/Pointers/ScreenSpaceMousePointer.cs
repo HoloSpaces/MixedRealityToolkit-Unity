@@ -46,7 +46,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
                 Camera mainCamera = CameraCache.Main;
                 Ray ray = mainCamera.ScreenPointToRay(currentMousePosition);
-                Rays[0].CopyRay(ray, float.MaxValue);
+                Rays[0].CopyRay(ray, 1000f);
 
                 transform.position = mainCamera.transform.position;
                 transform.rotation = Quaternion.LookRotation(ray.direction);
