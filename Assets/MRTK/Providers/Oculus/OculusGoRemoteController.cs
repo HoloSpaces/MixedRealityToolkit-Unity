@@ -37,12 +37,17 @@ namespace HoloSpaces.MixedReality.Input
         /// <inheritdoc />
         public override MixedRealityInteractionMapping[] DefaultInteractions => new[]
         {
+            // VERSION 1 of the Go
             new MixedRealityInteractionMapping(0, "Spatial Pointer", AxisType.SixDof, DeviceInputType.SpatialPointer, new MixedRealityInputAction(4, "Pointer Pose", AxisType.SixDof)),
             new MixedRealityInteractionMapping(1, "Trigger", AxisType.SingleAxis, DeviceInputType.TriggerPress, new MixedRealityInputAction(1, "Select", AxisType.Digital), axisCodeX: ControllerMappingLibrary.AXIS_3),
             new MixedRealityInteractionMapping(2, "Back", AxisType.Digital, DeviceInputType.ButtonPress, new MixedRealityInputAction(2, "Menu", AxisType.Digital), KeyCode.Joystick1Button1),
             new MixedRealityInteractionMapping(3, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton17),
             new MixedRealityInteractionMapping(4, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton9),
-            new MixedRealityInteractionMapping(5, "PrimaryTouchpad Axis", AxisType.DualAxis, DeviceInputType.DirectionalPad, axisCodeX: ControllerMappingLibrary.AXIS_4, axisCodeY: ControllerMappingLibrary.AXIS_5, invertYAxis: true)
+            new MixedRealityInteractionMapping(5, "PrimaryTouchpad Axis", AxisType.DualAxis, DeviceInputType.DirectionalPad, axisCodeX: ControllerMappingLibrary.AXIS_4, axisCodeY: ControllerMappingLibrary.AXIS_5, invertYAxis: true),
+
+            // VERSION 2 of the Go
+            new MixedRealityInteractionMapping(9, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton16),
+            new MixedRealityInteractionMapping(10, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton8)
         };
 
         private readonly MixedRealityInputAction teleportInputAction = new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis);
@@ -79,6 +84,7 @@ namespace HoloSpaces.MixedReality.Input
 
                 if (interactionMapping.InputType == DeviceInputType.TriggerPress)
                 {
+                    //#as HACK: !0 check fixes the fact that some Gos emit a -1 on AXIS_3 while others emit 1
                     interactionMapping.BoolData = !singleAxisValue.Equals(0);
 
                     // If our value changed raise it.
