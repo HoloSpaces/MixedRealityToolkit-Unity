@@ -6,6 +6,7 @@ using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using UInput = UnityEngine.Input;
+using UnityEngine.EventSystems;
 
 namespace HoloSpaces.MixedReality.Input
 {
@@ -61,6 +62,55 @@ namespace HoloSpaces.MixedReality.Input
                 if (isTouchPadPressed)
                 {
                     isTeleportEnabled = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// This is copy of the underlying implementation with a specific adjustment for Oculus Go
+        /// </remarks>
+        protected override void UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
+        {
+            using (UpdateSingleAxisDataPerfMarker.Auto())
+            {
+                Debug.Assert(interactionMapping.AxisType == AxisType.SingleAxis);
+
+                var singleAxisValue = UInput.GetAxisRaw(interactionMapping.AxisCodeX);
+
+                if (interactionMapping.InputType == DeviceInputType.TriggerPress)
+                {
+                    interactionMapping.BoolData = Mathf.Abs(singleAxisValue).Equals(1);
+
+                    // If our value changed raise it.
+                    if (interactionMapping.Changed)
+                    {
+                        // rwr TODO: this only occurs on the selected InputField of the Keyboard
+                        // the selectedObject gets deselected and is recognized as a button up by the UnityInput System - gets set to 1 on true release on joystick
+                        EventSystem currentEventSystem = EventSystem.current;
+                        if (currentEventSystem.currentSelectedGameObject != null) currentEventSystem.SetSelectedGameObject(null);
+
+                        // Raise input system event if it's enabled
+                        if (interactionMapping.BoolData)
+                        {
+                            CoreServices.InputSystem?.RaiseOnInputDown(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction);
+                        }
+                        else
+                        {
+                            CoreServices.InputSystem?.RaiseOnInputUp(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction);
+                        }
+                    }
+                }
+                else
+                {
+                    // Update the interaction data source
+                    interactionMapping.FloatData = singleAxisValue;
+
+                    // If our value changed raise it.
+                    if (interactionMapping.Changed)
+                    {
+                        // Raise input system event if it's enabled
+                        CoreServices.InputSystem?.RaiseFloatInputChanged(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction, interactionMapping.FloatData);
+                    }
                 }
             }
         }

@@ -165,7 +165,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
             }
         }
 
-        private static readonly ProfilerMarker UpdateSingleAxisDataPerfMarker = new ProfilerMarker("[MRTK] GenericJoystickController.UpdateSingleAxisData");
+        protected static readonly ProfilerMarker UpdateSingleAxisDataPerfMarker = new ProfilerMarker("[MRTK] GenericJoystickController.UpdateSingleAxisData");
 
         /// <summary>
         /// Update an Interaction Float data type from a SingleAxis (float) input 
