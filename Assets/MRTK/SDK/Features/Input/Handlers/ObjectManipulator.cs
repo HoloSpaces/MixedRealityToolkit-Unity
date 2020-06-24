@@ -204,6 +204,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private bool enableZAxisOffset = false;
 
         [SerializeField]
+        [Tooltip("Max distance transformation should be allowed in axis.")]
+        private float maxZaxisDistanceMove = 20.0f;
+
+        [SerializeField]
         [Tooltip("Factor for the velocity for a Z Axis Transformation.")]
         private float zAxisOffsetVelocity = 0.5f;
 
@@ -358,7 +362,11 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private void AddTouchpadEventListner(ManipulationEventData data)
         {
             manipulationZOffset = 0;
-            TouchpadPositionListener.Instance.RegisterScrollCallback(data, (scrollDelta) => { manipulationZOffset += scrollDelta*Time.deltaTime*zAxisOffsetVelocity; });
+            TouchpadPositionListener.Instance.RegisterScrollCallback(data, (scrollDelta) =>
+            {
+                float newOffsetDelta = scrollDelta * Time.deltaTime * zAxisOffsetVelocity;
+                manipulationZOffset += newOffsetDelta;
+            });
         }
 
         private void RemoveTouchpadEventListner(ManipulationEventData data)
@@ -633,7 +641,8 @@ namespace Microsoft.MixedReality.Toolkit.UI
             MixedRealityPose hostPose = new MixedRealityPose(HostTransform.position, HostTransform.rotation);
             moveLogic.Setup(pointerPose, pointerData.GrabPoint, hostPose, HostTransform.localScale);
         }
-       
+
+      
         private void HandleOneHandMoveUpdated()
         {
             Debug.Assert(pointerIdToPointerMap.Count == 1);
@@ -653,11 +662,17 @@ namespace Microsoft.MixedReality.Toolkit.UI
             RotateInOneHandType rotateInOneHandType = isNearManipulation ? oneHandRotationModeNear : oneHandRotationModeFar;
             MixedRealityPose pointerPose = new MixedRealityPose(pointer.Position, pointer.Rotation);
             targetTransform.Position = moveLogic.Update(pointerPose, targetTransform.Rotation, targetTransform.Scale, rotateInOneHandType != RotateInOneHandType.RotateAboutObjectCenter);
-
+        
             if (enableZAxisOffset) // if z axis move enabled, 
             {
-                Vector3 offsetVector = pointer.Rotation * Vector3.forward * manipulationZOffset; 
-                targetTransform.Position = targetTransform.Position + offsetVector;
+                float distance = Vector3.Distance(targetTransform.Position, pointer.Position);
+
+                float minOffsetDistance = -distance + targetTransform.Scale.z;
+                float maxOffsetDistance = maxZaxisDistanceMove > distance ? maxZaxisDistanceMove - distance: 0.0f;
+                manipulationZOffset = Mathf.Clamp(manipulationZOffset, minOffsetDistance, maxOffsetDistance);
+
+                Vector3 offsetVector = pointer.Rotation * Vector3.forward * manipulationZOffset;
+                targetTransform.Position = targetTransform.Position + offsetVector; 
             } 
 
             constraints.ApplyTranslationConstraints(ref targetTransform, true, IsNearManipulation());

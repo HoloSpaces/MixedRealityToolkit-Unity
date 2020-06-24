@@ -37,6 +37,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         private SerializedProperty scaleLerpTime;
         private SerializedProperty enableZAxisOffset;
         private SerializedProperty zAxisOffsetVelocity;
+        private SerializedProperty maxZaxisDistanceMove;
 
         private SerializedProperty onManipulationStarted;
         private SerializedProperty onManipulationEnded;
@@ -74,6 +75,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             scaleLerpTime = serializedObject.FindProperty("scaleLerpTime");
             enableZAxisOffset = serializedObject.FindProperty("enableZAxisOffset");
             zAxisOffsetVelocity = serializedObject.FindProperty("zAxisOffsetVelocity");
+            maxZaxisDistanceMove = serializedObject.FindProperty("maxZaxisDistanceMove");
 
             // Manipulation Events
             onManipulationStarted = serializedObject.FindProperty("onManipulationStarted");
@@ -194,6 +196,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 if (enableZAxisOffset.boolValue)
                 {
                     EditorGUILayout.PropertyField(zAxisOffsetVelocity);
+                    EditorGUILayout.PropertyField(maxZaxisDistanceMove);
+
                 }
             }
 
