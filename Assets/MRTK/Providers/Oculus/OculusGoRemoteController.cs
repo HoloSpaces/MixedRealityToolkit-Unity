@@ -79,7 +79,7 @@ namespace HoloSpaces.MixedReality.Input
 
                 if (interactionMapping.InputType == DeviceInputType.TriggerPress)
                 {
-                    interactionMapping.BoolData = Mathf.Abs(singleAxisValue).Equals(1);
+                    interactionMapping.BoolData = !singleAxisValue.Equals(0);
 
                     // If our value changed raise it.
                     if (interactionMapping.Changed)
