@@ -43,14 +43,16 @@ namespace HoloSpaces.MixedReality.Input
             new MixedRealityInteractionMapping(2, "Back", AxisType.Digital, DeviceInputType.ButtonPress, new MixedRealityInputAction(2, "Menu", AxisType.Digital), KeyCode.Joystick1Button1),
             new MixedRealityInteractionMapping(3, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton17),
             new MixedRealityInteractionMapping(4, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton9),
-            new MixedRealityInteractionMapping(5, "PrimaryTouchpad Axis", AxisType.DualAxis, DeviceInputType.DirectionalPad, axisCodeX: ControllerMappingLibrary.AXIS_4, axisCodeY: ControllerMappingLibrary.AXIS_5, invertYAxis: true),
-
             // VERSION 2 of the Go
-            new MixedRealityInteractionMapping(9, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton16),
-            new MixedRealityInteractionMapping(10, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton8)
+            new MixedRealityInteractionMapping(5, "PrimaryTouchpad Touch", AxisType.Digital, DeviceInputType.TouchpadTouch, KeyCode.JoystickButton16),
+            new MixedRealityInteractionMapping(6, "PrimaryTouchpad Click", AxisType.Digital, DeviceInputType.TouchpadPress, KeyCode.JoystickButton8),
+
+            new MixedRealityInteractionMapping(7, "PrimaryTouchpad Axis", AxisType.DualAxis, DeviceInputType.DirectionalPad, axisCodeX: ControllerMappingLibrary.AXIS_4, axisCodeY: ControllerMappingLibrary.AXIS_5, invertYAxis: true),
+            new MixedRealityInteractionMapping(8, "PrimaryTouchpad Axis", AxisType.DualAxis, DeviceInputType.DirectionalPad, axisCodeX: ControllerMappingLibrary.AXIS_1, axisCodeY: ControllerMappingLibrary.AXIS_2, invertYAxis: true),
         };
 
         private readonly MixedRealityInputAction teleportInputAction = new MixedRealityInputAction(5, "Teleport Direction", AxisType.DualAxis);
+        private MixedRealityInteractionMapping usedDualAxisByThisGo;
 
         /// <inheritdoc />
         public override void SetupDefaultInteractions()
@@ -63,12 +65,18 @@ namespace HoloSpaces.MixedReality.Input
             base.UpdateButtonData(interactionMapping);
             if (interactionMapping.InputType == DeviceInputType.TouchpadPress)
             {
-                isTouchPadPressed = interactionMapping.BoolData;
-                if (isTouchPadPressed)
+                if (interactionMapping.BoolData)
                 {
-                    isTeleportEnabled = true;
+                   isTouchPadPressed = isTeleportEnabled = true;
                 }
             }
+        }
+
+        // need to reset isTouchPadPress becasue of two press buttons called one after the other and to get them ||ed the value is only set to true in UpdateButtonData, never false
+        public override void UpdateController()
+        {
+            base.UpdateController();
+            isTouchPadPressed = false;
         }
 
         /// <summary>
@@ -138,10 +146,14 @@ namespace HoloSpaces.MixedReality.Input
                 dualAxisPosition.x = UInput.GetAxisRaw(interactionMapping.AxisCodeX);
                 dualAxisPosition.y = UInput.GetAxisRaw(interactionMapping.AxisCodeY);
 
-                if (dualAxisPosition.sqrMagnitude < Mathf.Pow(5f, 2f))
-                {
-                    dualAxisPosition.Normalize();
-                }
+                Debug.Log($"{dualAxisPosition} {UInput.GetAxis(interactionMapping.AxisCodeX)} {UInput.GetAxis(interactionMapping.AxisCodeY)}");
+
+                //#as BUG: Only one of the two DualAxis will be called by the Go currently used so the one not being called will emit nothing
+                if (dualAxisPosition == new Vector2())
+                    return;
+
+                usedDualAxisByThisGo = interactionMapping;
+                dualAxisPosition.Normalize();
 
                 // Update the interaction data source
                 interactionMapping.Vector2Data = dualAxisPosition;
@@ -150,7 +162,11 @@ namespace HoloSpaces.MixedReality.Input
             }
             else if (isTeleportEnabled)
             {
+                if (interactionMapping != usedDualAxisByThisGo)
+                    return;
+
                 isTeleportEnabled = false;
+
                 interactionMapping.Vector2Data = Vector2.zero;
 
                 CoreServices.InputSystem?.RaisePositionInputChanged(InputSource, ControllerHandedness, teleportInputAction, interactionMapping.Vector2Data);
