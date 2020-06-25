@@ -28,6 +28,8 @@ namespace HoloSpaces.MixedReality.Input
         {
         }
 
+        protected override float ButtonPressDeadzone => .2f;
+
         /// <inheritdoc />
         public override MixedRealityInteractionMapping[] DefaultLeftHandedInteractions => new[]
         {

@@ -8,6 +8,8 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using Microsoft.MixedReality.Toolkit.Input.UnityInput;
 using UnityEngine;
+using Unity.Profiling;
+using UInput = UnityEngine.Input;
 
 namespace HoloSpaces.MixedReality.Input
 {
@@ -22,6 +24,8 @@ namespace HoloSpaces.MixedReality.Input
         {
             nodeType = controllerHandedness == Handedness.Left ? XRNode.LeftHand : XRNode.RightHand;
         }
+
+        protected virtual float ButtonPressDeadzone => 1f;
 
         protected readonly XRNode nodeType;
         protected TrackingState lastTrackingState = TrackingState.NotTracked;
@@ -115,6 +119,56 @@ namespace HoloSpaces.MixedReality.Input
                     // The input source does not support tracking.
                     TrackingState = TrackingState.NotApplicable;
                     break;
+            }
+        }
+
+        private static readonly ProfilerMarker UpdateButtonDataPerfMarker = new ProfilerMarker("[MRTK] GenericOculusAndroidController.UpdateButtonData");
+
+        /// <summary>
+        /// Update an Interaction Bool data type from a Bool input
+        /// </summary>
+        /// <remarks>
+        /// Raises an Input System "Input Down" event when the key is down, and raises an "Input Up" when it is released (e.g. a Button)
+        /// Also raises a "Pressed" event while pressed
+        /// </remarks>
+        protected override void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
+        {
+            using (UpdateButtonDataPerfMarker.Auto())
+            {
+                Debug.Assert(interactionMapping.AxisType == AxisType.Digital);
+
+                // Update the interaction data source
+                switch (interactionMapping.InputType)
+                {
+                    case DeviceInputType.TriggerPress:
+                        interactionMapping.BoolData = UInput.GetAxisRaw(interactionMapping.AxisCodeX) >= ButtonPressDeadzone;
+                        break;
+                    case DeviceInputType.TriggerNearTouch:
+                    case DeviceInputType.ThumbNearTouch:
+                    case DeviceInputType.IndexFingerNearTouch:
+                    case DeviceInputType.MiddleFingerNearTouch:
+                    case DeviceInputType.RingFingerNearTouch:
+                    case DeviceInputType.PinkyFingerNearTouch:
+                        interactionMapping.BoolData = !UInput.GetAxisRaw(interactionMapping.AxisCodeX).Equals(0);
+                        break;
+                    default:
+                        interactionMapping.BoolData = UInput.GetKey(interactionMapping.KeyCode);
+                        break;
+                }
+
+                // If our value changed raise it.
+                if (interactionMapping.Changed)
+                {
+                    // Raise input system event if it's enabled
+                    if (interactionMapping.BoolData)
+                    {
+                        CoreServices.InputSystem?.RaiseOnInputDown(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction);
+                    }
+                    else
+                    {
+                        CoreServices.InputSystem?.RaiseOnInputUp(InputSource, ControllerHandedness, interactionMapping.MixedRealityInputAction);
+                    }
+                }
             }
         }
     }
