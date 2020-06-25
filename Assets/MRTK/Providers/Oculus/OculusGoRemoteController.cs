@@ -146,8 +146,6 @@ namespace HoloSpaces.MixedReality.Input
                 dualAxisPosition.x = UInput.GetAxisRaw(interactionMapping.AxisCodeX);
                 dualAxisPosition.y = UInput.GetAxisRaw(interactionMapping.AxisCodeY);
 
-                Debug.Log($"{dualAxisPosition} {UInput.GetAxis(interactionMapping.AxisCodeX)} {UInput.GetAxis(interactionMapping.AxisCodeY)}");
-
                 //#as BUG: Only one of the two DualAxis will be called by the Go currently used so the one not being called will emit nothing
                 if (dualAxisPosition == new Vector2())
                     return;
