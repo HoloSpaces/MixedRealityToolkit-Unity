@@ -16,5 +16,13 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.management",
+            "expression": "",
+            "define": "XR_MANAGEMENT_ENABLED"
+        }
+    ],
+    "noEngineReferences": false
 }

@@ -38,8 +38,9 @@ namespace HoloSpaces.MixedReality.Input
 
         #endregion IMixedRealityCapabilityCheck Implementation
 
-        #region Controller Utilities
+#region Controller Utilities
 
+#if XR_MANAGEMENT_ENABLED
         protected override String[] GetConnectedJoystickNames()
         {
             var  controllers = new List<UnityEngine.XR.InputDevice>();
@@ -55,6 +56,7 @@ namespace HoloSpaces.MixedReality.Input
 
             return controllersNames;
         }
+#endif
 
         /// <inheritdoc />
         protected override GenericJoystickController GetOrAddController(string joystickName)
@@ -125,14 +127,18 @@ namespace HoloSpaces.MixedReality.Input
         {
             if (joystickName.StartsWith("Oculus Tracked Remote"))
                 return SupportedControllerType.OculusGoRemote;
+#if XR_MANAGEMENT_ENABLED
             else if(joystickName.StartsWith("Oculus Touch Controller"))
-                return SupportedControllerType.OculusQuestRemote;
+#else
+            else if (joystickName.StartsWith("Oculus Quest Controller"))
+#endif
+            return SupportedControllerType.OculusQuestRemote;
 
             Debug.Log($"{joystickName} does not have a defined controller type, falling back to generic controller type");
 
             return SupportedControllerType.GenericAndroid;
         }
 
-        #endregion Controller Utilities
+#endregion Controller Utilities
     }
 }
