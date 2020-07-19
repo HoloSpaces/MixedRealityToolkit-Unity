@@ -563,6 +563,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         private bool IsMicrophoneActive()
         {
+            if (_recordImage == null) return false;
             var result = _recordImage.color != _defaultColor;
             return result;
         }
@@ -572,7 +573,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// </summary>
         private void SetMicrophoneDefault()
         {
-            _recordImage.color = _defaultColor;
+            if (_recordImage != null)  _recordImage.color = _defaultColor;
         }
 
         /// <summary>
@@ -580,7 +581,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// </summary>
         private void SetMicrophoneRecording()
         {
-            _recordImage.color = Color.red;
+            if (_recordImage != null) _recordImage.color = Color.red;
         }
 
         /// <summary>
@@ -954,7 +955,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// <returns>Returns true if default subkeys were activated, false if alphanumeric keyboard isn't active</returns>
         private bool TryToShowAlphaSubkeys()
         {
-            if (AlphaKeyboard.IsActive())
+            if (AlphaKeyboard.IsActive() && AlphaSubKeys != null)
             {
                 AlphaSubKeys.gameObject.SetActive(true);
                 return true;
@@ -1014,12 +1015,12 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// </summary>
         private void DisableAllKeyboards()
         {
-            AlphaKeyboard.gameObject.SetActive(false);
-            SymbolKeyboard.gameObject.SetActive(false);
+            if (AlphaKeyboard != null)  AlphaKeyboard.gameObject.SetActive(false);
+            if (SymbolKeyboard != null) SymbolKeyboard.gameObject.SetActive(false);
 
-            AlphaWebKeys.gameObject.SetActive(false);
-            AlphaMailKeys.gameObject.SetActive(false);
-            AlphaSubKeys.gameObject.SetActive(false);
+            if (AlphaWebKeys != null)  AlphaWebKeys.gameObject.SetActive(false);
+            if (AlphaMailKeys != null) AlphaMailKeys.gameObject.SetActive(false);
+            if (AlphaSubKeys != null)  AlphaSubKeys.gameObject.SetActive(false);
         }
 
         /// <summary>
