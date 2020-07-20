@@ -34,10 +34,10 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// <summary>
         /// Translate and rotate the camera transform based on keyboard and mouse input.
         /// </summary>
-        public void UpdateTransform(Transform transform, MouseDelta mouseDelta)
+        public void UpdateTransform(Transform transform, MouseDelta mouseDelta, bool useExternalCameraTranslation = false)
         {
             // Undo the last tracker to Unity transforms applied
-            transform.Translate(-this.lastTrackerToUnityTranslation, Space.World);
+            if(!useExternalCameraTranslation) transform.Translate(-this.lastTrackerToUnityTranslation, Space.World);
             transform.Rotate(-this.lastTrackerToUnityRotation.eulerAngles, Space.World);
 
             // Calculate and apply the camera control movement this frame
@@ -47,10 +47,10 @@ namespace Microsoft.MixedReality.Toolkit.Input
             transform.Rotate(rotate.x, 0.0f, 0.0f);
             transform.Rotate(0.0f, rotate.y, 0.0f, Space.World);
             transform.Rotate(0.0f, 0.0f, rotate.z);
-            transform.Translate(translate, Space.World);
+            if (!useExternalCameraTranslation) transform.Translate(translate, Space.World);
 
             transform.Rotate(this.lastTrackerToUnityRotation.eulerAngles, Space.World);
-            transform.Translate(this.lastTrackerToUnityTranslation, Space.World);
+            if (!useExternalCameraTranslation) transform.Translate(this.lastTrackerToUnityTranslation, Space.World);
         }
 
         private static float GetKeyDir(string neg, string pos)

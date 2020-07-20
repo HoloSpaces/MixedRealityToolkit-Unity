@@ -47,7 +47,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
     {
         private ManualCameraControl cameraControl = null;
         private SimulatedHandDataProvider handDataProvider = null;
-
+        private bool useExternalCameraTranslation = false;
         private HandSimulationMode handSimulationMode;
         /// <inheritdoc />
         public HandSimulationMode HandSimulationMode
@@ -129,6 +129,14 @@ namespace Microsoft.MixedReality.Toolkit.Input
             {
                 handDataProvider.ResetHand(Handedness.Right);
             }
+        }
+
+        /// <summary>
+        /// Enables camera external translation control, eg character contoller
+        /// </summary>
+        public void EnableExternalCameraTranslation(bool enable)
+        {
+            useExternalCameraTranslation = enable;
         }
 
         /// <summary>
@@ -302,7 +310,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
                 if (cameraControl != null && CameraCache.Main)
                 {
-                    cameraControl.UpdateTransform(CameraCache.Main.transform, mouseDelta);
+                    cameraControl.UpdateTransform(CameraCache.Main.transform, mouseDelta, useExternalCameraTranslation);
                 }
             }
 
