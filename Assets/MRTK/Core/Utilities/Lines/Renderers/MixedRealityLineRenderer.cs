@@ -84,6 +84,11 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
             set => fadeLineAnimationTime = value;
         }
 
+        public Vector3[] Positions
+        {
+            get => positions;
+        }
+
         [SerializeField]
         [HideInInspector]
         private LineRenderer lineRenderer = null;
