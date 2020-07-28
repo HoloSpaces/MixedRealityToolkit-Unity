@@ -44,4 +44,9 @@ public class HoloNonNativeKeyboard : NonNativeKeyboard
 
         currentKeyboardText = InputField.text;
     }
+
+    public void SetCharLimit(int value)
+    {
+        InputField.characterLimit = value;
+    }
 }
