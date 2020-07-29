@@ -3,6 +3,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 namespace Microsoft.MixedReality.Toolkit.Experimental.UI
@@ -25,6 +26,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         public string ShiftValue;
 
         /// <summary>
+        /// KeyPress OnPointer Down.
+        /// </summary>
+        public bool pressOnPointerDown = true;
+
+        /// <summary>
         /// Reference to child text element.
         /// </summary>
         private TextMeshProUGUI m_Text;
@@ -33,6 +39,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// Reference to the GameObject's button component.
         /// </summary>
         private Button m_Button;
+
+        /// <summary>
+        /// Reference to the GameObject's button component.
+        /// </summary>
+        private EventTrigger eventTrigger;
 
         /// <summary>
         /// Get the button component.
@@ -50,10 +61,30 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             m_Text = gameObject.GetComponentInChildren<TextMeshProUGUI>();
             m_Text.text = Value;
 
-            m_Button.onClick.RemoveAllListeners();
-            m_Button.onClick.AddListener(FireAppendValue);
+            if (pressOnPointerDown)
+            {
+                eventTrigger = gameObject.EnsureComponent<EventTrigger>();
+                EventTrigger.Entry entry = new EventTrigger.Entry();
+                entry.eventID = EventTriggerType.PointerDown;
+                entry.callback.RemoveAllListeners();
+                entry.callback.AddListener((data) => { OnPointerDownDelegate((PointerEventData)data); });
+                eventTrigger.triggers.Add(entry);
+            }
+            else
+            {
+                m_Button.onClick.RemoveAllListeners();
+                m_Button.onClick.AddListener(FireAppendValue);
+            }
 
             NonNativeKeyboard.Instance.OnKeyboardShifted += Shift;
+        }
+
+        /// <summary>
+        /// Method injected into the button's on pointer down listener.
+        /// </summary>
+        private void OnPointerDownDelegate(PointerEventData data)
+        {
+            NonNativeKeyboard.Instance.AppendValue(this);
         }
 
         /// <summary>
