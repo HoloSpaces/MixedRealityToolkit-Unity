@@ -620,11 +620,13 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
             }
 
             m_CaretPosition = InputField.caretPosition;
+            if (m_CaretPosition < InputField.characterLimit)
+            {
+                InputField.text = InputField.text.Insert(m_CaretPosition, value);
+                m_CaretPosition += value.Length;
 
-            InputField.text = InputField.text.Insert(m_CaretPosition, value);
-            m_CaretPosition += value.Length;
-
-            UpdateCaretPosition(m_CaretPosition);
+                UpdateCaretPosition(m_CaretPosition);
+            }
         }
 
         /// <summary>
