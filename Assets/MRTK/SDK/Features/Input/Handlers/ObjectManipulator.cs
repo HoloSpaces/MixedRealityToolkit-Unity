@@ -741,7 +741,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void ApplyTargetTransform(MixedRealityTransform targetTransform)
         {
-            if (rigidBody != null && !useRigidBody)
+            if (rigidBody == null && !useRigidBody)
             {
                 HostTransform.position = smoothingActive ? Smoothing.SmoothTo(HostTransform.position, targetTransform.Position, moveLerpTime, Time.deltaTime) : targetTransform.Position;
                 HostTransform.rotation = smoothingActive ? Smoothing.SmoothTo(HostTransform.rotation, targetTransform.Rotation, rotateLerpTime, Time.deltaTime) : targetTransform.Rotation;
