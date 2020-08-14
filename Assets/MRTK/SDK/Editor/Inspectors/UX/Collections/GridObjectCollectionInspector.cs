@@ -28,7 +28,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         protected override void OnEnable()
         {
             base.OnEnable();
-            useAutoUpdate = true;
+            //useAutoUpdate = true;
             surfaceType = serializedObject.FindProperty("surfaceType");
             orientType = serializedObject.FindProperty("orientType");
             layout = serializedObject.FindProperty("layout");
