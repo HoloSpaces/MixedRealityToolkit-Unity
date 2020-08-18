@@ -46,6 +46,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         private EventTrigger eventTrigger;
 
         /// <summary>
+        /// last pointer downTime. Fix for multiple events
+        /// </summary>
+        private float lastPointerDownTime = 0.0f;
+
+        /// <summary>
         /// Get the button component.
         /// </summary>
         private void Awake()
@@ -84,7 +89,11 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         /// </summary>
         private void OnPointerDownDelegate(PointerEventData data)
         {
+            if (Time.unscaledTime-lastPointerDownTime < .1f) // bug fix for multiple events at the same time
+                return;
+
             NonNativeKeyboard.Instance.AppendValue(this);
+            lastPointerDownTime = Time.unscaledTime;
         }
 
         /// <summary>
