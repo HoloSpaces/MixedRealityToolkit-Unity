@@ -144,6 +144,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
         [Tooltip("Rigid body behavior of the dragged object when releasing it.")]
         private ReleaseBehaviorType releaseBehavior = ReleaseBehaviorType.KeepVelocity | ReleaseBehaviorType.KeepAngularVelocity;
 
+        [SerializeField]
+        public float keepVelocityMutliplier = 3.0f;
+
         /// <summary>
         /// Rigid body behavior of the dragged object when releasing it.
         /// </summary>
@@ -819,7 +822,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepVelocity))
                 {
-                    rigidBody.velocity = velocity;
+                    rigidBody.velocity = velocity* keepVelocityMutliplier;
                 }
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepAngularVelocity))
