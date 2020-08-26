@@ -287,9 +287,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                 if (teleportPointer != null)
                 {
                     targetRotation.y = teleportPointer.PointerOrientation;
+                    targetPosition = teleportPointer.Result.Details.Point;
                 }
-                
-                targetPosition = eventData.Pointer.Result.Details.Point;
             }
 
                 if (eventData.HotSpot != null)
