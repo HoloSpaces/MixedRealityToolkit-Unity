@@ -40,6 +40,15 @@ namespace HoloSpaces.MixedReality.Input
         /// </summary>
         private readonly List<XRNodeState> nodeStates = new List<XRNodeState>();
 
+        private readonly Vector3[] velocityPositionsCache = new Vector3[velocityUpdateInterval];
+        private readonly Vector3[] velocityNormalsCache = new Vector3[velocityUpdateInterval];
+        private Vector3 velocityPositionsSum = Vector3.zero;
+        private Vector3 velocityNormalsSum = Vector3.zero;
+
+        private float deltaTimeStart;
+        private const int velocityUpdateInterval = 6;
+        private int frameOn = 0;
+
         /// <inheritdoc />
         public override void UpdateController()
         {
@@ -120,6 +129,30 @@ namespace HoloSpaces.MixedReality.Input
                     TrackingState = TrackingState.NotApplicable;
                     break;
             }
+
+            UpdateVelocity(CurrentControllerPosition);
+        }
+
+        protected void UpdateVelocity(Vector3 position) // code from basehand
+        {
+            if (frameOn < velocityUpdateInterval)
+            {
+                velocityPositionsCache[frameOn] = position;
+                velocityPositionsSum += velocityPositionsCache[frameOn];
+            }
+            else
+            {
+                int frameIndex = frameOn % velocityUpdateInterval;
+                float deltaTime = Time.unscaledTime - deltaTimeStart;
+                Vector3 newPosition = position;
+                Vector3 newPositionsSum = velocityPositionsSum - velocityPositionsCache[frameIndex] + newPosition;
+                Velocity = (newPositionsSum - velocityPositionsSum) / deltaTime / velocityUpdateInterval;
+                velocityPositionsCache[frameIndex] = newPosition; 
+                velocityPositionsSum = newPositionsSum;
+            }
+
+            deltaTimeStart = Time.unscaledTime;
+            frameOn++;
         }
 
         private static readonly ProfilerMarker UpdateButtonDataPerfMarker = new ProfilerMarker("[MRTK] GenericOculusAndroidController.UpdateButtonData");
