@@ -399,8 +399,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                     canMove = false;
                                     // Rotate the camera by the rotation amount.  If our angle is positive then rotate in the positive direction, otherwise in the opposite direction.
                                     Transform cameraTransform = CameraCache.Main.transform;
-                                    MixedRealityPlayspace.RotateAround(cameraTransform.position, Vector3.up, angle >= 0.0f ? rotationAmount : -rotationAmount);
-                                    CoreServices.TeleportSystem?.RaiseTeleportRequest(this, new BackStepHotSpot(cameraTransform.position, cameraTransform.rotation.eulerAngles.y + (angle >= 0.0f ? rotationAmount : -rotationAmount)));
+                                    CoreServices.TeleportSystem?.RaiseTeleportStarted(this, new BackStepHotSpot(cameraTransform.position, cameraTransform.rotation.eulerAngles.y + (angle >= 0.0f ? rotationAmount : -rotationAmount)));
                                 }
                                 else // We may be trying to strafe backwards.
                                 {
