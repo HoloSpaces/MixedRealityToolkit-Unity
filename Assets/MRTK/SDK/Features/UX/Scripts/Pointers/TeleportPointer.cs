@@ -398,7 +398,9 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                 {
                                     canMove = false;
                                     // Rotate the camera by the rotation amount.  If our angle is positive then rotate in the positive direction, otherwise in the opposite direction.
-                                    MixedRealityPlayspace.RotateAround(CameraCache.Main.transform.position, Vector3.up, angle >= 0.0f ? rotationAmount : -rotationAmount);
+                                    Transform cameraTransform = CameraCache.Main.transform;
+                                    MixedRealityPlayspace.RotateAround(cameraTransform.position, Vector3.up, angle >= 0.0f ? rotationAmount : -rotationAmount);
+                                    CoreServices.TeleportSystem?.RaiseTeleportRequest(this, new BackStepHotSpot(cameraTransform.position, cameraTransform.rotation.eulerAngles.y + (angle >= 0.0f ? rotationAmount : -rotationAmount)));
                                 }
                                 else // We may be trying to strafe backwards.
                                 {
@@ -413,9 +415,9 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                 {
                                     canMove = false;
                                     var height = MixedRealityPlayspace.Position.y;
-                                    var cameraPosition = CameraCache.Main.transform;
-                                    var forwardCameraView = -new Vector3(cameraPosition.forward.x, 0f, cameraPosition.forward.z);
-                                    var newPosition = forwardCameraView.normalized * strafeAmount + cameraPosition.position;
+                                    var cameraTransform = CameraCache.Main.transform;
+                                    var forwardCameraView = -new Vector3(cameraTransform.forward.x, 0f, cameraTransform.forward.z);
+                                    var newPosition = forwardCameraView.normalized * strafeAmount + cameraTransform.position;
                                     
                                     Vector3 strafeHitPosition;
                                     bool isValidStrafe = true;
@@ -431,7 +433,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
                                     if (isValidStrafe)
                                     {
-                                        CoreServices.TeleportSystem?.RaiseTeleportStarted(null, new BackStepHotSpot(newPosition, cameraPosition.eulerAngles.y));
+                                        CoreServices.TeleportSystem?.RaiseTeleportStarted(null, new BackStepHotSpot(newPosition, cameraTransform.eulerAngles.y));
                                     }
                                 }
                             }
@@ -569,18 +571,14 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
     }
 }
 
-public class BackStepHotSpot : IMixedRealityTeleportHotSpot
+public struct BackStepHotSpot : IMixedRealityTeleportHotSpot
 {
-
-    public BackStepHotSpot(Vector3 position)
-    {
-        Position = position;
-    }
-
-    public BackStepHotSpot(Vector3 position, float rotation) : this(position)
+    public BackStepHotSpot(Vector3 position, float rotation)
     {
         OverrideTargetOrientation = true;
+        Position = position;
         TargetOrientation = rotation;
+        Normal = default;
     }
 
     public Vector3 Position { get; set; }
