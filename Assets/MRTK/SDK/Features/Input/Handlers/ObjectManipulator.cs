@@ -145,7 +145,12 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private ReleaseBehaviorType releaseBehavior = ReleaseBehaviorType.KeepVelocity | ReleaseBehaviorType.KeepAngularVelocity;
 
         [SerializeField]
-        public float keepVelocityMutliplier = 3.0f;
+        [Tooltip("Multiply with existing velocity")]
+        public float keepVelocityMutliplier = 1.0f;
+
+        [SerializeField]
+        [Tooltip("Uses object veolicity Instead of hand velocity")]
+        public bool useObjectVelocity = true;
 
         /// <summary>
         /// Rigid body behavior of the dragged object when releasing it.
@@ -285,6 +290,13 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private ManipulationMoveLogic moveLogic;
         private TwoHandScaleLogic scaleLogic;
         private TwoHandRotateLogic rotateLogic;
+
+        private readonly Vector3[] velocityPositionsCache = new Vector3[velocityUpdateInterval];
+        private Vector3 velocityPositionsSum = Vector3.zero;
+        private float deltaTimeStart;
+        private const int velocityUpdateInterval = 6;
+        private int frameOn = 0;
+        private Vector3 objectVelocity = Vector3.zero;
 
         /// <summary>
         /// Holds the pointer and the initial intersection point of the pointer ray 
@@ -765,6 +777,30 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
                 HostTransform.localScale = smoothingActive ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
             }
+
+            UpdateVelocity(HostTransform.position);
+        }
+
+        protected void UpdateVelocity(Vector3 position) // code from basehand
+        {
+            if (frameOn < velocityUpdateInterval)
+            {
+                velocityPositionsCache[frameOn] = position;
+                velocityPositionsSum += velocityPositionsCache[frameOn];
+            }
+            else
+            {
+                int frameIndex = frameOn % velocityUpdateInterval;
+                float deltaTime = Time.unscaledTime - deltaTimeStart;
+                Vector3 newPosition = position;
+                Vector3 newPositionsSum = velocityPositionsSum - velocityPositionsCache[frameIndex] + newPosition;
+                objectVelocity = (newPositionsSum - velocityPositionsSum) / deltaTime / velocityUpdateInterval;
+                velocityPositionsCache[frameIndex] = newPosition;
+                velocityPositionsSum = newPositionsSum;
+            }
+
+            deltaTimeStart = Time.unscaledTime;
+            frameOn++;
         }
 
         private Vector3[] GetHandPositionArray()
@@ -822,7 +858,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepVelocity))
                 {
-                    rigidBody.velocity = velocity* keepVelocityMutliplier;
+                    Vector3 finalVelocity = useObjectVelocity?objectVelocity: velocity;
+                    finalVelocity = finalVelocity * keepVelocityMutliplier;
+                    rigidBody.velocity = finalVelocity;
                 }
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepAngularVelocity))

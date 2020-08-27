@@ -41,10 +41,7 @@ namespace HoloSpaces.MixedReality.Input
         private readonly List<XRNodeState> nodeStates = new List<XRNodeState>();
 
         private readonly Vector3[] velocityPositionsCache = new Vector3[velocityUpdateInterval];
-        private readonly Vector3[] velocityNormalsCache = new Vector3[velocityUpdateInterval];
         private Vector3 velocityPositionsSum = Vector3.zero;
-        private Vector3 velocityNormalsSum = Vector3.zero;
-
         private float deltaTimeStart;
         private const int velocityUpdateInterval = 6;
         private int frameOn = 0;
