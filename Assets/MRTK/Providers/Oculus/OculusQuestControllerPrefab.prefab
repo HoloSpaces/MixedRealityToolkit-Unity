@@ -58,6 +58,81 @@ MonoBehaviour:
     description: Pointer Pose
     axisConstraint: 7
   handedness: 1
+--- !u!1001 &1578608788416655239
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 8735967793944375524}
+    m_Modifications:
+    - target: {fileID: 6395334162891182091, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_Name
+      value: OculusTouchForQuestAndRiftSLeftModel_noRing
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7970125943418806808, guid: d5fd36358391eb440bc4b00896228a21,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d5fd36358391eb440bc4b00896228a21, type: 3}
+--- !u!1 &5559855221362851724 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6395334162891182091, guid: d5fd36358391eb440bc4b00896228a21,
+    type: 3}
+  m_PrefabInstance: {fileID: 1578608788416655239}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4417802564365102944
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -751,6 +826,81 @@ PrefabInstance:
     - {fileID: 114674612155881938, guid: c6a74181d4000004887343fb87b3c53a, type: 3}
     - {fileID: 95390787848344758, guid: c6a74181d4000004887343fb87b3c53a, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: c6a74181d4000004887343fb87b3c53a, type: 3}
+--- !u!1001 &5634491907990512606
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 8735967793944375524}
+    m_Modifications:
+    - target: {fileID: 951998138174775915, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_Name
+      value: OculusTouchForQuestAndRiftSRightModel_noRing
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.000000081460335
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4282207032639705208, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: cd8221996f47a7340a58a0b1ae2ec0c3, type: 3}
+--- !u!1 &4829989425858199989 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 951998138174775915, guid: cd8221996f47a7340a58a0b1ae2ec0c3,
+    type: 3}
+  m_PrefabInstance: {fileID: 5634491907990512606}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8664152963148724009
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1443,6 +1593,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 11479374, guid: d9809c5e8418bb047bf2c8ba1d1a2cec, type: 3}
+      propertyPath: m_modelOculusTouchQuestAndRiftSLeftController
+      value: 
+      objectReference: {fileID: 5559855221362851724}
+    - target: {fileID: 11479374, guid: d9809c5e8418bb047bf2c8ba1d1a2cec, type: 3}
+      propertyPath: m_modelOculusTouchQuestAndRiftSRightController
+      value: 
+      objectReference: {fileID: 4829989425858199989}
+    - target: {fileID: 1307870489563208, guid: d9809c5e8418bb047bf2c8ba1d1a2cec, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1864357959958104, guid: d9809c5e8418bb047bf2c8ba1d1a2cec, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4018669889632488, guid: d9809c5e8418bb047bf2c8ba1d1a2cec, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1456,6 +1622,12 @@ PrefabInstance:
 --- !u!1 &8735967793943966864 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 112276, guid: d9809c5e8418bb047bf2c8ba1d1a2cec,
+    type: 3}
+  m_PrefabInstance: {fileID: 8735967793944052228}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8735967793944375524 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 488160, guid: d9809c5e8418bb047bf2c8ba1d1a2cec,
     type: 3}
   m_PrefabInstance: {fileID: 8735967793944052228}
   m_PrefabAsset: {fileID: 0}
