@@ -261,19 +261,19 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
                     pointerOffsetPose.Position = CurrentControllerPose.Position;
                     pointerOffsetPose.Rotation = CurrentControllerPose.Rotation * Quaternion.AngleAxis(PointerOffsetAngle, Vector3.left);
 
-                // Update the interaction data source
-                interactionMapping.PoseData = pointerOffsetPose;
-            }
-            else if (interactionMapping.InputType == DeviceInputType.SpatialGrip)
-            {
-                // Update the interaction data source
-                interactionMapping.PoseData = CurrentControllerPose;
-            }
-            else
-            {
-                Debug.LogWarning("Unhandled Interaction");
-                return;
-            }
+                    // Update the interaction data source
+                    interactionMapping.PoseData = pointerOffsetPose;
+                }
+                else if (interactionMapping.InputType == DeviceInputType.SpatialGrip)
+                {
+                    // Update the interaction data source
+                    interactionMapping.PoseData = CurrentControllerPose;
+                }
+                else
+                {
+                    Debug.LogWarning("Unhandled Interaction");
+                    return;
+                }
 
                 // If our value changed raise it.
                 if (interactionMapping.Changed)
