@@ -19,7 +19,7 @@ namespace HoloSpaces.MixedReality.Input
             set
             {
                 base.Controller = value;
-#if !UNITY_EDITOR && UNITY_ANDROID
+#if UNITY_ANDROID
                 OVRInput.Update();
 #endif
             }
