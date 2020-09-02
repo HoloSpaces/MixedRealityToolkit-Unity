@@ -324,14 +324,12 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private bool isNearManipulation;
         private bool isManipulationStarted;
 
-        private Rigidbody rigidBody;
-        private bool useRigidBody = true;
+#pragma warning disable 108
+        private Rigidbody rigidbody;
+#pragma warning restore 108
         private bool wasKinematic = false;
 
-        public bool UseRigidBody
-        {
-            set => useRigidBody = value;
-        }
+        public bool UseRigidBody { get; set; } = false;
 
         private ConstraintManager constraints;
 
@@ -359,8 +357,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private TouchpadPositionListener listner;
         private void Start()
         {
-            rigidBody = HostTransform.GetComponent<Rigidbody>();
-            if(rigidBody == null) useRigidBody = false;
+            rigidbody = HostTransform.GetComponent<Rigidbody>();
+
+            if(rigidbody == null)
+                UseRigidBody = false;
             
             if (enableZAxisOffset)
             {
@@ -714,10 +714,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 });
             }
 
-            if (rigidBody != null && useRigidBody)
+            if (rigidbody != null && UseRigidBody)
             {
-                wasKinematic = rigidBody.isKinematic;
-                rigidBody.isKinematic = false;
+                wasKinematic = rigidbody.isKinematic;
+                rigidbody.isKinematic = false;
             }
 
             constraints.Initialize(new MixedRealityPose(HostTransform.position, HostTransform.rotation));
@@ -756,7 +756,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void ApplyTargetTransform(MixedRealityTransform targetTransform)
         {
-            if (!useRigidBody || rigidBody == null)
+            if (!UseRigidBody || rigidbody == null)
             {
                 HostTransform.position = smoothingActive ? Smoothing.SmoothTo(HostTransform.position, targetTransform.Position, moveLerpTime, Time.deltaTime) : targetTransform.Position;
                 HostTransform.rotation = smoothingActive ? Smoothing.SmoothTo(HostTransform.rotation, targetTransform.Rotation, rotateLerpTime, Time.deltaTime) : targetTransform.Rotation;
@@ -764,7 +764,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             }
             else
             {
-                rigidBody.velocity = ((1f - Mathf.Pow(moveLerpTime, Time.deltaTime)) / Time.deltaTime) * (targetTransform.Position - HostTransform.position);
+                rigidbody.velocity = ((1f - Mathf.Pow(moveLerpTime, Time.deltaTime)) / Time.deltaTime) * (targetTransform.Position - HostTransform.position);
 
                 var relativeRotation = targetTransform.Rotation * Quaternion.Inverse(HostTransform.rotation);
                 relativeRotation.ToAngleAxis(out float angle, out Vector3 axis);
@@ -772,7 +772,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                     angle -= 360f;
                 if (axis.IsValidVector())
                 {
-                    rigidBody.angularVelocity = ((1f - Mathf.Pow(rotateLerpTime, Time.deltaTime)) / Time.deltaTime) * (axis.normalized * angle * Mathf.Deg2Rad);
+                    rigidbody.angularVelocity = ((1f - Mathf.Pow(rotateLerpTime, Time.deltaTime)) / Time.deltaTime) * (axis.normalized * angle * Mathf.Deg2Rad);
                 }
 
                 HostTransform.localScale = smoothingActive ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
@@ -852,20 +852,20 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void ReleaseRigidBody(Vector3 velocity, Vector3 angularVelocity)
         {
-            if (rigidBody != null && useRigidBody)
+            if (rigidbody != null && UseRigidBody)
             {
-                rigidBody.isKinematic = wasKinematic;
+                rigidbody.isKinematic = wasKinematic;
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepVelocity))
                 {
                     Vector3 finalVelocity = useObjectVelocity?objectVelocity: velocity;
                     finalVelocity = finalVelocity * keepVelocityMutliplier;
-                    rigidBody.velocity = finalVelocity;
+                    rigidbody.velocity = finalVelocity;
                 }
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepAngularVelocity))
                 {
-                    rigidBody.angularVelocity = angularVelocity;
+                    rigidbody.angularVelocity = angularVelocity;
                 }
             }
         }
