@@ -15,7 +15,7 @@ namespace Microsoft.MixedReality.Toolkit.Extensions.SceneTransitions
     public class CameraFaderQuad : ICameraFader
     {
         const string QuadMaterialShaderName = "Particles/Standard Unlit";
-        const string QuadMaterialColorName = "_Color";
+        const string QuadMaterialColorName = "_BaseColor"; //#sg "_Color"  for built in shaders, for urp "_BaseColor"
 
         /// <summary>
         /// Simple struct for keeping track of quad properties
