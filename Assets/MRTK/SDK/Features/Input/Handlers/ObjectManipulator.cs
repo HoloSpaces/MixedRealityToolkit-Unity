@@ -352,12 +352,13 @@ namespace Microsoft.MixedReality.Toolkit.UI
             moveLogic = new ManipulationMoveLogic();
             rotateLogic = new TwoHandRotateLogic();
             scaleLogic = new TwoHandScaleLogic();
+            rigidbody = HostTransform.GetComponent<Rigidbody>();
+            constraints = new ConstraintManager(gameObject);
         }
 
         private TouchpadPositionListener listner;
         private void Start()
         {
-            rigidbody = HostTransform.GetComponent<Rigidbody>();
 
             if(rigidbody == null)
                 UseRigidBody = false;
@@ -368,7 +369,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 OnManipulationEnded.AddListener(RemoveTouchpadEventListner);
             }
               
-            constraints = new ConstraintManager(gameObject);
         }
         #endregion MonoBehaviour Functions
 
