@@ -1156,7 +1156,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// </summary>
         public static MixedRealityInputAction ResolveInputAction(int index)
         {
-            MixedRealityInputAction[] actions = CoreServices.InputSystem.InputSystemProfile.InputActionsProfile.InputActions;
+            MixedRealityInputAction[] actions = CoreServices.InputSystem?.InputSystemProfile.InputActionsProfile.InputActions;
             if (actions?.Length > 0)
             {
                 index = Mathf.Clamp(index, 0, actions.Length - 1);
