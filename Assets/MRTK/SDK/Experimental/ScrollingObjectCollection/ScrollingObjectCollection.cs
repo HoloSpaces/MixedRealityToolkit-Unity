@@ -2090,7 +2090,6 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
         void IMixedRealityPointerHandler.OnPointerDown(MixedRealityPointerEventData eventData)
         {
             currentPointer = eventData.Pointer;
-            oldIsTargetPositionLockedOnFocusLock = currentPointer.IsTargetPositionLockedOnFocusLock;
 
             // Quick check for the global listener to bail if the object is not in the list
             if (currentPointer?.Result?.CurrentPointerTarget == null
@@ -2101,6 +2100,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
             if (!(currentPointer is IMixedRealityNearPointer) && currentPointer.Controller.IsRotationAvailable)
             {
+                oldIsTargetPositionLockedOnFocusLock = currentPointer.IsTargetPositionLockedOnFocusLock;
                 currentPointer.IsTargetPositionLockedOnFocusLock = false;
             }
 
