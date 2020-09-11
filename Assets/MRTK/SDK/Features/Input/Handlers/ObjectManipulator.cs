@@ -324,6 +324,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private bool isNearManipulation;
         private bool isManipulationStarted;
 
+        public bool IsPointerIdInPointerMap(uint pointerId) => pointerIdToPointerMap.ContainsKey(pointerId);
+        public bool IsPointerMapEmpty => pointerIdToPointerMap.Count == 0;
+
 #pragma warning disable 108
         private Rigidbody rigidbody;
 #pragma warning restore 108
@@ -794,7 +797,12 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 float deltaTime = Time.unscaledTime - deltaTimeStart;
                 Vector3 newPosition = position;
                 Vector3 newPositionsSum = velocityPositionsSum - velocityPositionsCache[frameIndex] + newPosition;
-                objectVelocity = (newPositionsSum - velocityPositionsSum) / deltaTime / velocityUpdateInterval;
+
+                if (deltaTime != 0)
+                    objectVelocity = (newPositionsSum - velocityPositionsSum) / deltaTime / velocityUpdateInterval;
+                else
+                    objectVelocity = Vector3.zero;
+
                 velocityPositionsCache[frameIndex] = newPosition;
                 velocityPositionsSum = newPositionsSum;
             }
