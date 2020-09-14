@@ -49,4 +49,13 @@ public class HoloNonNativeKeyboard : NonNativeKeyboard
     {
         InputField.characterLimit = value;
     }
+
+    //set text on the keyboard inputfeid
+    public void SetText(string text)
+    {
+        int caretPosition = InputField.caretPosition;
+        InputField.text = InputField.text.Insert(caretPosition, text);
+        caretPosition += text.Length;
+        InputField.caretPosition = caretPosition;
+    }
 }
