@@ -30,6 +30,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         private SerializedProperty twoHandedManipulationType;
 
         private SerializedProperty releaseBehavior;
+        private SerializedProperty useObjectVelocity;
+        private SerializedProperty keepVelocityMutliplier;
 
         private SerializedProperty smoothingActive;
         private SerializedProperty moveLerpTime;
@@ -39,6 +41,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         private SerializedProperty zAxisOffsetVelocity;
         private SerializedProperty maxZaxisDistanceMove;
 
+
+        private SerializedProperty excludeChildInputEvents;
         private SerializedProperty onManipulationStarted;
         private SerializedProperty onManipulationEnded;
         private SerializedProperty onHoverEntered;
@@ -67,6 +71,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
             // Physics
             releaseBehavior = serializedObject.FindProperty("releaseBehavior");
+            useObjectVelocity = serializedObject.FindProperty("useObjectVelocity");
+            keepVelocityMutliplier = serializedObject.FindProperty("keepVelocityMutliplier");
 
             // Smoothing
             smoothingActive = serializedObject.FindProperty("smoothingActive");
@@ -77,11 +83,15 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             zAxisOffsetVelocity = serializedObject.FindProperty("zAxisOffsetVelocity");
             maxZaxisDistanceMove = serializedObject.FindProperty("maxZaxisDistanceMove");
 
+
             // Manipulation Events
+            excludeChildInputEvents = serializedObject.FindProperty("excludeChildInputEvents");
             onManipulationStarted = serializedObject.FindProperty("onManipulationStarted");
             onManipulationEnded = serializedObject.FindProperty("onManipulationEnded");
             onHoverEntered = serializedObject.FindProperty("onHoverEntered");
             onHoverExited = serializedObject.FindProperty("onHoverExited");
+
+
         }
 
         public override void OnInspectorGUI()
@@ -176,6 +186,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 if (rb != null)
                 {
                     EditorGUILayout.PropertyField(releaseBehavior);
+                    EditorGUILayout.PropertyField(useObjectVelocity);
+                    EditorGUILayout.PropertyField(keepVelocityMutliplier);
                 }
                 else
                 {
@@ -206,6 +218,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
             if (eventsFoldout)
             {
+                EditorGUILayout.PropertyField(excludeChildInputEvents);
                 EditorGUILayout.PropertyField(onManipulationStarted);
                 EditorGUILayout.PropertyField(onManipulationEnded);
                 EditorGUILayout.PropertyField(onHoverEntered);

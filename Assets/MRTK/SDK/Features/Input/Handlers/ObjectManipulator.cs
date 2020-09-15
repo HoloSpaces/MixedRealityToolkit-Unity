@@ -219,6 +219,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
         [Tooltip("Factor for the velocity for a Z Axis Transformation.")]
         private float zAxisOffsetVelocity = 0.5f;
 
+        [SerializeField]
+        [Tooltip("excludes child collider events")]
+        private bool excludeChildInputEvents = false;
+
         /// <summary>
         /// Enter amount representing amount of smoothing to apply to the scale. Smoothing of 0 means no smoothing. Max value means no change to value.
         /// </summary>
@@ -362,7 +366,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private TouchpadPositionListener listner;
         private void Start()
         {
-
             if(rigidbody == null)
                 UseRigidBody = false;
             
@@ -501,6 +504,8 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// <inheritdoc />
         public void OnPointerDown(MixedRealityPointerEventData eventData)
         {
+            if (excludeChildInputEvents && eventData.Pointer.Result.CurrentPointerTarget != HostTransform.gameObject) return;
+
             if (eventData.used ||
                 (!allowFarManipulation && eventData.Pointer as IMixedRealityNearPointer == null))
             {
@@ -548,6 +553,8 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         public void OnPointerDragged(MixedRealityPointerEventData eventData)
         {
+            if (excludeChildInputEvents && eventData.Pointer.Result.CurrentPointerTarget != HostTransform.gameObject) return;
+
             // Call manipulation updated handlers
             if (IsOneHandedManipulationEnabled)
             {
@@ -562,6 +569,8 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// <inheritdoc />
         public void OnPointerUp(MixedRealityPointerEventData eventData)
         {
+            if (excludeChildInputEvents && eventData.Pointer.Result.CurrentPointerTarget != HostTransform.gameObject) return;
+
             // Get pointer data before they are removed from the map
             Vector3 grabPoint = GetPointersGrabPoint();
             Vector3 velocity = GetPointersVelocity();
@@ -721,6 +730,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             {
                 wasKinematic = rigidbody.isKinematic;
                 rigidbody.isKinematic = false;
+                Debug.Log(rigidbody.isKinematic);
             }
 
             constraints.Initialize(new MixedRealityPose(HostTransform.position, HostTransform.rotation));
@@ -863,6 +873,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             if (rigidbody != null && UseRigidBody)
             {
                 rigidbody.isKinematic = wasKinematic;
+                Debug.Log(rigidbody.isKinematic);
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepVelocity))
                 {
