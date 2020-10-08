@@ -349,6 +349,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                     return;
                 }
 
+                if (!CoreServices.TeleportSystem.Enabled) return;
+
                 if (eventData.SourceId == InputSourceParent.SourceId &&
                     eventData.Handedness == Handedness &&
                     eventData.MixedRealityInputAction == teleportAction)

@@ -48,6 +48,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         /// <inheritdoc/>
         public override string Name { get; protected set; } = "Mixed Reality Teleport System";
 
+        public bool Enabled { get; set;}
+
         /// <inheritdoc />
         public override void Initialize()
         {
@@ -80,8 +82,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                 }
             }
 #endif // UNITY_EDITOR
-
-            teleportEventData = new TeleportEventData(EventSystem.current);
+           Enabled = MixedRealityToolkit.IsTeleportSystemEnabled;
+           teleportEventData = new TeleportEventData(EventSystem.current);
         }
 
         /// <inheritdoc />
@@ -168,6 +170,16 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             };
 
         private static readonly ProfilerMarker RaiseTeleportRequestPerfMarker = new ProfilerMarker("[MRTK] MixedRealityTeleportSystem.RaiseTeleportRequest");
+
+        public override void Enable()
+        {
+            Enabled = true;
+        }
+
+        public override void Disable()
+        {
+            Enabled = false;
+        }
 
         /// <inheritdoc />
         public void RaiseTeleportRequest(IMixedRealityPointer pointer, IMixedRealityTeleportHotSpot hotSpot)

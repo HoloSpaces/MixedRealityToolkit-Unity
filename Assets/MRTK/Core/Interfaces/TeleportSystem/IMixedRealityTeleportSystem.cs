@@ -12,6 +12,11 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
     public interface IMixedRealityTeleportSystem : IMixedRealityEventSystem
     {
         /// <summary>
+        /// System enabled
+        /// </summary>
+        bool Enabled { get; set; }
+
+        /// <summary>
         /// The duration of the teleport in seconds.
         /// </summary>
         float TeleportDuration { get; set; }
