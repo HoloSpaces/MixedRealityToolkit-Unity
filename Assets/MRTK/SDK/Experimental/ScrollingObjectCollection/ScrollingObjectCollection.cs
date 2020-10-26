@@ -192,7 +192,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
 
         [SerializeField]
         [Tooltip("Amount of falloff applied to velocity")]
-        [Range(0.0001f, 0.9999f)]
+        [Range(0.0001f, 2.0f)]
         private float velocityDampen = 0.90f;
 
         /// <summary>
@@ -1630,7 +1630,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                 }
 
                 // Hide the items that have no chance of being seen
-                if (i < prevItems - Tiers || i > postItems + Tiers)
+                if (i < prevItems || i > postItems) //#sg code change i < prevItems - Tiers || i > postItems + Tiers;
                 {
                     // Quick check to cut down on the redundant calls
                     if (node.Transform.gameObject.activeSelf)
@@ -1672,7 +1672,7 @@ namespace Microsoft.MixedReality.Toolkit.Experimental.UI
                     {
                         node.Transform.gameObject.SetActive(true);
                     }
-
+                    
                     // The node has a new item, send it to the clipping box and see if its a renderer
                     if (!node.isClipped)
                     {
