@@ -116,7 +116,7 @@ Shader "Mixed Reality Toolkit/Standard"
         Pass
         {
             Name "Main"
-            Tags{ "RenderType" = "Opaque" "LightMode" = "ForwardBase" }
+            Tags{ "RenderType" = "Opaque" "LightMode" = "LightweightForward" }
             LOD 100
             Blend[_SrcBlend][_DstBlend]
             BlendOp[_BlendOp]
@@ -190,7 +190,7 @@ Shader "Mixed Reality Toolkit/Standard"
             #include "MixedRealityShaderUtils.cginc"
 
             // This define will get commented in by the UpgradeShaderForLightweightRenderPipeline method.
-            //#define _LIGHTWEIGHT_RENDER_PIPELINE
+            #define _LIGHTWEIGHT_RENDER_PIPELINE
 
 #if defined(_TRIPLANAR_MAPPING) || defined(_DIRECTIONAL_LIGHT) || defined(_SPHERICAL_HARMONICS) || defined(_REFLECTIONS) || defined(_RIM_LIGHT) || defined(_PROXIMITY_LIGHT) || defined(_ENVIRONMENT_COLORING)
             #define _NORMAL
@@ -1177,7 +1177,7 @@ Shader "Mixed Reality Toolkit/Standard"
             #include "UnityMetaPass.cginc"
 
             // This define will get commented in by the UpgradeShaderForLightweightRenderPipeline method.
-            //#define _LIGHTWEIGHT_RENDER_PIPELINE
+            #define _LIGHTWEIGHT_RENDER_PIPELINE
 
             struct v2f
             {
