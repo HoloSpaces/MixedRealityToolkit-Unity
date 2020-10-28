@@ -123,7 +123,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         /// Raises an Input System "Input Down" event when the key is down, and raises an "Input Up" when it is released (e.g. a Button)
         /// Also raises a "Pressed" event while pressed
         /// </remarks>
-        protected void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
+        protected virtual  void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
         {
             using (UpdateButtonDataPerfMarker.Auto())
             {
@@ -164,7 +164,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
             }
         }
 
-        private static readonly ProfilerMarker UpdateSingleAxisDataPerfMarker = new ProfilerMarker("[MRTK] GenericJoystickController.UpdateSingleAxisData");
+        protected static readonly ProfilerMarker UpdateSingleAxisDataPerfMarker = new ProfilerMarker("[MRTK] GenericJoystickController.UpdateSingleAxisData");
 
         /// <summary>
         /// Update an Interaction Float data type from a SingleAxis (float) input 
@@ -172,7 +172,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         /// <remarks>
         /// Raises a Float Input Changed event when the float data changes
         /// </remarks>
-        protected void UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
+        protected virtual void  UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
         {
             using (UpdateSingleAxisDataPerfMarker.Auto())
             {
@@ -218,7 +218,7 @@ namespace Microsoft.MixedReality.Toolkit.Input.UnityInput
         /// <summary>
         /// Update the Touchpad / Thumbstick input from the device (in OpenVR, touchpad and thumbstick are the same input control)
         /// </summary>
-        protected void UpdateDualAxisData(MixedRealityInteractionMapping interactionMapping)
+        protected virtual void UpdateDualAxisData(MixedRealityInteractionMapping interactionMapping)
         {
             using (UpdateDualAxisDataPerfMarker.Auto())
             {

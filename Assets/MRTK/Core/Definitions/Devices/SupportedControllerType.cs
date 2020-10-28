@@ -25,6 +25,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
         TouchScreen = 1 << 8,
         Mouse = 1 << 9,
         ArticulatedHand = 1 << 10,
-        GGVHand = 1 << 11
+        GGVHand = 1 << 11,
+        GenericAndroid = 1 << 12,
+        OculusGoRemote = 1 << 13,
+        OculusQuestRemote = 1 << 14
     }
 }
