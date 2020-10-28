@@ -30,6 +30,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         public float SurfaceCursorDistance
         {
             get { return surfaceCursorDistance; }
+            set { surfaceCursorDistance = value; }
         }
 
         /// <summary>
