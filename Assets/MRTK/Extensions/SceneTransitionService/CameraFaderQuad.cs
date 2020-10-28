@@ -108,7 +108,8 @@ namespace Microsoft.MixedReality.Toolkit.Extensions.SceneTransitions
                 }
 
                 quadMaterial.enableInstancing = true;
-                quadMaterial.SetColor(QuadMaterialColorName, currentColor);
+                string colorPropertyName = quadMaterial.HasProperty("_BaseColor") ? "_BaseColor" : QuadMaterialColorName; // support for URP shader
+                quadMaterial.SetColor(colorPropertyName, currentColor);
 
                 // Create our quads
                 foreach (Camera camera in targets)
@@ -152,8 +153,7 @@ namespace Microsoft.MixedReality.Toolkit.Extensions.SceneTransitions
                         // Must have been destroyed - just continue
                         if (quad.Renderer == null)
                             continue;
-
-                        quad.PropertyBlock.SetColor(QuadMaterialColorName, currentColor);
+                        quad.PropertyBlock.SetColor(colorPropertyName, currentColor);
                         quad.Renderer.SetPropertyBlock(quad.PropertyBlock);
                     }
 
@@ -203,8 +203,9 @@ namespace Microsoft.MixedReality.Toolkit.Extensions.SceneTransitions
                         // Must have been destroyed - just continue
                         if (quad.Renderer == null)
                             continue;
-
-                        quad.PropertyBlock.SetColor(QuadMaterialColorName, currentColor);
+                        
+                        string colorPropertyName = quadMaterial.HasProperty("_BaseColor") ? "_BaseColor" : QuadMaterialColorName; // support for URP shader
+                        quad.PropertyBlock.SetColor(colorPropertyName, currentColor);
                         quad.Renderer.SetPropertyBlock(quad.PropertyBlock);
                     }
 
