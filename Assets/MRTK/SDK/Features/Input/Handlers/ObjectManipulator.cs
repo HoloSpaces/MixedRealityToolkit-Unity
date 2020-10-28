@@ -299,6 +299,11 @@ namespace Microsoft.MixedReality.Toolkit.UI
             set => elasticsManager = value;
         }
 
+        /// <summary>
+        /// Enable/desable rigidody physics
+        /// </summary>
+        public bool UseRigidBody;
+
         #endregion Serialized Fields
 
         #region Event handlers
