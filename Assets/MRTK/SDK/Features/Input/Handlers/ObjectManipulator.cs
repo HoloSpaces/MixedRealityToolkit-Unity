@@ -420,6 +420,10 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private void Start()
         {
             rigidBody = HostTransform.GetComponent<Rigidbody>();
+            
+            if(rigidBody == null)
+                UseRigidBody = false;
+            
             if (constraintsManager == null && EnableConstraints)
             {
                 constraintsManager = gameObject.EnsureComponent<ConstraintManager>();
@@ -796,7 +800,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 });
             }
 
-            if (rigidBody != null)
+            if (rigidBody != null && UseRigidBody)
             {
                 wasGravity = rigidBody.useGravity;
                 wasKinematic = rigidBody.isKinematic;
@@ -851,7 +855,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void ApplyTargetTransform(MixedRealityTransform targetTransform)
         {
-            if (rigidBody == null)
+            if (!UseRigidBody || rigidBody == null)
             {
                 TransformFlags transformUpdated = 0;
                 if (elasticsManager != null)
@@ -963,7 +967,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void ReleaseRigidBody(Vector3 velocity, Vector3 angularVelocity)
         {
-            if (rigidBody != null)
+            if (rigidBody != null && UseRigidBody)
             {
                 rigidBody.useGravity = wasGravity;
                 rigidBody.isKinematic = wasKinematic;
