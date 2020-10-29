@@ -88,6 +88,13 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         private static readonly ProfilerMarker OnPostSceneQueryPerfMarker = new ProfilerMarker("[MRTK] ShellHandRayPointer.OnPostSceneQuery");
 
+        public override void OnPreSceneQuery()
+        {
+            base.OnPreSceneQuery();
+            Ray ray = new Ray(Position, Rotation * Vector3.forward);
+            Rays[0].CopyRay(ray, PointerExtent);
+        }
+        
         /// <inheritdoc />
         public override void OnPostSceneQuery()
         {
