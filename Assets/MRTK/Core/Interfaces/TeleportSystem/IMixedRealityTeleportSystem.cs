@@ -15,6 +15,11 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         /// The duration of the teleport in seconds.
         /// </summary>
         float TeleportDuration { get; set; }
+        
+        /// <summary>
+        /// System is enables
+        /// </summary>
+        bool Enabled { get; set; }
 
         /// <summary>
         /// Raise a teleportation request event.

@@ -47,6 +47,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
         /// <inheritdoc/>
         public override string Name { get; protected set; } = "Mixed Reality Teleport System";
+        
+        public bool Enabled { get; set;}
 
         /// <inheritdoc />
         public override void Initialize()
@@ -81,6 +83,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             }
 #endif // UNITY_EDITOR
 
+            Enabled = MixedRealityToolkit.IsTeleportSystemEnabled;
             teleportEventData = new TeleportEventData(EventSystem.current);
         }
 
@@ -108,6 +111,16 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
         private static readonly ProfilerMarker HandleEventPerfMarker = new ProfilerMarker("[MRTK] MixedRealityTeleportSystem.HandleEvent");
 
+        public override void Enable()
+        {
+            Enabled = true;
+        }
+
+        public override void Disable()
+        {
+            Enabled = false;
+        }
+        
         /// <inheritdoc />
         public override void HandleEvent<T>(BaseEventData eventData, ExecuteEvents.EventFunction<T> eventHandler)
         {

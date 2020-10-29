@@ -374,6 +374,8 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         {
             using (OnInputChangedPerfMarker.Auto())
             {
+                if (!CoreServices.TeleportSystem.Enabled) return;
+                
                 // Don't process input if we've got an active teleport request in progress.
                 if (isTeleportRequestActive || CoreServices.TeleportSystem == null)
                 {
