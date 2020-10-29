@@ -166,7 +166,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         [EnumFlags]
         [Tooltip("Rigid body behavior of the dragged object when releasing it.")]
         private ReleaseBehaviorType releaseBehavior = ReleaseBehaviorType.KeepVelocity | ReleaseBehaviorType.KeepAngularVelocity;
-
+        
         /// <summary>
         /// Rigid body behavior of the dragged object when releasing it.
         /// </summary>
@@ -175,7 +175,16 @@ namespace Microsoft.MixedReality.Toolkit.UI
             get => releaseBehavior;
             set => releaseBehavior = value;
         }
+        
+        [SerializeField]
+        [Tooltip("Multiply with existing velocity")]
+        public float keepVelocityMutliplier = 1.0f;
+        
+        [SerializeField]
+        [Tooltip("Uses object veolicity Instead of hand velocity")]
+        public bool useObjectVelocity = true;
 
+        
         /// <summary>
         /// Obsolete: Whether to enable frame-rate independent smoothing.
         /// </summary>
@@ -367,6 +376,16 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private ManipulationMoveLogic moveLogic;
         private TwoHandScaleLogic scaleLogic;
         private TwoHandRotateLogic rotateLogic;
+        
+        /// <summary>
+        /// Object velocity in stead of hand based
+        /// </summary>
+        private readonly Vector3[] velocityPositionsCache = new Vector3[velocityUpdateInterval];
+        private Vector3 velocityPositionsSum = Vector3.zero;
+        private float deltaTimeStart;
+        private const int velocityUpdateInterval = 6;
+        private int frameOn = 0;
+        private Vector3 objectVelocity = Vector3.zero;
 
         /// <summary>
         /// Holds the pointer and the initial intersection point of the pointer ray
@@ -915,7 +934,36 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
 
                 HostTransform.localScale = isSmoothing ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
+                
+                UpdateVelocity(HostTransform.position);
             }
+        }
+        
+        private void UpdateVelocity(Vector3 position) // code from basehand
+        {
+            if (frameOn < velocityUpdateInterval)
+            {
+                velocityPositionsCache[frameOn] = position;
+                velocityPositionsSum += velocityPositionsCache[frameOn];
+            }
+            else
+            {
+                int frameIndex = frameOn % velocityUpdateInterval;
+                float deltaTime = Time.unscaledTime - deltaTimeStart;
+                Vector3 newPosition = position;
+                Vector3 newPositionsSum = velocityPositionsSum - velocityPositionsCache[frameIndex] + newPosition;
+
+                if (deltaTime != 0)
+                    objectVelocity = (newPositionsSum - velocityPositionsSum) / deltaTime / velocityUpdateInterval;
+                else
+                    objectVelocity = Vector3.zero;
+
+                velocityPositionsCache[frameIndex] = newPosition;
+                velocityPositionsSum = newPositionsSum;
+            }
+
+            deltaTimeStart = Time.unscaledTime;
+            frameOn++;
         }
 
         private Vector3[] GetHandPositionArray()
@@ -974,7 +1022,9 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepVelocity))
                 {
-                    rigidBody.velocity = velocity;
+                    Vector3 finalVelocity = useObjectVelocity?objectVelocity: velocity;
+                    finalVelocity = finalVelocity * keepVelocityMutliplier;
+                    rigidBody.velocity = finalVelocity;
                 }
 
                 if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepAngularVelocity))

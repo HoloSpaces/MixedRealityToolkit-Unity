@@ -28,6 +28,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         private SerializedProperty twoHandedManipulationType;
 
         private SerializedProperty releaseBehavior;
+        private SerializedProperty useObjectVelocity;
+        private SerializedProperty keepVelocityMutliplier;
 
         private SerializedProperty smoothingFar;
         private SerializedProperty smoothingNear;
@@ -69,6 +71,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             // Physics
             releaseBehavior = serializedObject.FindProperty("releaseBehavior");
             useForcesForNearManipulation = serializedObject.FindProperty("useForcesForNearManipulation");
+            useObjectVelocity = serializedObject.FindProperty("useObjectVelocity");
+            keepVelocityMutliplier = serializedObject.FindProperty("keepVelocityMutliplier");
 
             // Smoothing
             smoothingFar = serializedObject.FindProperty("smoothingFar");
@@ -152,6 +156,8 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 {
                     EditorGUILayout.PropertyField(releaseBehavior);
                     EditorGUILayout.PropertyField(useForcesForNearManipulation);
+                    EditorGUILayout.PropertyField(useObjectVelocity);
+                    EditorGUILayout.PropertyField(keepVelocityMutliplier);
                 }
                 else
                 {
