@@ -73,7 +73,15 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         [SerializeField]
         [Tooltip("The distance to move the camera when the strafe is activated")]
         private float strafeAmount = 0.25f;
-
+        
+        [SerializeField]
+        [Tooltip("The condition if a Strafe Height is needed")]
+        private bool requiresStrafeHeight = default;
+        
+        [SerializeField]
+        [Tooltip("The height of required strafe")]
+        private float strafeHeight = 0.5f;
+        
         [SerializeField]
         [Range(0f, 1f)]
         [Tooltip("The up direction threshold to use when determining if a surface is 'flat' enough to teleport to.")]
@@ -451,8 +459,22 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                         canMove = false;
                                         var height = MixedRealityPlayspace.Position.y;
                                         var newPosition = -CameraCache.Main.transform.forward * strafeAmount + MixedRealityPlayspace.Position;
-                                        newPosition.y = height;
-                                        MixedRealityPlayspace.Position = newPosition;
+                                    
+                                        Vector3 strafeHitPosition;
+                                        bool isValidStrafe = true;
+                                        if (requiresStrafeHeight)
+                                        {
+                                            isValidStrafe = CheckPossibleBackStep(newPosition, out strafeHitPosition);
+                                            newPosition = strafeHitPosition;
+                                        }
+                                        else
+                                        {
+                                            newPosition.y = height;
+                                        }
+
+                                        if (isValidStrafe)
+                                            MixedRealityPlayspace.Position = newPosition;
+                                       
                                     }
                                 }
                             }
@@ -491,6 +513,32 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                     }
                 }
             }
+        }
+        
+        /// <summary>
+        /// check if a backstrafe is possible on a valid platform regarding the possible strafe height given
+        /// </summary>
+        /// <param name="newPosition">the new position relative to backstrafe position</param>
+        /// <param name="hitStrafePosition">actual position the strafe raycast hits</param>
+        /// <returns>if there is a valid layer one can backstrafe on</returns>
+        private bool CheckPossibleBackStep(Vector3 newPosition, out Vector3 hitStrafePosition)
+        {
+            var raycastProvider = CoreServices.InputSystem.RaycastProvider;
+
+            Vector3 strafeOrigin = new Vector3(newPosition.x, MixedRealityPlayspace.Position.y + strafeHeight, newPosition.z);
+            Vector3 strafeTerminus = strafeOrigin + (Vector3.down * strafeHeight * 2f);
+            RayStep rayStep = new RayStep(strafeOrigin, strafeTerminus);
+            MixedRealityRaycastHit hitInfo;
+            LayerMask[] layerMasks = new LayerMask[] { ValidLayers };
+
+            if (raycastProvider.Raycast(rayStep, layerMasks, false, out hitInfo))
+            {
+                hitStrafePosition = hitInfo.point;
+                return true;
+            }
+
+            hitStrafePosition = Vector3.zero;
+            return false;
         }
 
         #endregion IMixedRealityInputHandler Implementation
