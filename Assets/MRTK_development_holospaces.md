@@ -197,7 +197,7 @@ TeleportPointer
 +//[ScriptedImporter(1, "gltf")]
     public class GltfAssetImporter : ScriptedImporter
     {}
-
+...................................................................................................
 #fix 29/10/20 fix pointer extent override not working
 create pullrewuest, veryfy the fix is correct
 
@@ -211,7 +211,7 @@ ShellHandRayPointer
         }
 
 }
-
+...........................................................................................
 feature 29/10/20 feature contue object velocity based on its last positin
 Custom for holospaces
 
@@ -258,7 +258,7 @@ ObjectManipulatorInspector
 	+EditorGUILayout.PropertyField(useObjectVelocity);
          +EditorGUILayout.PropertyField(keepVelocityMutliplier);
 }
-
+..............................................................................................
 #fix 29/10/20 null reference on property
 
 ManipulationHandler
@@ -272,9 +272,12 @@ public RotationConstraintType ConstraintOnRotation
 }
 }
 
-
+........................................................................................
 #fix 08/12/20 feature restric backward movement when there is a collider
 Custom for holospaces
+
+10/12/20 created a pull request Feature/back strafing steps #9035
+
  public class TeleportPointer 
   {
         +[SerializeField]
@@ -341,4 +344,5 @@ Custom for holospaces
                 EditorGUILayout.PropertyField(requiresStrafeHeight);
         }
    }
+......................................................................................
 
