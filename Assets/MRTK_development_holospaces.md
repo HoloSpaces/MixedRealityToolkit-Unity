@@ -1,4 +1,4 @@
-# mrtk_development_holospaces
+ # mrtk_development_holospaces
 
 mrtk_development_holospaces is a custom branch of mrtk_development
 
@@ -277,6 +277,7 @@ public RotationConstraintType ConstraintOnRotation
 Custom for holospaces
 
 10/12/20 created a pull request Feature/back strafing steps #9035
+//pull request not succeded, reason its more locomotion specific
 
  public class TeleportPointer 
   {
@@ -345,4 +346,20 @@ Custom for holospaces
         }
    }
 ......................................................................................
+#fix 08/12/20 feature update the cached main camera 
+// pull request created 
+https://github.com/microsoft/MixedRealityToolkit-Unity/pull/9149
+
+    public static class CameraCache
+    { 
+ 	 /// <summary>
+        /// Manually update the cached main camera 
+        /// </summary>
+        +public static void UpdateCachedMainCamera(Camera camera)
+        {
+            cachedCamera = camera;
+        }
+    }
+......................................................................................
+
 
