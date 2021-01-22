@@ -7,16 +7,37 @@ note: mrtk_development is a fork of https://github.com/microsoft/MixedRealityToo
 mrtk_development is always upto date with the upstream branch and please do not modify mrtk_development branch at any chances
 
 Try to avoid modifying this branch(mrtk_development_holospaces) as much as possible. If its a bug or required feature, please do it
-locally and then create pull request to upstream branch. 
+locally and then create pull request to upstream branch.
 
 Pull request to Microsoft/mrtk_development:
-Update mrtk_development branch then create a clone and do the changes on cloned branch and request pull request. 
+Update mrtk_development branch then create a clone and do the changes on cloned branch and request pull request.
 
 Also recommend to track locall changes here on this document.
 
 mrtk_development_holospaces change history
- 
-#fix 27/10/20 
+
+#fix 22/01/2021
+No way to hide teleport pointer cursor when a hotspot (currently, furniture in our scenes) gets hovered. Added a boolean property to teleport pointer
+-pull request created https://github.com/microsoft/MixedRealityToolkit-Unity/pull/9159
+
+In class TeleportPointer(),
+
+    +/// <summary>
+    +/// Teleport pointer cursor visibility if pointer is focused on hotspot
+    +/// </summary>
+    +public bool TeleportHotSpotCursorVisibility { get; set; } = true;
+
+    -BaseCursor?.SetVisibility(TeleportSurfaceResult == TeleportSurfaceResult.Valid || TeleportSurfaceResult == TeleportSurfaceResult.HotSpot);
+    +if (TeleportHotSpotCursorVisibility)
+    +{
+    +    BaseCursor?.SetVisibility(TeleportSurfaceResult == TeleportSurfaceResult.Valid || TeleportSurfaceResult == TeleportSurfaceResult.HotSpot);
+    +}
+    +else
+    +{
+    +    BaseCursor?.SetVisibility(TeleportSurfaceResult == TeleportSurfaceResult.Valid);
+    +}
+
+#fix 27/10/20
 Line renderer points are not exposed - already created pull request -pull request succeded
 TODO: merge it back
 namespace Microsoft.MixedReality.Toolkit.Utilities
@@ -45,7 +66,7 @@ functionality need to be added,  pull request must be created from another branc
 
 
 
-#fix 27/10/20 
+#fix 27/10/20
 manually set cursor distance from code, pull request must be created from another branch
 
     public interface IMixedRealityCursor : IMixedRealityFocusChangedHandler, IMixedRealitySourceStateHandler, IMixedRealityPointerHandler
@@ -64,14 +85,14 @@ public class BaseCursor : MonoBehaviour, IMixedRealityCursor
 }
 
 
-#fix 28/10/20 
+#fix 28/10/20
 public class UnityJoystickManager : BaseInputDeviceManager
 {
 
        private void RefreshDevices()
        {
             -var joystickNames = UInput.GetJoystickNames();
-             +var joystickNames = GetConnectedJoystickNames();	
+             +var joystickNames = GetConnectedJoystickNames();
        }
 
         +/// <summary>
@@ -97,7 +118,7 @@ public class GenericJoystickController: BaseController
 {
    -protected virtual  void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
    +protected virtual  void UpdateButtonData(MixedRealityInteractionMapping interactionMapping)
-   
+
     -protected virtual void  UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
     +protected virtual void  UpdateSingleAxisData(MixedRealityInteractionMapping interactionMapping)
 
@@ -112,18 +133,18 @@ public class NonNativeKeyboard
 {
 	private bool IsMicrophoneActive()
         {
-            -var result = _recordImage.color != _defaultColor; 
+            -var result = _recordImage.color != _defaultColor;
             var result = false;
             + if (_recordImage != null)
             +{
-             +   result  = _recordImage.color != _defaultColor; 
+             +   result  = _recordImage.color != _defaultColor;
             +}
             return result;
         }
 }
 
-#fix 28/10/20 
-Custom for holospaces URP 
+#fix 28/10/20
+Custom for holospaces URP
  public class CameraFaderQuad : ICameraFader
     {
 	 public async Task FadeOutAsync(float fadeOutTime, Color color, IEnumerable<Camera> targets)
@@ -142,18 +163,18 @@ Custom for holospaces URP
     }
 }
 
-#fix 29/10/20 
-// keyboard double entry fix and press on enter down 
+#fix 29/10/20
+// keyboard double entry fix and press on enter down
  public class KeyboardValueKey : MonoBehaviour
 {
 	//compare the original one with current one
 }
 
 
-#fix 29/10/20 
+#fix 29/10/20
 // Object manipulator enable desable rigid body
 // Request for this feature and create a pull requst
-public void ObjectManipulator 
+public void ObjectManipulator
 {
 	//compare the original one with current one or check against "UseRigidbody"
 }
@@ -220,11 +241,11 @@ ObjectManipulator
 	SerializeField]
         [Tooltip("Multiply with existing velocity")]
         public float keepVelocityMutliplier = 1.0f;
-        
+
         [SerializeField]
         [Tooltip("Uses object veolicity Instead of hand velocity")]
         public bool useObjectVelocity = true;
-	
+
         ReleaseRigidBody()
 	{
 
@@ -279,12 +300,12 @@ Custom for holospaces
 10/12/20 created a pull request Feature/back strafing steps #9035
 //pull request not succeded, reason its more locomotion specific
 
- public class TeleportPointer 
+ public class TeleportPointer
   {
         +[SerializeField]
         +[Tooltip("The condition if a Strafe Height is needed")]
         +private bool requiresStrafeHeight = false;
-        
+
         +[SerializeField]
         +[Tooltip("The height of required strafe")]
         +private float strafeHeight = 0.5f;
@@ -301,7 +322,7 @@ Custom for holospaces
          {
               newPosition.y = height;
          }                                                             
-                              
+
           if (isValidStrafe)                              
          MixedRealityPlayspace.Position = newPosition;  
 
@@ -326,7 +347,7 @@ Custom for holospaces
             hitStrafePosition = Vector3.zero;
             return false;
         }                                                                                           
-                                       
+
 }
  public class TeleportPointerInspector : LinePointerInspector
     {
@@ -346,14 +367,14 @@ Custom for holospaces
         }
    }
 ......................................................................................
-#fix 08/12/20 feature update the cached main camera 
-// pull request created 
+#fix 08/12/20 feature update the cached main camera
+// pull request created
 https://github.com/microsoft/MixedRealityToolkit-Unity/pull/9149
 
     public static class CameraCache
-    { 
+    {
  	 /// <summary>
-        /// Manually update the cached main camera 
+        /// Manually update the cached main camera
         /// </summary>
         +public static void UpdateCachedMainCamera(Camera camera)
         {
@@ -361,5 +382,3 @@ https://github.com/microsoft/MixedRealityToolkit-Unity/pull/9149
         }
     }
 ......................................................................................
-
-
