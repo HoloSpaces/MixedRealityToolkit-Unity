@@ -18,7 +18,7 @@ mrtk_development_holospaces change history
 
 #fix 22/01/2021
 No way to hide teleport pointer cursor when a hotspot (currently, furniture in our scenes) gets hovered. Added a boolean property to teleport pointer
--pull request created https://github.com/microsoft/MixedRealityToolkit-Unity/pull/9159
+-pull request created https://github.com/microsoft/MixedRealityToolkit-Unity/pull/9159, pull request approved
 
 In class TeleportPointer(),
 
