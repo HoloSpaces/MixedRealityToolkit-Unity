@@ -52,11 +52,10 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
 
                 // Cache the main camera
                 cachedCamera = mainCamera;
-
                 return cachedCamera;
             }
         }
-        
+
         /// <summary>
         /// Manually update the cached main camera 
         /// </summary>

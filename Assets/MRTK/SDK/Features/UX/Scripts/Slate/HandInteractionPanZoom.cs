@@ -754,8 +754,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private bool TryGetHandPositionFromController(IMixedRealityController controller, TrackedHandJoint joint, out Vector3 position)
         {
-            var hand = controller as IMixedRealityHand;
-            if (hand != null)
+            if (controller is IMixedRealityHand hand)
             {
                 if (hand.TryGetJoint(joint, out MixedRealityPose pose))
                 {
@@ -789,8 +788,11 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void EndAllTouches()
         {
-            handDataMap.Clear();
-            RaisePanEnded(0);
+            if (handDataMap.Count > 0)
+            {
+                handDataMap.Clear();
+                RaisePanEnded(0);
+            }
         }
 
         private void MoveTouch(uint sourceId)
@@ -868,14 +870,15 @@ namespace Microsoft.MixedReality.Toolkit.UI
         /// </summary>
         public void OnPointerDown(MixedRealityPointerEventData eventData)
         {
+            bool isNear = eventData.Pointer is IMixedRealityNearPointer;
             oldIsTargetPositionLockedOnFocusLock = eventData.Pointer.IsTargetPositionLockedOnFocusLock;
-            if (!(eventData.Pointer is IMixedRealityNearPointer) && eventData.Pointer.Controller.IsRotationAvailable)
+            if (!isNear && eventData.Pointer.Controller.IsRotationAvailable)
             {
                 eventData.Pointer.IsTargetPositionLockedOnFocusLock = false;
             }
             SetAffordancesActive(false);
             EndTouch(eventData.SourceId);
-            SetHandDataFromController(eventData.Pointer.Controller, eventData.Pointer, false);
+            SetHandDataFromController(eventData.Pointer.Controller, eventData.Pointer, isNear);
             eventData.Use();
         }
 
