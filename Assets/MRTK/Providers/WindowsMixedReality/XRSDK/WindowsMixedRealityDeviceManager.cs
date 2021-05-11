@@ -34,7 +34,8 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.WindowsMixedReality
     [MixedRealityDataProvider(
         typeof(IMixedRealityInputSystem),
         SupportedPlatforms.WindowsStandalone | SupportedPlatforms.WindowsUniversal,
-        "XR SDK Windows Mixed Reality Device Manager")]
+        "XR SDK Windows Mixed Reality Device Manager",
+        supportedUnityXRPipelines: SupportedUnityXRPipelines.XRSDK)]
     public class WindowsMixedRealityDeviceManager : XRSDKDeviceManager
     {
         /// <summary>
@@ -50,21 +51,12 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.WindowsMixedReality
             uint priority = DefaultPriority,
             BaseMixedRealityProfile profile = null) : base(inputSystem, name, priority, profile) { }
 
-        private bool? isActiveLoader = null;
-        private bool IsActiveLoader
-        {
-            get
-            {
+        private bool IsActiveLoader =>
 #if WMR_ENABLED
-                if (!isActiveLoader.HasValue)
-                {
-                    isActiveLoader = IsLoaderActive("Windows MR Loader");
-                }
+            LoaderHelpers.IsLoaderActive("Windows MR Loader");
+#else
+            false;
 #endif // WMR_ENABLED
-
-                return isActiveLoader ?? false;
-            }
-        }
 
         #region IMixedRealityDeviceManager Interface
 
@@ -308,10 +300,9 @@ namespace Microsoft.MixedReality.Toolkit.XRSDK.WindowsMixedReality
 
             if (inputDevice.characteristics.HasFlag(InputDeviceCharacteristics.Controller))
             {
-                bool hasTouchpad = inputDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out _);
-                bool isHPController = !hasTouchpad;
-
-                if (isHPController)
+                // primary2DAxis represents the touchpad in Windows XR Plugin.
+                // The HP motion controller doesn't have a touchpad, so we check for its existence in the feature usages.
+                if (!inputDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out _))
                 {
                     return SupportedControllerType.HPMotionController;
                 }

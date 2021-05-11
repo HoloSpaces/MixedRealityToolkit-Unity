@@ -5,10 +5,12 @@ using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Physics;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
+using System.Runtime.CompilerServices;
 using Unity.Profiling;
 using UnityEngine;
 using UnityPhysics = UnityEngine.Physics;
 
+[assembly: InternalsVisibleTo("Microsoft.MixedReality.Toolkit.Tests.PlayModeTests")]
 namespace Microsoft.MixedReality.Toolkit.Teleport
 {
     /// <summary>
@@ -29,7 +31,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         public TeleportSurfaceResult TeleportSurfaceResult { get; private set; } = TeleportSurfaceResult.None;
 
         /// <inheritdoc />
-        public IMixedRealityTeleportHotSpot TeleportHotSpot { get; set; }
+        public IMixedRealityTeleportHotspot TeleportHotspot { get; set; }
 
         [SerializeField]
         [Tooltip("Teleport Pointer will only respond to input events for teleportation that match this MixedRealityInputAction")]
@@ -85,16 +87,21 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
         [SerializeField]
         [Tooltip("The distance to move the camera when the strafe is activated")]
-        private float strafeAmount = 0.25f;
+        internal float strafeAmount = 0.25f;
         
         [SerializeField]
-        [Tooltip("The condition if a Strafe Height is needed")]
-        private bool requiresStrafeHeight = default;
-        
+        [Tooltip("Whether or not a strafe checks that there is a floor beneath the user's origin on strafe")]
+        internal bool checkForFloorOnStrafe = false;
+
         [SerializeField]
-        [Tooltip("The height of required strafe")]
-        private float strafeHeight = 0.5f;
-        
+        [Tooltip("Whether or not the user's y-position can move during a strafe")]
+        internal bool adjustHeightOnStrafe = false;
+
+
+        [SerializeField]
+        [Tooltip("The detection range for a floor on strafe, as well as the max amount that a user's y-position can change on strafe")]
+        internal float maxHeightChangeOnStrafe = 0.5f;
+
         [SerializeField]
         [Range(0f, 1f)]
         [Tooltip("The up direction threshold to use when determining if a surface is 'flat' enough to teleport to.")]
@@ -239,6 +246,58 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             }
         }
 
+        /// <summary>
+        /// check if a backstrafe is possible on a valid platform regarding the possible strafe height given
+        /// </summary>
+        /// <param name="newPosition">the new position relative to backstrafe position</param>
+        /// <param name="hitStrafePosition">actual position the strafe raycast hits</param>
+        /// <returns>if there is a valid layer one can backstrafe on</returns>
+        internal bool CheckPossibleBackStep(Vector3 newPosition, out Vector3 hitStrafePosition)
+        {
+            var raycastProvider = CoreServices.InputSystem.RaycastProvider;
+            Vector3 strafeOrigin = new Vector3(newPosition.x, MixedRealityPlayspace.Position.y + maxHeightChangeOnStrafe, newPosition.z);
+            Vector3 strafeTerminus = strafeOrigin + (Vector3.down * maxHeightChangeOnStrafe * 2f);
+
+            RayStep rayStep = new RayStep(strafeOrigin, strafeTerminus);
+            LayerMask[] layerMasks =  new LayerMask[] { ValidLayers };
+
+            // check are we hiting a floor plane or step above the current MixedRealityPlayspace.Position
+            if (!raycastProvider.IsNull() && raycastProvider.Raycast(rayStep, layerMasks, false, out var hitInfo))
+            {
+                hitStrafePosition = hitInfo.point;
+                return true;
+            }
+
+            hitStrafePosition = Vector3.zero;
+            return false;
+        }
+
+        /// <summary>
+        /// Performs a strafe in the opposite direction of the camera's forward direction
+        /// </summary>
+        internal void PerformStrafe()
+        {
+            canMove = false;
+            var height = MixedRealityPlayspace.Position.y;
+            var newPosition = -CameraCache.Main.transform.forward * strafeAmount + MixedRealityPlayspace.Position;
+
+            newPosition.y = height;
+            bool isValidStrafe = true;
+            if (checkForFloorOnStrafe)
+            {
+                isValidStrafe = CheckPossibleBackStep(newPosition, out var strafeHitPosition);
+                if (adjustHeightOnStrafe)
+                {
+                    newPosition = strafeHitPosition;
+                }
+            }
+
+            if (isValidStrafe)
+            {
+                MixedRealityPlayspace.Position = newPosition;
+            }
+        }
+
         #region IMixedRealityPointer Implementation
 
         /// <inheritdoc />
@@ -254,11 +313,11 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         {
             get
             {
-                if (TeleportHotSpot != null &&
-                    TeleportHotSpot.OverrideTargetOrientation &&
+                if (TeleportHotspot != null &&
+                    TeleportHotspot.OverrideOrientation &&
                     TeleportSurfaceResult == TeleportSurfaceResult.HotSpot)
                 {
-                    return TeleportHotSpot.TargetOrientation;
+                    return TeleportHotspot.TargetRotation;
                 }
 
                 return pointerOrientation + (raycastOrigin != null ? raycastOrigin.eulerAngles.y : transform.eulerAngles.y);
@@ -286,6 +345,9 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
 
                 // Re-enable gravity if we're looking at a hotspot
                 GravityDistorter.enabled = (TeleportSurfaceResult == TeleportSurfaceResult.HotSpot);
+
+                // Set the have the teleport pointer control which layer masks it raycasts against
+                PrioritizedLayerMasksOverride = PrioritizedLayerMasksOverride ?? new LayerMask[] { ValidLayers | InvalidLayers };
             }
         }
 
@@ -322,11 +384,11 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                         if (((1 << Result.CurrentPointerTarget.layer) & ValidLayers.value) != 0)
                         {
                             // See if it's a hot spot
-                            if (TeleportHotSpot != null && TeleportHotSpot.IsActive)
+                            if (TeleportHotspot != null && TeleportHotspot.IsActive)
                             {
                                 TeleportSurfaceResult = TeleportSurfaceResult.HotSpot;
                                 // Turn on gravity, point it at hotspot
-                                GravityDistorter.WorldCenterOfGravity = TeleportHotSpot.Position;
+                                GravityDistorter.WorldCenterOfGravity = TeleportHotspot.Position;
                                 GravityDistorter.enabled = true;
                             }
                             else
@@ -384,10 +446,10 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             base.Reset();
             if (gameObject == null) return;
 
-            if (TeleportHotSpot != null)
+            if (TeleportHotspot != null)
             {
-                CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
-                TeleportHotSpot = null;
+                CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotspot);
+                TeleportHotspot = null;
             }
         }
 
@@ -402,8 +464,6 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         {
             using (OnInputChangedPerfMarker.Auto())
             {
-                if (!CoreServices.TeleportSystem.Enabled) return;
-                
                 // Don't process input if we've got an active teleport request in progress.
                 if (isTeleportRequestActive || CoreServices.TeleportSystem == null)
                 {
@@ -434,7 +494,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                         {
                             TeleportRequestRaised = true;
 
-                            CoreServices.TeleportSystem?.RaiseTeleportRequest(this, TeleportHotSpot);
+                            CoreServices.TeleportSystem?.RaiseTeleportRequest(this, TeleportHotspot);
                             if (pointerAudioSource != null && teleportRequestedClip != null)
                             {
                                 pointerAudioSource.PlayOneShot(teleportRequestedClip);
@@ -476,25 +536,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                                     // Check to make sure we're still under our activation threshold.
                                     if (offsetStrafeAngle > 0 && offsetStrafeAngle <= backStrafeActivationAngle)
                                     {
-                                        canMove = false;
-                                        var height = MixedRealityPlayspace.Position.y;
-                                        var newPosition = -CameraCache.Main.transform.forward * strafeAmount + MixedRealityPlayspace.Position;
-                                    
-                                        Vector3 strafeHitPosition;
-                                        bool isValidStrafe = true;
-                                        if (requiresStrafeHeight)
-                                        {
-                                            isValidStrafe = CheckPossibleBackStep(newPosition, out strafeHitPosition);
-                                            newPosition = strafeHitPosition;
-                                        }
-                                        else
-                                        {
-                                            newPosition.y = height;
-                                        }
-
-                                        if (isValidStrafe)
-                                            MixedRealityPlayspace.Position = newPosition;
-                                       
+                                        PerformStrafe();
                                     }
                                 }
                             }
@@ -518,7 +560,7 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                         if (TeleportSurfaceResult == TeleportSurfaceResult.Valid ||
                             TeleportSurfaceResult == TeleportSurfaceResult.HotSpot)
                         {
-                            CoreServices.TeleportSystem?.RaiseTeleportStarted(this, TeleportHotSpot);
+                            CoreServices.TeleportSystem?.RaiseTeleportStarted(this, TeleportHotspot);
                             if (pointerAudioSource != null && teleportCompletedClip != null)
                             {
                                 pointerAudioSource.PlayOneShot(teleportCompletedClip);
@@ -529,36 +571,10 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
                     if (TeleportRequestRaised)
                     {
                         TeleportRequestRaised = false;
-                        CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotSpot);
+                        CoreServices.TeleportSystem?.RaiseTeleportCanceled(this, TeleportHotspot);
                     }
                 }
             }
-        }
-        
-        /// <summary>
-        /// check if a backstrafe is possible on a valid platform regarding the possible strafe height given
-        /// </summary>
-        /// <param name="newPosition">the new position relative to backstrafe position</param>
-        /// <param name="hitStrafePosition">actual position the strafe raycast hits</param>
-        /// <returns>if there is a valid layer one can backstrafe on</returns>
-        private bool CheckPossibleBackStep(Vector3 newPosition, out Vector3 hitStrafePosition)
-        {
-            var raycastProvider = CoreServices.InputSystem.RaycastProvider;
-
-            Vector3 strafeOrigin = new Vector3(newPosition.x, MixedRealityPlayspace.Position.y + strafeHeight, newPosition.z);
-            Vector3 strafeTerminus = strafeOrigin + (Vector3.down * strafeHeight * 2f);
-            RayStep rayStep = new RayStep(strafeOrigin, strafeTerminus);
-            MixedRealityRaycastHit hitInfo;
-            LayerMask[] layerMasks = new LayerMask[] { ValidLayers };
-
-            if (raycastProvider.Raycast(rayStep, layerMasks, false, out hitInfo))
-            {
-                hitStrafePosition = hitInfo.point;
-                return true;
-            }
-
-            hitStrafePosition = Vector3.zero;
-            return false;
         }
 
         #endregion IMixedRealityInputHandler Implementation

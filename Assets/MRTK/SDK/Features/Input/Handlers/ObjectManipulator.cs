@@ -4,7 +4,6 @@
 using Microsoft.MixedReality.Toolkit.Experimental.Physics;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Physics;
-using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using System.Collections.Generic;
@@ -166,7 +165,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
         [EnumFlags]
         [Tooltip("Rigid body behavior of the dragged object when releasing it.")]
         private ReleaseBehaviorType releaseBehavior = ReleaseBehaviorType.KeepVelocity | ReleaseBehaviorType.KeepAngularVelocity;
-        
+
         /// <summary>
         /// Rigid body behavior of the dragged object when releasing it.
         /// </summary>
@@ -175,16 +174,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
             get => releaseBehavior;
             set => releaseBehavior = value;
         }
-        
-        [SerializeField]
-        [Tooltip("Multiply with existing velocity")]
-        public float keepVelocityMutliplier = 1.0f;
-        
-        [SerializeField]
-        [Tooltip("Uses object veolicity Instead of hand velocity")]
-        public bool useObjectVelocity = true;
 
-        
         /// <summary>
         /// Obsolete: Whether to enable frame-rate independent smoothing.
         /// </summary>
@@ -308,11 +298,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
             set => elasticsManager = value;
         }
 
-        /// <summary>
-        /// Enable/desable rigidody physics
-        /// </summary>
-        public bool UseRigidBody;
-
         #endregion Serialized Fields
 
         #region Event handlers
@@ -376,16 +361,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private ManipulationMoveLogic moveLogic;
         private TwoHandScaleLogic scaleLogic;
         private TwoHandRotateLogic rotateLogic;
-        
-        /// <summary>
-        /// Object velocity in stead of hand based
-        /// </summary>
-        private readonly Vector3[] velocityPositionsCache = new Vector3[velocityUpdateInterval];
-        private Vector3 velocityPositionsSum = Vector3.zero;
-        private float deltaTimeStart;
-        private const int velocityUpdateInterval = 6;
-        private int frameOn = 0;
-        private Vector3 objectVelocity = Vector3.zero;
 
         /// <summary>
         /// Holds the pointer and the initial intersection point of the pointer ray
@@ -442,10 +417,6 @@ namespace Microsoft.MixedReality.Toolkit.UI
         private void Start()
         {
             rigidBody = HostTransform.GetComponent<Rigidbody>();
-            
-            if(rigidBody == null)
-                UseRigidBody = false;
-            
             if (constraintsManager == null && EnableConstraints)
             {
                 constraintsManager = gameObject.EnsureComponent<ConstraintManager>();
@@ -831,7 +802,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 });
             }
 
-            if (rigidBody != null && UseRigidBody)
+            if (rigidBody != null)
             {
                 wasGravity = rigidBody.useGravity;
                 wasKinematic = rigidBody.isKinematic;
@@ -886,7 +857,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void ApplyTargetTransform(MixedRealityTransform targetTransform)
         {
-            if (!UseRigidBody || rigidBody == null)
+            if (rigidBody == null)
             {
                 TransformFlags transformUpdated = 0;
                 if (elasticsManager != null)
@@ -934,7 +905,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
                     var relativeRotation = targetTransform.Rotation * Quaternion.Inverse(HostTransform.rotation);
                     relativeRotation.ToAngleAxis(out float angle, out Vector3 axis);
-                    
+
                     if (axis.IsValidVector())
                     {
                         if (angle > 180f)
@@ -946,36 +917,7 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
 
                 HostTransform.localScale = isSmoothing ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
-                
-                UpdateVelocity(HostTransform.position);
             }
-        }
-        
-        private void UpdateVelocity(Vector3 position) // code from basehand
-        {
-            if (frameOn < velocityUpdateInterval)
-            {
-                velocityPositionsCache[frameOn] = position;
-                velocityPositionsSum += velocityPositionsCache[frameOn];
-            }
-            else
-            {
-                int frameIndex = frameOn % velocityUpdateInterval;
-                float deltaTime = Time.unscaledTime - deltaTimeStart;
-                Vector3 newPosition = position;
-                Vector3 newPositionsSum = velocityPositionsSum - velocityPositionsCache[frameIndex] + newPosition;
-
-                if (deltaTime != 0)
-                    objectVelocity = (newPositionsSum - velocityPositionsSum) / deltaTime / velocityUpdateInterval;
-                else
-                    objectVelocity = Vector3.zero;
-
-                velocityPositionsCache[frameIndex] = newPosition;
-                velocityPositionsSum = newPositionsSum;
-            }
-
-            deltaTimeStart = Time.unscaledTime;
-            frameOn++;
         }
 
         private Vector3[] GetHandPositionArray()
@@ -1027,21 +969,24 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
         private void ReleaseRigidBody(Vector3 velocity, Vector3 angularVelocity)
         {
-            if (rigidBody != null && UseRigidBody)
+            if (rigidBody != null)
             {
                 rigidBody.useGravity = wasGravity;
                 rigidBody.isKinematic = wasKinematic;
 
-                if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepVelocity))
+                // Match the object's velocity to the controller for near interactions
+                // Otherwise keep the objects current velocity so that it's not dampened unnaturally
+                if (isNearManipulation)
                 {
-                    Vector3 finalVelocity = useObjectVelocity?objectVelocity: velocity;
-                    finalVelocity = finalVelocity * keepVelocityMutliplier;
-                    rigidBody.velocity = finalVelocity;
-                }
+                    if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepVelocity))
+                    {
+                        rigidBody.velocity = velocity;
+                    }
 
-                if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepAngularVelocity))
-                {
-                    rigidBody.angularVelocity = angularVelocity;
+                    if (releaseBehavior.HasFlag(ReleaseBehaviorType.KeepAngularVelocity))
+                    {
+                        rigidBody.angularVelocity = angularVelocity;
+                    }
                 }
             }
         }

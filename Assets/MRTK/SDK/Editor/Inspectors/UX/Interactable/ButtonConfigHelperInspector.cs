@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using UnityEngine;
-using UnityEditor;
 using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities.Editor;
+using UnityEditor;
+using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Inspectors
 {
@@ -90,7 +90,7 @@ namespace Microsoft.MixedReality.Toolkit.Inspectors
                     {
                         if (GUILayout.Button("Use migration tool to upgrade buttons"))
                         {
-                            if (!EditorApplication.ExecuteMenuItem("Mixed Reality Toolkit/Utilities/Migration Window"))
+                            if (!EditorApplication.ExecuteMenuItem("Mixed Reality/Toolkit/Utilities/Migration Window"))
                             {
                                 EditorUtility.DisplayDialog("Package Required", "You need to install the MRTK tools (Microsoft.MixedRealityToolkit.Unity.Tools) package to use the Migration Tool", "OK");
                             }

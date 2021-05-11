@@ -107,7 +107,7 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Inspectors
                             // Display the properties for editing the head offset 
                             EditorGUILayout.PropertyField(leapVRDeviceOffsetY);
                             EditorGUILayout.PropertyField(leapVRDeviceOffsetZ);
-                            EditorGUILayout.PropertyField(leapVRDeviceOffsetTiltX);   
+                            EditorGUILayout.PropertyField(leapVRDeviceOffsetTiltX);
                         }
                         else if (leapVRDeviceOffsetMode.enumValueIndex == (int)LeapVRDeviceOffsetMode.Transform)
                         {
@@ -134,7 +134,7 @@ namespace Microsoft.MixedReality.Toolkit.LeapMotion.Inspectors
             return MixedRealityToolkit.IsInitialized && profile != null &&
                 MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile != null &&
                 MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile.DataProviderConfigurations != null &&
-                MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile.DataProviderConfigurations.Any(s => profile == s.DeviceManagerProfile);
+                MixedRealityToolkit.Instance.ActiveProfile.InputSystemProfile.DataProviderConfigurations.Any(s => profile == s.Profile);
         }
     }
 }
