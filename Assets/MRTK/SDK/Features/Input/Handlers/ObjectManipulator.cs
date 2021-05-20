@@ -868,18 +868,20 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
                 if (!transformUpdated.HasFlag(TransformFlags.Move))
                 {
-                    HostTransform.position = isSmoothing ? Smoothing.SmoothTo(HostTransform.position, targetTransform.Position, moveLerpTime, Time.deltaTime) : targetTransform.Position;
                     CheckVectorIsValid(HostTransform.position, "position");
+                    HostTransform.position = isSmoothing ? Smoothing.SmoothTo(HostTransform.position, targetTransform.Position, moveLerpTime, Time.deltaTime) : targetTransform.Position;
+                    
                 }
                 if (!transformUpdated.HasFlag(TransformFlags.Rotate))
                 {
-                    HostTransform.rotation = isSmoothing ? Smoothing.SmoothTo(HostTransform.rotation, targetTransform.Rotation, rotateLerpTime, Time.deltaTime) : targetTransform.Rotation;
                     CheckQuaternionIsValid(HostTransform.rotation,"rotation");
+                    HostTransform.rotation = isSmoothing ? Smoothing.SmoothTo(HostTransform.rotation, targetTransform.Rotation, rotateLerpTime, Time.deltaTime) : targetTransform.Rotation;
+                    
                 }
                 if (!transformUpdated.HasFlag(TransformFlags.Scale))
                 {
-                    HostTransform.localScale = isSmoothing ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
                     CheckVectorIsValid(HostTransform.localScale, "localScale");
+                    HostTransform.localScale = isSmoothing ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
                 }
             }
             else
@@ -928,16 +930,17 @@ namespace Microsoft.MixedReality.Toolkit.UI
         {
             if (!float.IsNaN(vector3In.x) && !float.IsNaN(vector3In.y) && !float.IsNaN(vector3In.z))
             {
-                throw new InvalidOperationException("Monster bug vectorType: " + vectorType + "is not valid:" + vector3In + "on:" +transform.gameObject.name);
+                return;
             }
-        }
+            throw new InvalidOperationException("Monster bug vectorType: " + vectorType + "is not valid:" + vector3In + "on:" +transform.gameObject.name);        }
         
         private void CheckQuaternionIsValid(Quaternion quaternionIn, string vectorType)
         {
             if (!float.IsNaN(quaternionIn.x) && !float.IsNaN(quaternionIn.y) && !float.IsNaN(quaternionIn.z) &&!float.IsNaN(quaternionIn.w) )
             {
-                throw new InvalidOperationException("Monster bug vectorType: " + vectorType + "is not valid:" + quaternionIn + "on:" +transform.gameObject.name);
+                return;
             }
+            throw new InvalidOperationException("Monster bug vectorType: " + vectorType + "is not valid:" + quaternionIn + "on:" +transform.gameObject.name);
         }
 
         private Vector3[] GetHandPositionArray()
