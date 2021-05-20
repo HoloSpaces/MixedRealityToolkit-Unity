@@ -8,6 +8,7 @@ using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
@@ -868,14 +869,17 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 if (!transformUpdated.HasFlag(TransformFlags.Move))
                 {
                     HostTransform.position = isSmoothing ? Smoothing.SmoothTo(HostTransform.position, targetTransform.Position, moveLerpTime, Time.deltaTime) : targetTransform.Position;
+                    CheckVectorIsValid(HostTransform.position, "position");
                 }
                 if (!transformUpdated.HasFlag(TransformFlags.Rotate))
                 {
                     HostTransform.rotation = isSmoothing ? Smoothing.SmoothTo(HostTransform.rotation, targetTransform.Rotation, rotateLerpTime, Time.deltaTime) : targetTransform.Rotation;
+                    CheckQuaternionIsValid(HostTransform.rotation,"rotation");
                 }
                 if (!transformUpdated.HasFlag(TransformFlags.Scale))
                 {
                     HostTransform.localScale = isSmoothing ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
+                    CheckVectorIsValid(HostTransform.localScale, "localScale");
                 }
             }
             else
@@ -917,6 +921,22 @@ namespace Microsoft.MixedReality.Toolkit.UI
                 }
 
                 HostTransform.localScale = isSmoothing ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
+            }
+        }
+
+        private void CheckVectorIsValid(Vector3 vector3In, string vectorType)
+        {
+            if (!float.IsNaN(vector3In.x) && !float.IsNaN(vector3In.y) && !float.IsNaN(vector3In.z))
+            {
+                throw new InvalidOperationException("Monster bug vectorType: " + vectorType + "is not valid:" + vector3In + "on:" +transform.gameObject.name);
+            }
+        }
+        
+        private void CheckQuaternionIsValid(Quaternion quaternionIn, string vectorType)
+        {
+            if (!float.IsNaN(quaternionIn.x) && !float.IsNaN(quaternionIn.y) && !float.IsNaN(quaternionIn.z) &&!float.IsNaN(quaternionIn.w) )
+            {
+                throw new InvalidOperationException("Monster bug vectorType: " + vectorType + "is not valid:" + quaternionIn + "on:" +transform.gameObject.name);
             }
         }
 
