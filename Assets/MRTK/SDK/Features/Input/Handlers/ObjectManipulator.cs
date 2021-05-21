@@ -868,19 +868,19 @@ namespace Microsoft.MixedReality.Toolkit.UI
 
                 if (!transformUpdated.HasFlag(TransformFlags.Move))
                 {
-                    CheckVectorIsValid(HostTransform.position, "position");
+                    CheckVectorIsValid(targetTransform.Position, "Position");
                     HostTransform.position = isSmoothing ? Smoothing.SmoothTo(HostTransform.position, targetTransform.Position, moveLerpTime, Time.deltaTime) : targetTransform.Position;
                     
                 }
                 if (!transformUpdated.HasFlag(TransformFlags.Rotate))
                 {
-                    CheckQuaternionIsValid(HostTransform.rotation,"rotation");
+                    CheckQuaternionIsValid(targetTransform.Rotation,"Rotation");
                     HostTransform.rotation = isSmoothing ? Smoothing.SmoothTo(HostTransform.rotation, targetTransform.Rotation, rotateLerpTime, Time.deltaTime) : targetTransform.Rotation;
                     
                 }
                 if (!transformUpdated.HasFlag(TransformFlags.Scale))
                 {
-                    CheckVectorIsValid(HostTransform.localScale, "localScale");
+                    CheckVectorIsValid(targetTransform.Scale, "Scale");
                     HostTransform.localScale = isSmoothing ? Smoothing.SmoothTo(HostTransform.localScale, targetTransform.Scale, scaleLerpTime, Time.deltaTime) : targetTransform.Scale;
                 }
             }
